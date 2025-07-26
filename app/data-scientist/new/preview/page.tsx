@@ -19,8 +19,7 @@ import ConfigureDatasetModal from "@/components/configure-dataset-modal"
 import ContentRenderer from "@/components/content-renderer"
 import TableCellRenderer from "@/components/table-cell-renderer"
 import { createEvaluation } from "@/lib/client-db"
-import { useDatasetAnalysis } from "@/lib/hooks/use-dataset-analysis"
-import { transformAnalysisResult } from "@/lib/utils/analysis-transformers"
+import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
 
 // Import the results dataset utilities at the top of the file
 import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
@@ -85,13 +84,34 @@ export default function PreviewPage() {
   const isEditMode = params?.id !== undefined
   const editId = params?.id ? Number(params.id) : null
 
+  // Track evaluation name editing state
+  const [evaluationNameEdited, setEvaluationNameEdited] = useState(false)
+
+  // Use the data initialization hook
+  const {
+    uploadedData,
+    dataColumns,
+    evaluationName,
+    instructions,
+    criteria,
+    columnRoles,
+    setEvaluationName,
+    setInstructions,
+    setCriteria,
+    setColumnRoles,
+    setUploadedData,
+    setDataColumns,
+  } = usePreviewDataInitialization({
+    isEditMode,
+    editId,
+    evaluationNameEdited
+  })
+
   const [currentItem, setCurrentItem] = useState(1)
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  // Remove these state variables:
-  // const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [showDatasetConfig, setShowDatasetConfig] = useState(false)
@@ -103,78 +123,6 @@ export default function PreviewPage() {
   const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const [uploadedData, setUploadedData] = useState<any[]>([])
-  const [dataColumns, setDataColumns] = useState<string[]>([])
-
-  const [evaluationName, setEvaluationName] = useState("Content Quality Assessment")
-  const [evaluationNameEdited, setEvaluationNameEdited] = useState(false)
-  const [instructions, setInstructions] = useState(
-    "Please evaluate each response carefully. Focus on quality, relevance, accuracy, and appropriateness of the generated content.",
-  )
-
-  const [criteria, setCriteria] = useState<Metric[]>([
-    {
-      id: 1,
-      name: "Overall Quality",
-      type: "likert-scale",
-      options: ["1", "2", "3", "4", "5"],
-      required: true,
-      likertLabels: { low: "Poor", high: "Excellent" },
-      aiGenerated: false,
-    },
-    {
-      id: 2,
-      name: "Is the content appropriate and accurate?",
-      type: "yes-no",
-      options: ["Yes", "No"],
-      required: true,
-      aiGenerated: false,
-    },
-    {
-      id: 3,
-      name: "Additional Comments",
-      type: "text-input",
-      options: [],
-      required: false,
-      aiGenerated: false,
-    },
-  ])
-
-  const [columnRoles, setColumnRoles] = useState<ColumnRole[]>([
-    {
-      id: "user_query",
-      name: "user_query",
-      suggestedRole: "Input Data",
-      confidence: 85,
-      reason: "Contains user queries/prompts for AI evaluation",
-      userRole: "Input Data",
-    },
-    {
-      id: "ai_response",
-      name: "ai_response",
-      suggestedRole: "Model Output",
-      confidence: 90,
-      reason: "Contains AI responses that need human evaluation",
-      userRole: "Model Output",
-    },
-    {
-      id: "category",
-      name: "category",
-      suggestedRole: "Metadata",
-      confidence: 80,
-      reason: "Categorical field providing context for analysis",
-      userRole: "Metadata",
-    },
-    {
-      id: "item_id",
-      name: "item_id",
-      suggestedRole: "Metadata",
-      confidence: 90,
-      reason: "Identifier field providing context but not directly used for evaluation",
-      userRole: "Metadata",
-    },
-  ])
 
   // Near the top of the file, add a new state variable to track if we're coming from the upload page
   const [isComingFromUpload, setIsComingFromUpload] = useState(true)
@@ -223,105 +171,6 @@ export default function PreviewPage() {
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     setIsDragging(true)
-  }
-
-  // Modify the useEffect that loads data from sessionStorage to immediately set isAnalyzing to true
-  useLayoutEffect(() => {
-    if (isEditMode && editId) {
-      // Load existing evaluation for editing - keep this as is
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const existingEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id === editId)
-
-      if (existingEvaluation) {
-        setEvaluationName(existingEvaluation.name)
-        setEvaluationNameEdited(false) // Reset edited flag when loading existing evaluation
-        setInstructions(existingEvaluation.instructions)
-        setCriteria(existingEvaluation.criteria)
-        setColumnRoles(existingEvaluation.columnRoles)
-        setUploadedData(existingEvaluation.data)
-
-        if (existingEvaluation.data.length > 0) {
-          const columns = Object.keys(existingEvaluation.data[0])
-          setDataColumns(columns)
-        }
-      }
-    } else {
-      // Load data from sessionStorage - everything should be ready
-      const storedData = sessionStorage.getItem("uploadedData")
-      const storedAIResult = sessionStorage.getItem("aiAnalysisResult")
-      const storedAIPreference = sessionStorage.getItem("useAIAnalysis")
-      const storedJsonlColumnRoles = sessionStorage.getItem("jsonlColumnRoles")
-
-      if (storedData) {
-        const parsedData = JSON.parse(storedData)
-        setUploadedData(parsedData)
-
-        if (parsedData.length > 0) {
-          const columns = Object.keys(parsedData[0])
-          setDataColumns(columns)
-
-          // If JSONL column roles exist, use them
-          if (storedJsonlColumnRoles) {
-            setColumnRoles(JSON.parse(storedJsonlColumnRoles))
-          } else {
-            const shouldUseAI = storedAIResult && storedAIPreference === "true"
-            if (shouldUseAI) {
-              const aiResult = JSON.parse(storedAIResult)
-              applyAIResults(aiResult)
-            } else {
-              // Use fallback analysis (must be awaited)
-              (async () => {
-                await performFallbackAnalysis(parsedData, columns)
-              })()
-            }
-          }
-        }
-      }
-    }
-  }, [isEditMode, editId])
-
-  // Add helper function to apply AI results:
-  const applyAIResults = (aiResult: any) => {
-    if (aiResult.evaluationName && !evaluationNameEdited) {
-      setEvaluationName(aiResult.evaluationName)
-    }
-    
-    if (aiResult.instructions) {
-      setInstructions(aiResult.instructions)
-    }
-
-    // Update column roles from AI analysis
-    const aiColumnRoles = aiResult.columnAnalysis.map((col: any) => {
-      let convertedRole = col.suggestedRole
-      if (col.suggestedRole === "Input Data" || col.suggestedRole === "Input") convertedRole = "Input"
-      if (col.suggestedRole === "Model Output" || col.suggestedRole === "Output") convertedRole = "Model Output"
-      if (col.suggestedRole === "Excluded Data" || col.suggestedRole === "Excluded") convertedRole = "Excluded"
-      if (col.suggestedRole === "Reference") convertedRole = "Reference"
-      if (col.suggestedRole === "Metadata") convertedRole = "Metadata"
-
-      return {
-        id: col.columnName,
-        name: col.columnName,
-        suggestedRole: col.suggestedRole,
-        confidence: col.confidence,
-        reasoning: col.reasoning,
-        reason: col.reasoning,
-        userRole: convertedRole,
-      }
-    })
-    setColumnRoles(aiColumnRoles)
-
-    // Update criteria from AI suggestions
-    const aiCriteria = aiResult.suggestedMetrics.map((metric: any, index: number) => ({
-      id: index + 1,
-      name: metric.name,
-      type: metric.type,
-      options: metric.options,
-      required: metric.required,
-      likertLabels: metric.likertLabels,
-      aiGenerated: true,
-    }))
-    setCriteria(aiCriteria)
   }
 
   // Add keyboard event listener for undo functionality
@@ -441,43 +290,6 @@ export default function PreviewPage() {
     // Fallback to formatted column name
     const formatted = columnName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     return formatted
-  }
-
-  // Use the dataset analysis hook for standardized analysis
-  const { analyzeWithAPI, isAnalyzing } = useDatasetAnalysis();
-  
-  // Maintain compatibility with existing code by wrapping the hook and handling UI updates
-  const performFallbackAnalysis = async (data: any[], columns: string[]) => {
-    try {
-      // Get analysis result from the backend API
-      const analysisResult = await analyzeWithAPI(data, columns, true)
-
-      // Transform the result for UI components
-      const transformedResult = transformAnalysisResult(analysisResult)
-
-      // Update UI state
-      setColumnRoles(transformedResult.columnRoles)
-
-      // Set the evaluation name ONLY from the analysis result (no cleaning/fallback)
-      if (!evaluationNameEdited) {
-        setEvaluationName(transformedResult.evaluationName)
-      }
-
-      // Update criteria based on the analysis
-      setCriteria(transformedResult.criteria)
-
-      // Set instructions (no edited flag for instructions)
-      setInstructions(transformedResult.instructions)
-
-      return analysisResult
-    } catch (error) {
-      console.error("Error in fallback analysis:", error)
-      // If something goes wrong, return a minimal valid result
-      return {
-        success: false,
-        error: "Fallback analysis failed"
-      }
-    }
   }
 
   const isFormValid = criteria.every((criterion) => {
@@ -950,7 +762,7 @@ export default function PreviewPage() {
       )}
 
       {/* Only show main content after analysis is ready; render a full-viewport loader while analyzing */}
-      {isAnalyzing || columnRoles.length === 0 || criteria.length === 0 ? (
+      {columnRoles.length === 0 || criteria.length === 0 ? (
         <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center min-h-screen">
           {/* Animated Logo (copied from upload page for consistency) */}
           <div className="mb-8">
