@@ -2,353 +2,65 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { ClipboardDocumentIcon, DocumentArrowUpIcon, TrashIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
-
-interface Reviewer {
-  id: string
-  name: string
-  email: string
-  notes: string
-  link: string
-  createdAt: string
-  evaluationId: string
-}
-
-interface UploadedReviewer {
-  ReviewerName: string
-  Email: string
-}
+import { useAssignReviewersDataInitialization } from "@/components/data-scientist/assign-reviewers/useAssignReviewersDataInitialization"
+import { useAssignReviewersFormManagement } from "@/components/data-scientist/assign-reviewers/useAssignReviewersFormManagement"
+import { useAssignReviewersUIHelpers } from "@/components/data-scientist/assign-reviewers/useAssignReviewersUIHelpers"
 
 export default function AssignTeamPage() {
-  const router = useRouter()
-  const [reviewerName, setReviewerName] = useState("")
-  const [reviewerEmail, setReviewerEmail] = useState("")
-  const [reviewerNotes, setReviewerNotes] = useState("")
-  const [reviewers, setReviewers] = useState<Reviewer[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null)
-  const [currentEvaluationId, setCurrentEvaluationId] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadedReviewers, setUploadedReviewers] = useState<UploadedReviewer[]>([])
-  const [selectedFileName, setSelectedFileName] = useState<string>("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  // Use the data initialization hook
+  const {
+    reviewers,
+    setReviewers,
+    currentEvaluationId,
+    setCurrentEvaluationId,
+    uploadedReviewers,
+    setUploadedReviewers,
+    generateUniqueLink,
+  } = useAssignReviewersDataInitialization()
 
-  useEffect(() => {
-    // Try to get evaluation ID from URL params first (if coming from edit mode)
-    const urlParams = new URLSearchParams(window.location.search)
-    const evalId = urlParams.get("evaluationId")
+  // Use the UI helpers hook
+  const {
+    handleBack,
+    isUploading,
+    setIsUploading,
+    selectedFileName,
+    setSelectedFileName,
+    fileInputRef,
+    handleFileUpload,
+    copiedLinkId,
+    setCopiedLinkId,
+    handleCopyLink,
+    handleExportCSV,
+    clearFileInput,
+  } = useAssignReviewersUIHelpers({
+    reviewers,
+    setUploadedReviewers,
+  })
 
-    if (evalId) {
-      setCurrentEvaluationId(evalId)
-    } else {
-      // Fallback: get the most recent evaluation from localStorage
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      if (storedEvaluations.length > 0) {
-        setCurrentEvaluationId(storedEvaluations[0].id.toString())
-      }
-    }
-  }, [])
-
-  const handleBack = () => {
-    router.push("/data-scientist")
-  }
-
-  const generateUniqueLink = (reviewerId: string) => {
-    // Generate link to reviewer dashboard where reviewers can see their assigned evaluations
-    return `${window.location.origin}/reviewer?participant=${reviewerId}`
-  }
-
-  // Load existing reviewers for the current evaluation
-  useEffect(() => {
-    if (currentEvaluationId) {
-      const existingReviewers = JSON.parse(localStorage.getItem(`evaluation_${currentEvaluationId}_reviewers`) || "[]")
-      setReviewers(existingReviewers)
-    }
-  }, [currentEvaluationId])
-
-  // Save reviewers to localStorage whenever they change
-  useEffect(() => {
-    if (currentEvaluationId && reviewers.length > 0) {
-      localStorage.setItem(`evaluation_${currentEvaluationId}_reviewers`, JSON.stringify(reviewers))
-    }
-  }, [reviewers, currentEvaluationId])
-
-  const handleGenerateLink = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!reviewerName.trim()) return
-
-    setIsGenerating(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const reviewerId = Date.now().toString()
-    const newReviewer: Reviewer = {
-      id: reviewerId,
-      name: reviewerName.trim(),
-      email: reviewerEmail.trim(),
-      notes: "", // Set to empty since notes input was removed
-      link: generateUniqueLink(reviewerId),
-      createdAt: new Date().toISOString(),
-      evaluationId: currentEvaluationId || "",
-    }
-
-    setReviewers([newReviewer, ...reviewers])
-
-    // Add reviewer to evaluationReviewers for progress tracking
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    
-    // Get the actual total items from the current evaluation
-    const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-    const currentEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
-    let totalItems = currentEvaluation?.totalItems || 10 // Fallback to 10 if evaluation not found
-    
-    const progressReviewer = {
-      id: reviewerId,
-      name: newReviewer.name,
-      email: newReviewer.email || `${newReviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
-      status: "active",
-      completed: 0,
-      total: totalItems, // Use full dataset total items
-      avgTime: 0,
-      evaluationId: currentEvaluationId || "1234567890", // Use current evaluation ID
-    }
-
-    // Filter reviewers by evaluation ID and add new reviewer to the beginning of current evaluation's reviewers
-    const otherEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId !== currentEvaluationId)
-    const currentEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId === currentEvaluationId)
-    currentEvaluationReviewers.unshift(progressReviewer)
-    
-    const updatedReviewers = [...otherEvaluationReviewers, ...currentEvaluationReviewers]
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
-
-    // Update evaluation status to "active" when first reviewer is added
-    if (reviewers.length === 0) {
-      // This will be the first reviewer
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const updatedEvaluations = storedEvaluations.map((evaluation: any) => {
-        if (evaluation.id.toString() === currentEvaluationId) {
-          return { ...evaluation, status: "active" }
-        }
-        return evaluation
-      })
-      localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
-    }
-
-    // Clear form
-    setReviewerName("")
-    setReviewerEmail("")
-
-    setIsGenerating(false)
-  }
-
-  // File upload functionality
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) {
-      setSelectedFileName("")
-      return
-    }
-
-    setSelectedFileName(file.name)
-    setIsUploading(true)
-    const reader = new FileReader()
-
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string
-        let parsedData: UploadedReviewer[] = []
-
-        if (file.name.endsWith('.csv')) {
-          // Parse CSV
-          const lines = text.split('\n').filter(line => line.trim())
-          if (lines.length === 0) return
-
-          const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
-          
-          // Validate required headers (only Name and Email are required)
-          const nameHeaderExists = headers.some(h => 
-            h.toLowerCase() === 'name' || h.toLowerCase() === 'reviewername'
-          )
-          const emailHeaderExists = headers.some(h => h.toLowerCase() === 'email')
-
-          if (!nameHeaderExists || !emailHeaderExists) {
-            alert('CSV must contain headers: Name (or ReviewerName) and Email.')
-            setIsUploading(false)
-            return
-          }
-
-          // Find header indices (support multiple possible names)
-          const nameIndex = headers.findIndex(h => 
-            h.toLowerCase() === 'name' || h.toLowerCase() === 'reviewername'
-          )
-          const emailIndex = headers.findIndex(h => h.toLowerCase() === 'email')
-
-          // Parse data rows
-          for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
-            if (values[nameIndex]?.trim()) {
-              parsedData.push({
-                ReviewerName: values[nameIndex] || '',
-                Email: values[emailIndex] || ''
-              })
-            }
-          }
-        } else {
-          alert('Please upload a CSV file. Excel files will be supported in a future update.')
-          setIsUploading(false)
-          return
-        }
-
-        setUploadedReviewers(parsedData)
-        setIsUploading(false)
-      } catch (error) {
-        console.error('Error parsing file:', error)
-        alert('Error parsing file. Please check the format.')
-        setIsUploading(false)
-      }
-    }
-
-    reader.readAsText(file)
-  }
-
-  const handleBulkAdd = async () => {
-    if (uploadedReviewers.length === 0) return
-
-    setIsGenerating(true)
-
-    // Add all uploaded reviewers
-    const newReviewers: Reviewer[] = uploadedReviewers.map((uploaded, index) => {
-      const reviewerId = Date.now().toString() + Math.random().toString(36).substr(2, 9)
-      
-      return {
-        id: reviewerId,
-        name: uploaded.ReviewerName,
-        email: uploaded.Email,
-        notes: '',
-        link: generateUniqueLink(reviewerId),
-        createdAt: new Date().toISOString(),
-        evaluationId: currentEvaluationId || "",
-      }
-    })
-
-    setReviewers([...newReviewers, ...reviewers])
-
-    // Add to evaluationReviewers for progress tracking
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-    const currentEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
-    const totalItems = currentEvaluation?.totalItems || 10
-
-    const progressReviewers = newReviewers.map(reviewer => {
-      let totalItems = currentEvaluation?.totalItems || 10
-      
-      return {
-        id: reviewer.id,
-        name: reviewer.name,
-        email: reviewer.email || `${reviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
-        status: "active",
-        completed: 0,
-        total: totalItems,
-        avgTime: 0,
-        evaluationId: currentEvaluationId || "1234567890",
-      }
-    })
-
-    // Filter reviewers by evaluation ID and add new reviewers to the beginning of current evaluation's reviewers
-    const otherEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId !== currentEvaluationId)
-    const currentEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId === currentEvaluationId)
-    currentEvaluationReviewers.unshift(...progressReviewers)
-    
-    const updatedReviewers = [...otherEvaluationReviewers, ...currentEvaluationReviewers]
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
-
-    // Update evaluation status to "active" when reviewers are added
-    if (reviewers.length === 0) {
-      const updatedEvaluations = storedEvaluations.map((evaluation: any) => {
-        if (evaluation.id.toString() === currentEvaluationId) {
-          return { ...evaluation, status: "active" }
-        }
-        return evaluation
-      })
-      localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
-    }
-
-    // Clear uploaded data
-    setUploadedReviewers([])
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-
-    setIsGenerating(false)
-  }
-
-  const handleRemoveReviewer = (reviewerId: string) => {
-    setReviewers(reviewers.filter(r => r.id !== reviewerId))
-    
-    // Also remove from evaluationReviewers
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    const updatedReviewers = existingReviewers.filter((r: any) => r.id !== reviewerId)
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
-  }
-
-  const handleCopyLink = async (link: string, reviewerId: string) => {
-    try {
-      await navigator.clipboard.writeText(link)
-      setCopiedLinkId(reviewerId)
-      setTimeout(() => setCopiedLinkId(null), 2000)
-    } catch (err) {
-      console.error("Failed to copy link:", err)
-    }
-  }
-
-  const handleExportCSV = () => {
-    if (reviewers.length === 0) {
-      alert("No reviewers to export")
-      return
-    }
-
-    // CSV escaping function
-    const escapeCSVField = (field: any): string => {
-      if (field == null) return ""
-      const str = String(field)
-      // If field contains comma, quote, newline, or carriage return, wrap in quotes and escape quotes
-      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-        return '"' + str.replace(/"/g, '""') + '"'
-      }
-      return str
-    }
-
-    const csvData = [
-      ["Reviewer Name", "Email", "Evaluation Link", "Created Date"],
-      ...reviewers.map(reviewer => [
-        reviewer.name,
-        reviewer.email || "",
-        reviewer.link,
-        new Date(reviewer.createdAt).toLocaleDateString()
-      ])
-    ]
-
-    const csvContent = csvData.map(row => 
-      row.map(field => escapeCSVField(field)).join(",")
-    ).join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", `evaluation-reviewers-${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
+  // Use the form management hook
+  const {
+    reviewerName,
+    setReviewerName,
+    reviewerEmail,
+    setReviewerEmail,
+    reviewerNotes,
+    setReviewerNotes,
+    isGenerating,
+    setIsGenerating,
+    handleGenerateLink,
+    handleBulkAdd,
+    handleRemoveReviewer,
+  } = useAssignReviewersFormManagement({
+    reviewers,
+    setReviewers,
+    currentEvaluationId,
+    uploadedReviewers,
+    setUploadedReviewers,
+    generateUniqueLink,
+    clearFileInput,
+  })
 
   return (
     <PageLayout title="Add Reviewers">
