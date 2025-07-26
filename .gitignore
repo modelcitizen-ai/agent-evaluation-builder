@@ -1,0 +1,84 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Development tools (debugging, testing utilities)
+# Note: dev-tools/ is tracked for team development but can be modified locally
+
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation organization
+# Keep docs/ structure organized - new .md files should go in appropriate subdirectories
+# Root directory .md files will be moved during cleanup
+/*.md
+!README.md
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Custom exclusions for deployment
+# Testing files
+test_*.js
+test_*.csv
+final_validation_test.js
+*test_results.json
+test_output.json
+debug_*.json
+validation_results.json
+
+# Deployment artifacts
+*.zip
+deployment.zip
+human-eval-builder-deployment*.zip
+human-evaluation-platform.zip
+webapp_logs.zip
+deployment-manifest.txt
+deployment_logs.txt
+
+# Log files and directories
+logs/
+LogFiles/
+webapp_logs/
+*.log
+server.log
+
+# Deployment working directories
+deployments/
+ziVnQEAV
+
+# Development documentation (keep README.md and API_DOCUMENTATION.md)
+*_IMPLEMENTATION.md
+*_DEPLOYMENT*.md
+*_STATUS.md
+*_REPORT.md
+*_CHECKLIST.md
+AZURE_*.md
+RESPONSE_FOCUSED_REFACTORING_TEST.md

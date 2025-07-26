@@ -1,0 +1,1872 @@
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import {
+  ArrowRightIcon,
+  CogIcon,
+  PencilIcon,
+  PlusIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline"
+import PageLayout from "@/components/layout/page-layout"
+import EditMetricModal from "@/components/edit-metric-modal"
+import ContentRenderer from "@/components/content-renderer"
+import { createEvaluation } from "@/lib/client-db"
+
+// Import the results dataset utilities at the top of the file
+import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
+
+interface Metric {
+  id: number
+  name: string
+  type: string
+  options: string[]
+  required: boolean
+  likertLabels?: { low: string; high: string }
+  aiGenerated?: boolean
+}
+
+interface DeletedMetric {
+  metric: Metric
+  index: number
+}
+
+interface ColumnRole {
+  id: string
+  name: string
+  suggestedRole: string
+  confidence: number
+  reason: string
+  userRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" | "Input Data"
+  displayName?: string
+}
+
+interface AIAnalysisResult {
+  columnAnalysis: Array<{
+    columnName: string
+    suggestedRole: "Input Data" | "Model Output" | "Excluded Data" | "Metadata"
+    confidence: number
+    reasoning: string
+  }>
+  suggestedMetrics: Array<{
+    name: string
+    type: "yes-no" | "likert-scale" | "custom-list" | "text-input"
+    options: string[]
+    reasoning: string
+    confidence: number
+    required: boolean
+    likertLabels?: { low: string; high: string }
+  }>
+  evaluationName: string
+  instructions: string
+}
+
+export default function PreviewPage() {
+  const router = useRouter()
+  const params = useParams()
+
+  // Detect if we're in edit mode
+  const isEditMode = params?.id !== undefined
+  const editId = params?.id ? Number(params.id) : null
+
+  const [currentItem, setCurrentItem] = useState(1)
+  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editingMetric, setEditingMetric] = useState<Metric | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  // Remove these state variables:
+  // const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [showDatasetConfig, setShowDatasetConfig] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastDeletedMetric, setLastDeletedMetric] = useState<DeletedMetric | null>(null)
+
+  // Column resizing state
+  const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
+  const [isDragging, setIsDragging] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const [uploadedData, setUploadedData] = useState<any[]>([])
+  const [dataColumns, setDataColumns] = useState<string[]>([])
+
+  // Calculate total items from actual data
+  const totalItems = uploadedData.length > 0 ? uploadedData.length : 20 // fallback to 20 for demo
+
+  const [evaluationName, setEvaluationName] = useState("Content Quality Assessment")
+  const [instructions, setInstructions] = useState(
+    "Please evaluate each response carefully. Focus on quality, relevance, accuracy, and appropriateness of the generated content.",
+  )
+
+  const [criteria, setCriteria] = useState<Metric[]>([
+    {
+      id: 1,
+      name: "Overall Quality",
+      type: "likert-scale",
+      options: ["1", "2", "3", "4", "5"],
+      required: true,
+      likertLabels: { low: "Poor", high: "Excellent" },
+      aiGenerated: false,
+    },
+    {
+      id: 2,
+      name: "Is the content appropriate and accurate?",
+      type: "yes-no",
+      options: ["Yes", "No"],
+      required: true,
+      aiGenerated: false,
+    },
+    {
+      id: 3,
+      name: "Additional Comments",
+      type: "text-input",
+      options: [],
+      required: false,
+      aiGenerated: false,
+    },
+  ])
+
+  const [columnRoles, setColumnRoles] = useState<ColumnRole[]>([
+    {
+      id: "user_query",
+      name: "user_query",
+      suggestedRole: "Input Data",
+      confidence: 85,
+      reason: "Contains user queries/prompts for AI evaluation",
+      userRole: "Input Data",
+    },
+    {
+      id: "ai_response",
+      name: "ai_response",
+      suggestedRole: "Model Output",
+      confidence: 90,
+      reason: "Contains AI responses that need human evaluation",
+      userRole: "Model Output",
+    },
+    {
+      id: "category",
+      name: "category",
+      suggestedRole: "Metadata",
+      confidence: 80,
+      reason: "Categorical field providing context for analysis",
+      userRole: "Metadata",
+    },
+    {
+      id: "item_id",
+      name: "item_id",
+      suggestedRole: "Metadata",
+      confidence: 90,
+      reason: "Identifier field providing context but not directly used for evaluation",
+      userRole: "Metadata",
+    },
+  ])
+
+  // Near the top of the file, add a new state variable to track if we're coming from the upload page
+  const [isComingFromUpload, setIsComingFromUpload] = useState(true)
+
+  // Add a new state variable to track AI analysis preference
+  const [useAIAnalysis, setUseAIAnalysis] = useState(false)
+
+  // Add state to track responses for all items
+  const [allResponses, setAllResponses] = useState<Record<number, Record<string, string>>>({})
+
+  // Add a new state variable to track the furthest item reached:
+  const [furthestItemReached, setFurthestItemReached] = useState(1)
+
+  // Add this with the other state variables around line 100
+  const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
+
+  // Add this state variable with the other state declarations
+  const [isReviewComplete, setIsReviewComplete] = useState(false)
+
+  // Add a new state variable to track if the current form has been modified:
+  const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
+
+  // Add this with the other state variables
+  // const [isInitialLoading, setIsInitialLoading] = useState(true)
+
+  // Add this useEffect near the beginning of the component, after state declarations
+  // Remove the useEffect for initial loading timer
+
+  // Add keyboard event listener for undo functionality
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+        event.preventDefault()
+        handleUndoDelete()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [lastDeletedMetric, criteria])
+
+  // Handle column resizing
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  // Modify the useEffect that loads data from sessionStorage to immediately set isAnalyzing to true
+  useLayoutEffect(() => {
+    if (isEditMode && editId) {
+      // Load existing evaluation for editing - keep this as is
+      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
+      const existingEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id === editId)
+
+      if (existingEvaluation) {
+        setEvaluationName(existingEvaluation.name)
+        setInstructions(existingEvaluation.instructions)
+        setCriteria(existingEvaluation.criteria)
+        setColumnRoles(existingEvaluation.columnRoles)
+        setUploadedData(existingEvaluation.data)
+
+        if (existingEvaluation.data.length > 0) {
+          const columns = Object.keys(existingEvaluation.data[0])
+          setDataColumns(columns)
+        }
+      }
+    } else {
+      // Load data from sessionStorage - everything should be ready
+      const storedData = sessionStorage.getItem("uploadedData")
+      const storedAIResult = sessionStorage.getItem("aiAnalysisResult")
+      const storedAIPreference = sessionStorage.getItem("useAIAnalysis")
+
+      if (storedData) {
+        const parsedData = JSON.parse(storedData)
+        setUploadedData(parsedData)
+
+        if (parsedData.length > 0) {
+          const columns = Object.keys(parsedData[0])
+          setDataColumns(columns)
+
+          // If we have AI results, use them
+          if (storedAIResult) {
+            const aiResult = JSON.parse(storedAIResult)
+            applyAIResults(aiResult)
+          } else {
+            // Use fallback analysis
+            performFallbackAnalysis(parsedData, columns)
+          }
+        }
+      }
+    }
+  }, [isEditMode, editId])
+
+  // Add helper function to apply AI results:
+  const applyAIResults = (aiResult: any) => {
+    if (aiResult.evaluationName) {
+      setEvaluationName(aiResult.evaluationName)
+    }
+    
+    if (aiResult.instructions) {
+      setInstructions(aiResult.instructions)
+    }
+
+    // Update column roles from AI analysis
+    const aiColumnRoles = aiResult.columnAnalysis.map((col: any) => {
+      let convertedRole = col.suggestedRole
+      if (col.suggestedRole === "Input Data") convertedRole = "Input"
+      if (col.suggestedRole === "Model Output") convertedRole = "Model Output"
+      if (col.suggestedRole === "Excluded Data") convertedRole = "Excluded"
+
+      return {
+        id: col.columnName,
+        name: col.columnName,
+        suggestedRole: col.suggestedRole,
+        confidence: col.confidence,
+        reasoning: col.reasoning,
+        reason: col.reasoning,
+        userRole: convertedRole,
+      }
+    })
+    setColumnRoles(aiColumnRoles)
+
+    // Update criteria from AI suggestions
+    const aiCriteria = aiResult.suggestedMetrics.map((metric: any, index: number) => ({
+      id: index + 1,
+      name: metric.name,
+      type: metric.type,
+      options: metric.options,
+      required: metric.required,
+      likertLabels: metric.likertLabels,
+      aiGenerated: true,
+    }))
+    setCriteria(aiCriteria)
+  }
+
+  // Add keyboard event listener for undo functionality
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+        event.preventDefault()
+        handleUndoDelete()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [lastDeletedMetric, criteria])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return
+
+      const containerRect = containerRef.current.getBoundingClientRect()
+      const containerWidth = containerRect.width
+      const mouseX = e.clientX - containerRect.left
+
+      // Calculate percentage (constrain between 30% and 70%)
+      let newLeftWidth = (mouseX / containerWidth) * 100
+      newLeftWidth = Math.max(30, Math.min(70, newLeftWidth))
+
+      setLeftColumnWidth(newLeftWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragging])
+
+  // Sample data for preview
+  const previewData =
+    uploadedData.length > 0
+      ? uploadedData
+      : [
+          {
+            user_query: "How do I reset my password?",
+            ai_response: "To reset your password, click on 'Forgot Password' on the login page and follow the instructions sent to your email.",
+            category: "support",
+            item_id: "item_001",
+          },
+          {
+            user_query: "What are your business hours?",
+            ai_response: "Our business hours are Monday through Friday, 9 AM to 6 PM EST. We're closed on weekends and major holidays.",
+            category: "general",
+            item_id: "item_002",
+          },
+          {
+            user_query: "Can I return an item after 30 days?",
+            ai_response: "Our standard return policy is 30 days from purchase. However, you may still be eligible for store credit depending on the item condition.",
+            category: "returns",
+            item_id: "item_003",
+          },
+        ]
+
+  const generateInputTitle = (columnName: string) => {
+    // Check if there's a custom display name for this column
+    const columnConfig = columnRoles.find((col) => col.name === columnName)
+    if (columnConfig?.displayName && columnConfig.displayName.trim()) {
+      return columnConfig.displayName
+    }
+
+    // Fallback to formatted column name
+    const formatted = columnName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    return formatted
+  }
+
+  const getInputColumnContent = () => {
+    if (uploadedData.length === 0 && previewData.length === 0) return "No data available for preview."
+
+    const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
+    const inputColumns = columnRoles.filter((role) => role.userRole === "Input" || role.userRole === "Model Output")
+
+    if (inputColumns.length === 0)
+      return "No input or model output columns identified. Please set at least one column as 'Input' or 'Model Output' in the Configure Dataset section."
+
+    const currentRowIndex = (currentItem - 1) % dataToUse.length
+    const currentRow = dataToUse[currentRowIndex]
+
+    if (!currentRow) return "No content available for this item."
+
+    // Always return array format for consistent rendering with labels
+    return inputColumns.map((col) => ({
+      name: col.name,
+      content: currentRow[col.name] || "No content available",
+      type: col.userRole,
+    }))
+  }
+
+  const currentReview = getInputColumnContent()
+
+  // Update evaluation name when column roles change (but only if no AI analysis was used)
+  useEffect(() => {
+    // Don't override evaluation name if we have AI analysis results or we're in edit mode
+    if (columnRoles.length > 0 && !aiAnalysisResult && !isEditMode && !sessionStorage.getItem("aiAnalysisResult")) {
+      // Prioritize Model Output columns for response-focused naming
+      const outputCol = columnRoles.find((role) => role.userRole === "Model Output" || role.suggestedRole === "Model Output")
+      const inputCol = columnRoles.find((role) => role.userRole === "Input" || role.suggestedRole === "Input Data")
+      
+      if (outputCol) {
+        const colName = generateInputTitle(outputCol.name)
+        const cleanName = colName.replace(/response|output|generated|result|prediction/gi, "").trim()
+        const fallbackName = cleanName ? `${cleanName} Content Quality` : "Content Quality Assessment"
+        setEvaluationName(fallbackName)
+      } else if (inputCol) {
+        const colName = generateInputTitle(inputCol.name)
+        const cleanName = colName.replace(/content|text|data|input|query|prompt|question/gi, "").trim()
+        const fallbackName = cleanName ? `${cleanName} Content Evaluation` : "Content Quality Assessment"
+        setEvaluationName(fallbackName)
+      }
+    }
+  }, [columnRoles, aiAnalysisResult, isEditMode])
+
+  // Real AI Analysis Function using Azure OpenAI
+  // Remove all the loading states and AI analysis logic from the preview page:
+
+  // Fallback Analysis Function
+  const performFallbackAnalysis = (data: any[], columns: string[]) => {
+    // Detect column roles using basic analysis
+    const detectedRoles = columns.map((col) => {
+      const detectedRole = detectColumnRole(col, data)
+
+      // Check if the column contains video URLs
+      const hasVideoContent = data.some((row) => {
+        const value = row[col]
+        if (typeof value === "string") {
+          const lowerValue = value.toLowerCase()
+          return (
+            lowerValue.includes("youtube.com") ||
+            lowerValue.includes("youtu.be") ||
+            lowerValue.includes("vimeo.com") ||
+            lowerValue.endsWith(".mp4") ||
+            lowerValue.endsWith(".webm") ||
+            lowerValue.endsWith(".mov")
+          )
+        }
+        return false
+      })
+
+      // Prioritize video URLs as "Input"
+      if (hasVideoContent) {
+        return {
+          id: col,
+          name: col,
+          suggestedRole: "Input Data",
+          confidence: 95,
+          reasoning: "Column contains video URLs, suitable as input data.",
+          reason: "Column contains video URLs, suitable as input data.",
+          userRole: "Input",
+        }
+      }
+
+      // Convert role to proper schema format
+      let suggestedRole: string
+      if (detectedRole === "Input") suggestedRole = "Input Data"
+      else if (detectedRole === "Model Output") suggestedRole = "Model Output"
+      else if (detectedRole === "Excluded") suggestedRole = "Excluded Data"
+      else suggestedRole = "Metadata"
+      
+      return {
+        id: col,
+        name: col,
+        suggestedRole: suggestedRole,
+        confidence: calculateConfidence(col, data),
+        reasoning: generateReason(col, data),
+        reason: generateReason(col, data),
+        userRole: detectedRole,
+      }
+    })
+    setColumnRoles(detectedRoles)
+
+    // Replace this section in the performFallbackAnalysis function:
+    // Set basic evaluation name
+    const generateContextualName = () => {
+      // Look for domain-specific columns that might indicate the purpose
+      const domainColumns = columns.filter((col) => {
+        const lowerCol = col.toLowerCase()
+        return (
+          lowerCol.includes("category") ||
+          lowerCol.includes("type") ||
+          lowerCol.includes("domain") ||
+          lowerCol.includes("topic") ||
+          lowerCol.includes("subject")
+        )
+      })
+
+      // Check if we have any domain columns with values
+      if (domainColumns.length > 0) {
+        // Get unique values from the first domain column
+        const domainCol = domainColumns[0]
+        const uniqueValues = [...new Set(data.slice(0, 10).map((row) => row[domainCol]))].filter(Boolean)
+
+        if (uniqueValues.length === 1) {
+          // If there's just one value, use it directly
+          return `${uniqueValues[0]} Review`
+        } else if (uniqueValues.length > 1 && uniqueValues.length <= 3) {
+          // If there are a few values, combine them
+          return `${uniqueValues.slice(0, 3).join("/")} Analysis`
+        }
+      }
+
+      // Check for content type indicators
+      const hasImages = data.some((row) =>
+        Object.values(row).some(
+          (val) => typeof val === "string" && (val.includes(".jpg") || val.includes(".png") || val.includes("image")),
+        ),
+      )
+
+      const hasVideos = data.some((row) =>
+        Object.values(row).some(
+          (val) =>
+            typeof val === "string" && (val.includes(".mp4") || val.includes("youtube") || val.includes("video")),
+        ),
+      )
+
+      // Look for specific content types
+      if (hasVideos) {
+        return "Video Content Review"
+      } else if (hasImages) {
+        return "Visual Content Review"
+      }
+
+      // Check for specific column patterns
+      const hasCustomerData = columns.some(
+        (col) =>
+          col.toLowerCase().includes("customer") ||
+          col.toLowerCase().includes("support") ||
+          col.toLowerCase().includes("ticket"),
+      )
+
+      const hasProductData = columns.some(
+        (col) =>
+          col.toLowerCase().includes("product") ||
+          col.toLowerCase().includes("item") ||
+          col.toLowerCase().includes("merchandise"),
+      )
+
+      const hasArticleData = columns.some(
+        (col) =>
+          col.toLowerCase().includes("article") ||
+          col.toLowerCase().includes("blog") ||
+          col.toLowerCase().includes("post"),
+      )
+
+      // Return domain-specific names
+      if (hasCustomerData) {
+        return "Customer Support Review"
+      } else if (hasProductData) {
+        return "Product Description Review"
+      } else if (hasArticleData) {
+        return "Article Content Review"
+      }
+
+      // Fallback to response evaluation focus
+      const outputCol = detectedRoles.find((role) => role.userRole === "Model Output")
+      const inputCol = detectedRoles.find((role) => role.userRole === "Input")
+      
+      if (outputCol) {
+        const colName = generateInputTitle(outputCol.name)
+        // Extract meaningful domain context from column name
+        const cleanName = colName.replace(/response|output|generated|result|prediction|model/gi, "").trim()
+        // If the clean name is too generic or empty, use a better fallback
+        if (!cleanName || cleanName.length < 3) {
+          return "Content Quality Assessment"
+        }
+        return `${cleanName} Content Quality`
+      } else if (inputCol) {
+        const colName = generateInputTitle(inputCol.name)
+        // When no output column, infer from input what content we're evaluating
+        const cleanName = colName.replace(/content|text|data|input|query|prompt|question/gi, "").trim()
+        return cleanName ? `${cleanName} Content Evaluation` : "Content Quality Assessment"
+      }
+
+      // Ultimate fallback
+      return "Content Quality Assessment"
+    }
+
+    // Set the evaluation name using the contextual generator
+    setEvaluationName(generateContextualName())
+
+    // Keep default criteria but enhance them for video content if detected
+    const hasVideoContent = data.some((row) =>
+      Object.values(row).some(
+        (value) =>
+          typeof value === "string" &&
+          (value.includes(".mp4") ||
+            value.includes(".mov") ||
+            value.includes("video") ||
+            value.includes("youtube") ||
+            value.includes("vimeo")),
+      ),
+    )
+
+    if (hasVideoContent) {
+      const videoCriteria: Metric[] = [
+        {
+          id: 1,
+          name: "Video Quality",
+          type: "likert-scale",
+          options: ["1", "2", "3", "4", "5"],
+          required: true,
+          likertLabels: { low: "Poor", high: "Excellent" },
+          aiGenerated: false,
+        },
+        {
+          id: 2,
+          name: "Is the video content appropriate and clear?",
+          type: "yes-no",
+          options: ["Yes", "No"],
+          required: true,
+          aiGenerated: false,
+        },
+        {
+          id: 3,
+          name: "Additional Comments",
+          type: "text-input",
+          options: [],
+          required: false,
+          aiGenerated: false,
+        },
+      ]
+      setCriteria(videoCriteria)
+    } else {
+      // Set response-focused criteria for non-video content
+      const responseCriteria: Metric[] = [
+        {
+          id: 1,
+          name: "Overall Quality",
+          type: "likert-scale",
+          options: ["1", "2", "3", "4", "5"],
+          required: true,
+          likertLabels: { low: "Poor", high: "Excellent" },
+          aiGenerated: false,
+        },
+        {
+          id: 2,
+          name: "Is the content appropriate and accurate?",
+          type: "yes-no",
+          options: ["Yes", "No"],
+          required: true,
+          aiGenerated: false,
+        },
+        {
+          id: 3,
+          name: "Additional Comments",
+          type: "text-input",
+          options: [],
+          required: false,
+          aiGenerated: false,
+        },
+      ]
+      setCriteria(responseCriteria)
+    }
+
+    // Keep default criteria and instructions
+    // // // // // // // // // console.log removed for production
+  }
+
+  // Basic fallback column detection
+  const detectColumnRole = (columnName: string, data: any[]): "Input" | "Model Output" | "Excluded" | "Metadata" => {
+    const lowerName = columnName.toLowerCase()
+    const sampleValues = data.slice(0, Math.min(10, data.length)).map((row) => row[columnName])
+    const nonEmptyValues = sampleValues.filter((v) => v != null && v !== "")
+
+    if (nonEmptyValues.length === 0) return "Metadata"
+
+    const stringValues = nonEmptyValues.map((v) => String(v))
+    const avgLength = stringValues.reduce((sum, val) => sum + val.length, 0) / stringValues.length
+    const uniqueRatio = new Set(stringValues).size / stringValues.length
+
+    // Check if any values are video URLs
+    const hasVideoContent = stringValues.some((value) => {
+      const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi", ".mkv", ".flv"]
+      const videoHosts = ["youtube.com", "youtu.be", "vimeo.com"]
+      const lowerValue = value.toLowerCase()
+
+      return (
+        videoExtensions.some((ext) => lowerValue.includes(ext)) || videoHosts.some((host) => lowerValue.includes(host))
+      )
+    })
+
+    // Model Output indicators - prioritize response/output patterns first
+    if (
+      lowerName.includes("response") ||
+      lowerName.includes("output") ||
+      lowerName.includes("answer") ||
+      lowerName.includes("generated") ||
+      lowerName.includes("result") ||
+      lowerName.includes("prediction") ||
+      lowerName.includes("recommendation") ||
+      lowerName.includes("completion") ||
+      lowerName.includes("summary") ||
+      lowerName.includes("translation") ||
+      lowerName.includes("generated_") ||
+      lowerName.includes("ai_") ||
+      lowerName.includes("model_") ||
+      lowerName.includes("bot_") ||
+      lowerName.includes("assistant_")
+    ) {
+      return "Model Output"
+    }
+
+    // Input indicators - original input/prompt data
+    if (
+      lowerName.includes("text") ||
+      lowerName.includes("content") ||
+      lowerName.includes("review") ||
+      lowerName.includes("comment") ||
+      lowerName.includes("message") ||
+      lowerName.includes("video") ||
+      lowerName.includes("url") ||
+      lowerName.includes("link") ||
+      lowerName.includes("input") ||
+      lowerName.includes("query") ||
+      lowerName.includes("prompt") ||
+      lowerName.includes("question") ||
+      lowerName.includes("request") ||
+      (avgLength > 50 && !lowerName.includes("response") && !lowerName.includes("output")) ||
+      hasVideoContent
+    ) {
+      return "Input"
+    }
+
+    // Label indicators
+    if (
+      lowerName.includes("label") ||
+      lowerName.includes("sentiment") ||
+      lowerName.includes("category") ||
+      lowerName.includes("class") ||
+      lowerName.includes("rating") ||
+      (uniqueRatio < 0.3 && avgLength < 20)
+    ) {
+      return "Excluded"
+    }
+
+    return "Metadata"
+  }
+
+  const calculateConfidence = (columnName: string, data: any[]): number => {
+    const lowerName = columnName.toLowerCase()
+    const sampleValues = data.slice(0, Math.min(10, data.length)).map((row) => row[columnName])
+    const nonEmptyValues = sampleValues.filter((v) => v != null && v !== "")
+
+    if (nonEmptyValues.length === 0) return 25
+
+    let confidence = 50
+
+    // Strong name indicators - prioritize response/output patterns
+    const responseIndicators = ["response", "output", "answer", "generated", "result", "prediction", "recommendation", "completion", "summary", "translation"]
+    const inputIndicators = ["text", "content", "review", "comment", "input", "query", "prompt", "question"]
+    const metadataIndicators = ["label", "sentiment", "id", "timestamp", "category"]
+    
+    if (responseIndicators.some((indicator) => lowerName.includes(indicator))) {
+      confidence += 40 // High confidence for clear response patterns
+    } else if (inputIndicators.some((indicator) => lowerName.includes(indicator))) {
+      confidence += 30
+    } else if (metadataIndicators.some((indicator) => lowerName.includes(indicator))) {
+      confidence += 30
+    }
+
+    // Content analysis
+    const stringValues = nonEmptyValues.map((v) => String(v))
+    const avgLength = stringValues.reduce((sum, val) => sum + val.length, 0) / stringValues.length
+    const uniqueRatio = new Set(stringValues).size / stringValues.length
+
+    if (avgLength > 50) confidence += 20
+    if (uniqueRatio < 0.2) confidence += 15
+    if (uniqueRatio > 0.9) confidence += 10
+
+    return Math.min(95, Math.max(25, confidence))
+  }
+
+  const generateReason = (columnName: string, data: any[]): string => {
+    const lowerName = columnName.toLowerCase()
+    const sampleValues = data.slice(0, Math.min(5, data.length)).map((row) => row[columnName])
+    const nonEmptyValues = sampleValues.filter((v) => v != null && v !== "")
+
+    if (nonEmptyValues.length === 0) {
+      return "Column appears to be empty or contains only null values"
+    }
+
+    const stringValues = nonEmptyValues.map((v) => String(v))
+    const avgLength = stringValues.reduce((sum, val) => sum + val.length, 0) / stringValues.length
+    const uniqueRatio = new Set(stringValues).size / stringValues.length
+
+    // Check for video content
+    const hasVideoContent = stringValues.some((value) => {
+      const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi", ".mkv", ".flv"]
+      const videoHosts = ["youtube.com", "youtu.be", "vimeo.com"]
+      const lowerValue = value.toLowerCase()
+
+      return (
+        videoExtensions.some((ext) => lowerValue.includes(ext)) || videoHosts.some((host) => lowerValue.includes(host))
+      )
+    })
+
+    const reasons = []
+
+    // Name-based reasoning - prioritize response/output patterns
+    if (lowerName.includes("response") || lowerName.includes("output") || lowerName.includes("answer") || lowerName.includes("generated")) {
+      reasons.push("Column name suggests AI response or model output for evaluation")
+    }
+    if (lowerName.includes("result") || lowerName.includes("prediction") || lowerName.includes("recommendation") || lowerName.includes("completion")) {
+      reasons.push("Column name indicates generated results that should be evaluated")
+    }
+    if (lowerName.includes("summary") || lowerName.includes("translation") || lowerName.includes("ai_") || lowerName.includes("model_") || lowerName.includes("bot_")) {
+      reasons.push("Column name suggests AI-generated content for human evaluation")
+    }
+    if (lowerName.includes("text") || lowerName.includes("content")) {
+      reasons.push("Column name suggests text content")
+    }
+    if (lowerName.includes("input") || lowerName.includes("query") || lowerName.includes("prompt") || lowerName.includes("question")) {
+      reasons.push("Column name suggests input data or prompts that generated responses")
+    }
+    if (lowerName.includes("video") || lowerName.includes("url") || lowerName.includes("link")) {
+      reasons.push("Column name suggests video or URL content")
+    }
+    if (lowerName.includes("label") || lowerName.includes("sentiment")) {
+      reasons.push("Column name indicates classification labels")
+    }
+    if (lowerName.includes("id") || lowerName.includes("timestamp")) {
+      reasons.push("Column name suggests metadata/identifier")
+    }
+
+    // Content-based reasoning
+    if (hasVideoContent) {
+      reasons.push("Contains video URLs suitable for evaluation")
+    }
+    if (avgLength > 50) {
+      reasons.push(`Long text content (avg ${Math.round(avgLength)} chars) suitable for evaluation`)
+    }
+    if (uniqueRatio < 0.3) {
+      reasons.push(`Limited unique values (${Math.round(uniqueRatio * 100)}% unique) suggesting categories`)
+    }
+    if (uniqueRatio > 0.9) {
+      reasons.push("High uniqueness suggests individual entries rather than categories")
+    }
+
+    return reasons.length > 0 ? reasons.join("; ") : "General data field providing context for analysis"
+  }
+
+  const isFormValid = criteria.every((criterion) => {
+    if (!criterion.required) return true
+    const value = formData[`criterion-${criterion.id}`]
+    return value !== undefined && value !== null && value.trim() !== ""
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isFormValid) return
+
+    setIsSubmitting(true)
+
+    // Save current responses
+    const updatedAllResponses = {
+      ...allResponses,
+      [currentItem]: formData,
+    }
+    setAllResponses(updatedAllResponses)
+
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsSubmitting(false)
+
+    // Remove this line - don't clear the form data
+    // setFormData({})
+
+    // Mark the current item as submitted
+    const newSubmittedItems = new Set([...submittedItems, currentItem])
+    setSubmittedItems(newSubmittedItems)
+
+    // At the end of handleSubmit, after setting submittedItems, add:
+    setIsCurrentFormModified(false)
+
+    if (currentItem >= totalItems) {
+      // Set review complete state
+      setIsReviewComplete(true)
+    } else {
+      const nextItem = currentItem + 1
+      setCurrentItem(nextItem)
+      setFurthestItemReached(Math.max(furthestItemReached, nextItem))
+    }
+  }
+
+  const handleInputChange = (criterionId: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [`criterion-${criterionId}`]: value,
+    }))
+
+    // Mark form as modified when user changes an answer
+    setIsCurrentFormModified(true)
+  }
+
+  const updateColumnRole = (
+    columnId: string,
+    newRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded",
+  ) => {
+    setColumnRoles((prev) =>
+      prev.map((col) => {
+        if (col.id === columnId) {
+          // Update reasoning based on new role
+          let newReason = col.reason
+          if (col.suggestedRole !== newRole) {
+            switch (newRole) {
+              case "Input":
+                newReason = "Manually set as input data for evaluation"
+                break
+              case "Model Output":
+                newReason = "Manually set as model output data for evaluation"
+                break
+              case "Reference":
+                newReason = "Manually set as reference data for evaluation"
+                break
+              case "Excluded":
+                newReason = "Manually excluded from evaluation (may contain labels or sensitive information)"
+                break
+              case "Metadata":
+                newReason = "Manually set as metadata (provides context but not directly evaluated)"
+                break
+            }
+          }
+
+          return {
+            ...col,
+            userRole: newRole,
+            reason: newReason,
+          }
+        }
+        return col
+      }),
+    )
+  }
+
+  const updateColumnDisplayName = (columnId: string, displayName: string) => {
+    setColumnRoles((prev) =>
+      prev.map((col) => {
+        if (col.id === columnId) {
+          return {
+            ...col,
+            displayName: displayName,
+          }
+        }
+        return col
+      }),
+    )
+  }
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 90) return "text-green-600 bg-green-100"
+    if (confidence >= 75) return "text-yellow-600 bg-yellow-100"
+    return "text-red-600 bg-red-100"
+  }
+
+  const getConfidenceBarColor = (confidence: number) => {
+    if (confidence >= 90) return "bg-green-500"
+    if (confidence >= 75) return "bg-yellow-500"
+    return "bg-red-500"
+  }
+
+  const handleEditMetric = (metricId: number) => {
+    const metric = criteria.find((m) => m.id === metricId)
+    if (metric) {
+      setEditingMetric(metric)
+      setIsEditModalOpen(true)
+    }
+  }
+
+  const handleAddMetric = () => {
+    const newId = criteria.length > 0 ? Math.max(...criteria.map((m) => m.id)) + 1 : 1
+    const newMetric: Metric = {
+      id: newId,
+      name: "New Metric",
+      type: "yes-no",
+      options: ["Yes", "No"],
+      required: false,
+    }
+    setEditingMetric(newMetric)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveMetric = (updatedMetric: Metric) => {
+    const existingMetricIndex = criteria.findIndex((m) => m.id === updatedMetric.id)
+
+    if (existingMetricIndex >= 0) {
+      // Update existing metric
+      setCriteria(criteria.map((m) => (m.id === updatedMetric.id ? updatedMetric : m)))
+    } else {
+      // Add new metric
+      setCriteria([...criteria, updatedMetric])
+    }
+
+    setIsEditModalOpen(false)
+    setEditingMetric(null)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setEditingMetric(null)
+  }
+
+  const handleDeleteMetric = (metricId: number) => {
+    const metricIndex = criteria.findIndex((metric) => metric.id === metricId)
+    if (metricIndex === -1) return
+
+    const metricToDelete = criteria[metricIndex]
+
+    // Store the deleted metric for potential undo
+    setLastDeletedMetric({
+      metric: metricToDelete,
+      index: metricIndex,
+    })
+
+    // Remove the metric immediately
+    setCriteria(criteria.filter((metric) => metric.id !== metricId))
+  }
+
+  const handleUndoDelete = () => {
+    if (!lastDeletedMetric) return
+
+    const newCriteria = [...criteria]
+    newCriteria.splice(lastDeletedMetric.index, 0, lastDeletedMetric.metric)
+    setCriteria(newCriteria)
+    setLastDeletedMetric(null)
+  }
+
+  const moveMetric = (metricId: number, direction: "up" | "down") => {
+    const index = criteria.findIndex((m) => m.id === metricId)
+    if (index === -1) return
+
+    // Can't move first item up or last item down
+    if ((direction === "up" && index === 0) || (direction === "down" && index === criteria.length - 1)) {
+      return
+    }
+
+    const newCriteria = [...criteria]
+    const targetIndex = direction === "up" ? index - 1 : index + 1
+
+    // Swap the items
+    ;[newCriteria[index], newCriteria[targetIndex]] = [newCriteria[targetIndex], newCriteria[index]]
+
+    setCriteria(newCriteria)
+  }
+
+  // Save evaluation function
+  const handleSaveEvaluation = async () => {
+    setIsSaving(true)
+
+    try {
+      const existingEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
+      const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
+
+      if (isEditMode && editId) {
+        // Update existing evaluation
+        const updatedEvaluations = existingEvaluations.map((evaluation: any) =>
+          evaluation.id === editId
+            ? {
+                ...evaluation,
+                name: evaluationName,
+                instructions,
+                criteria,
+                columnRoles,
+                data: dataToUse,
+                totalItems,
+              }
+            : evaluation,
+        )
+        localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
+      } else {
+        // Create new evaluation
+        const evaluationId = Date.now()
+        const newEvaluation = {
+          id: evaluationId,
+          name: evaluationName,
+          instructions,
+          criteria,
+          columnRoles,
+          data: dataToUse,
+          totalItems,
+          status: "draft",
+          createdAt: new Date().toISOString(),
+        }
+
+        try {
+          // First try to save to database via API
+          const result = await createEvaluation(newEvaluation);
+          console.log("Evaluation created successfully:", result);
+          
+          // Also add to localStorage so it shows up in My Projects immediately
+          existingEvaluations.unshift(newEvaluation);
+          localStorage.setItem("evaluations", JSON.stringify(existingEvaluations));
+        } catch (error) {
+          console.error("Error creating evaluation in database:", error);
+          // Fall back to localStorage if database creation fails
+          console.log("Falling back to localStorage");
+          existingEvaluations.unshift(newEvaluation);
+          localStorage.setItem("evaluations", JSON.stringify(existingEvaluations));
+        }
+
+        // Initialize empty results dataset for this evaluation
+        const resultsDataset = initializeEmptyResultsDataset(evaluationId, evaluationName, dataToUse, criteria)
+        saveResultsDataset(resultsDataset)
+
+        // Clear session storage only for new evaluations
+        sessionStorage.removeItem("uploadedData")
+        sessionStorage.removeItem("fileName")
+      }
+
+      // Redirect to data scientist dashboard without confirmation
+      router.push("/data-scientist")
+    } catch (error) {
+      console.error("Error saving evaluation:", error)
+      alert("Error saving evaluation. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Load responses for current item
+  useEffect(() => {
+    const savedResponses = allResponses[currentItem] || {}
+    setFormData(savedResponses)
+
+    // Reset modification flag when loading a new item
+    setIsCurrentFormModified(false)
+
+    // Update furthest item reached if current item is further
+    if (currentItem > furthestItemReached) {
+      setFurthestItemReached(currentItem)
+    }
+  }, [currentItem, allResponses, furthestItemReached])
+
+  // Update the actions variable to handle saving
+  const actions = (
+    <div className="flex space-x-3">
+      {/* Configure Dataset Button - moved first */}
+      <button
+        onClick={() => setShowDatasetConfig(true)}
+        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        <CogIcon className="h-4 w-4 mr-2" />
+        Configure Dataset
+      </button>
+
+      {/* Instructions Toggle Button - moved second */}
+      <button
+        onClick={() => setShowInstructions(!showInstructions)}
+        className={`inline-flex items-center px-4 py-2 border ${
+          showInstructions ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700"
+        } shadow-sm text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none transition-colors`}
+        aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
+        title="Toggle instructions"
+      >
+        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        Instructions
+      </button>
+
+      <div className="flex space-x-3">
+        <button
+          onClick={() => router.push("/data-scientist")}
+          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleSaveEvaluation}
+          disabled={isSaving}
+          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+            isSaving
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          }`}
+        >
+          {isSaving ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Saving...
+            </>
+          ) : (
+            "Save"
+          )}
+        </button>
+      </div>
+    </div>
+  )
+
+  // Update the PageLayout to pass null for title when isAnalyzing is true
+  return (
+    <PageLayout
+      title={
+        <div className="flex items-center space-x-3">
+          <input
+            type="text"
+            value={evaluationName}
+            onChange={(e) => setEvaluationName(e.target.value)}
+            className="bg-transparent border-none text-2xl font-semibold text-gray-900 focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
+          />
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 flex-shrink-0">
+            Draft
+          </span>
+        </div>
+      }
+      actions={actions}
+    >
+      {/* Remove the isInitialLoading loading screen */}
+      {/* Remove the isAnalyzing loading screen */}
+      {/* Keep only the main content */}
+      {/* Error Banner */}
+      {analysisError && (
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-3" />
+            <div>
+              <h3 className="text-sm font-medium text-yellow-900">Azure OpenAI Analysis Issue</h3>
+              <p className="text-sm text-yellow-700">{analysisError} Using fallback analysis instead.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Only show when not analyzing */}
+      <div
+        ref={containerRef}
+        className="relative flex animate-in fade-in slide-in-from-bottom-4 duration-700"
+        style={{ cursor: isDragging ? "col-resize" : "default" }}
+      >
+        {/* Left Column - Instructions and Review */}
+        <div className="space-y-6 pr-4" style={{ width: `${leftColumnWidth}%` }}>
+          {/* Customer Review */}
+          {/* Content for Evaluation */}
+          <div className="bg-white shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              {(() => {
+                const content = getInputColumnContent()
+                if (typeof content === "string") {
+                  return (
+                    <div className="mb-4">
+                      <ContentRenderer content={content} />
+                    </div>
+                  )
+                } else if (Array.isArray(content)) {
+                  return (
+                    <div className="space-y-4 mb-4">
+                      {content.map((item, index) => (
+                        <ContentRenderer key={index} content={item.content} title={generateInputTitle(item.name)} />
+                      ))}
+                    </div>
+                  )
+                }
+                return null
+              })()}
+            </div>
+          </div>
+
+          {/* Metadata Card */}
+          {columnRoles.filter((role) => role.userRole === "Metadata").length > 0 && (
+            <div className="bg-white shadow sm:rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="space-y-2 text-xs">
+                  {columnRoles
+                    .filter((role) => role.userRole === "Metadata")
+                    .slice(0, 4)
+                    .map((metadataCol) => {
+                      const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
+                      const currentValue = dataToUse[(currentItem - 1) % dataToUse.length]?.[metadataCol.name] || "N/A"
+                      return (
+                        <div key={metadataCol.name}>
+                          <span className="font-medium text-gray-600">{generateInputTitle(metadataCol.name)}:</span>
+                          <span className="ml-2 text-gray-900">{String(currentValue)}</span>
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Resizable Divider */}
+        <div className="relative group" style={{ cursor: "col-resize" }}>
+          <div
+            className="absolute inset-y-0 w-4 -left-2 flex items-center justify-center cursor-col-resize"
+            onMouseDown={handleMouseDown}
+          >
+            <div
+              className="h-full w-1 bg-transparent group-hover:bg-indigo-400 transition-colors duration-200"
+              style={{ backgroundColor: isDragging ? "rgb(79 70 229)" : "" }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Right Column - Evaluation Form */}
+        <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
+          {/* Task Instructions - Moved above evaluation */}
+          {/* Instructions Panel - conditionally rendered */}
+          {showInstructions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg leading-6 font-medium text-blue-900">Instructions</h3>
+                </div>
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  className="w-full text-sm text-blue-800 bg-transparent border border-blue-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  rows={5}
+                />
+              </div>
+            </div>
+          )}
+          <div className="bg-white shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6 relative">
+              {/* Heading and navigation on separate lines for proper alignment */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Evaluation</h3>
+                
+                {/* Navigation unit - positioned to align with form content right edge */}
+                <div className="flex justify-end">
+                  <div className="flex items-center space-x-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (currentItem > 1) {
+                          // Save current responses before navigating
+                          setAllResponses((prev) => ({
+                            ...prev,
+                            [currentItem]: formData,
+                          }))
+                          setCurrentItem(currentItem - 1)
+                        }
+                      }}
+                      disabled={currentItem <= 1}
+                      className={`p-1 rounded-md ${
+                        currentItem <= 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                      }`}
+                    >
+                        currentItem <= 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                      }`}
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">
+                      {currentItem} of {totalItems}
+                    </div>
+                    {(() => {
+                      // Calculate progress - ensure it starts at 0% and reaches 100% on final submission
+                      const getProgressWidth = () => {
+                        if (totalItems === 0) {
+                          return 0
+                        }
+
+                        // If current item is submitted, show progress as if we've completed this question
+                        // Otherwise, show progress based on position (currentItem - 1)
+                        const isCurrentSubmitted = submittedItems.has(currentItem)
+                        const progressPosition = isCurrentSubmitted ? currentItem : currentItem - 1
+                        const progress = (progressPosition / totalItems) * 100
+
+                        return progress
+                      }
+
+                      const progressWidth = getProgressWidth()
+
+                      return (
+                        <div className="flex-1 min-w-16 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${progressWidth}%`,
+                            }}
+                          ></div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentItem < totalItems && currentItem < furthestItemReached) {
+                        // Save current responses before navigating
+                        setAllResponses((prev) => ({
+                          ...prev,
+                          [currentItem]: formData,
+                        }))
+                        setCurrentItem(currentItem + 1)
+                      }
+                    }}
+                    disabled={currentItem >= totalItems || currentItem >= furthestItemReached}
+                    className={`p-1 rounded-md ${
+                      currentItem >= totalItems || currentItem >= furthestItemReached
+                        ? "text-gray-300 cursor-not-allowed"
+                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                    }`}
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {criteria.map((criterion) => (
+                  <div key={criterion.id} className="border border-gray-200 rounded-lg p-4 group">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        <label className="block text-sm font-medium text-gray-700">
+                          {criterion.name}
+                          {criterion.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                      </div>
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => moveMetric(criterion.id, "up")}
+                          disabled={criteria.findIndex((m) => m.id === criterion.id) === 0}
+                          className={`p-1 rounded-md hover:bg-gray-100 ${
+                            criteria.findIndex((m) => m.id === criterion.id) === 0
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-gray-600 hover:text-gray-800"
+                          }`}
+                          aria-label="Move question up"
+                        >
+                          <ChevronUpIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveMetric(criterion.id, "down")}
+                          disabled={criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1}
+                          className={`p-1 rounded-md hover:bg-gray-100 ${
+                            criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-gray-600 hover:text-gray-800"
+                          }`}
+                          aria-label="Move question down"
+                        >
+                          <ChevronDownIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditMetric(criterion.id)}
+                          className="text-indigo-600 hover:text-indigo-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                          aria-label="Edit question"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        {criteria.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMetric(criterion.id)}
+                            className="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                            aria-label="Delete question"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {criterion.type === "yes-no" && (
+                      <div className="flex flex-wrap gap-2">
+                        {criterion.options.map((option, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleInputChange(criterion.id, option)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                              formData[`criterion-${criterion.id}`] === option
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {criterion.type === "likert-scale" && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-500">{criterion.likertLabels?.low || "Low"}</span>
+                          <span className="text-xs text-gray-500">{criterion.likertLabels?.high || "High"}</span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {[1, 2, 3, 4, 5].map((number) => (
+                            <button
+                              key={number}
+                              type="button"
+                              onClick={() => handleInputChange(criterion.id, number.toString())}
+                              className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                                formData[`criterion-${criterion.id}`] === number.toString()
+                                  ? "bg-indigo-600 text-white border-indigo-600"
+                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                              }`}
+                            >
+                              {number}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {criterion.type === "custom-list" && (
+                      <div className="flex flex-wrap gap-2">
+                        {criterion.options.map((option, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleInputChange(criterion.id, option)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                              formData[`criterion-${criterion.id}`] === option
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {criterion.type === "text-input" && (
+                      <textarea
+                        rows={3}
+                        value={formData[`criterion-${criterion.id}`] || ""}
+                        onChange={(e) => handleInputChange(criterion.id, e.target.value)}
+                        className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm px-3 py-1.5"
+                        placeholder={`Enter ${criterion.name.toLowerCase()}...`}
+                      />
+                    )}
+                  </div>
+                ))}
+
+                {/* Add Metric Button */}
+                <button
+                  type="button"
+                  onClick={handleAddMetric}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors"
+                >
+                  <PlusIcon className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-gray-600">Add a Question</span>
+                </button>
+
+                <div className="pt-4">
+                  {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
+                  {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
+                  {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
+                  {(() => {
+                    const isCurrentItemSubmitted = submittedItems.has(currentItem)
+                    const canSubmit = isFormValid && (!isCurrentItemSubmitted || isCurrentFormModified)
+
+                    return (
+                      <button
+                        type="submit"
+                        disabled={!canSubmit || isSubmitting}
+                        className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                          canSubmit && !isSubmitting
+                            ? "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            : "bg-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            Submit
+                            <svg
+                              className="ml-2 h-4 w-4 animate-spin"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </>
+                        ) : isReviewComplete && !isCurrentFormModified ? (
+                          "Review Complete"
+                        ) : (
+                          <>
+                            Submit
+                            <ArrowRightIcon className="ml-2 h-4 w-4" />
+                          </>
+                        )}
+                      </button>
+                    )
+                  })()}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Dataset Configuration Modal */}
+      {showDatasetConfig && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowDatasetConfig(false)}
+            ></div>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2.5">Configure Dataset</h3>
+                    <p className="text-sm text-gray-600">
+                      The system has suggested which columns to include in the evaluation. You may adjust both the
+                      selected columns and their mappings as needed.
+                    </p>
+                  </div>
+
+                  <button onClick={() => setShowDatasetConfig(false)} className="text-gray-400 hover:text-gray-600">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Data Preview Section */}
+                <div className="mb-6">
+                  <div className="border border-gray-200 rounded-lg overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        {/* Dropdown Row */}
+                        <tr className="bg-gray-50">
+                          {(uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0])).map((header) => {
+                            const columnConfig = columnRoles.find((col) => col.name === header)
+                            return (
+                              <th key={header} className="px-6 py-3 text-left">
+                                <select
+                                  value={columnConfig?.userRole || columnConfig?.suggestedRole || "Metadata"}
+                                  onChange={(e) =>
+                                    updateColumnRole(
+                                      header,
+                                      e.target.value as
+                                        | "Input"
+                                        | "Model Output"
+                                        | "Reference"
+                                        | "Metadata"
+                                        | "Excluded",
+                                    )
+                                  }
+                                  className="block w-40 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                  <option value="Input">Input</option>
+                                  <option value="Model Output">Model Output</option>
+                                  <option value="Reference">Reference</option>
+                                  <option value="Metadata">Metadata</option>
+                                  <option value="Excluded">Excluded</option>
+                                </select>
+                              </th>
+                            )
+                          })}
+                        </tr>
+                        {/* Display Name Input Row */}
+                        <tr className="bg-blue-50">
+                          {(uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0])).map((header) => {
+                            const columnConfig = columnRoles.find((col) => col.name === header)
+                            return (
+                              <th key={header} className="px-6 py-3 text-left">
+                                <input
+                                  type="text"
+                                  placeholder="Display name..."
+                                  value={columnConfig?.displayName || ""}
+                                  onChange={(e) => updateColumnDisplayName(header, e.target.value)}
+                                  className="block w-40 px-3 py-2 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                              </th>
+                            )
+                          })}
+                        </tr>
+                        {/* Column Name Row */}
+                        <tr className="bg-white">
+                          {(uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0])).map((header) => {
+                            const columnConfig = columnRoles.find((col) => col.name === header)
+                            return (
+                              <th key={header} className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                <div className="flex items-center">
+                                  {header}
+                                  <div className="ml-1 relative">
+                                    <div className="group">
+                                      <svg
+                                        className="h-4 w-4 text-gray-400 cursor-help"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                      </svg>
+
+                                      {/* Tooltip */}
+                                      <div
+                                        className={`absolute top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-[100] ${
+                                          header ===
+                                          (uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0]))[0]
+                                            ? "left-0"
+                                            : header ===
+                                                (uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0]))[
+                                                  (uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0]))
+                                                    .length - 1
+                                                ]
+                                              ? "right-0"
+                                              : "left-1/2 transform -translate-x-1/2"
+                                        }`}
+                                      >
+                                        <div className="font-medium mb-1">
+                                          {columnConfig?.userRole || columnConfig?.suggestedRole || "Metadata"}
+                                        </div>
+                                        <div className="text-gray-300">
+                                          {columnConfig?.userRole === "Excluded"
+                                            ? `${columnConfig?.reason || "No analysis available for this column"}. This data may not be needed for the evaluation.`
+                                            : columnConfig?.reason ||
+                                              "No analysis available for this column"}
+                                        </div>
+                                        {columnConfig?.confidence && (
+                                          <div className="text-gray-400 text-xs mt-1">
+                                            Confidence: {columnConfig.confidence}%
+                                          </div>
+                                        )}
+
+                                        {/* Tooltip arrow pointing up - positioned based on tooltip alignment */}
+                                        <div
+                                          className={`absolute bottom-full border-4 border-transparent border-b-gray-900 ${
+                                            header ===
+                                            (uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0]))[0]
+                                              ? "left-4"
+                                              : header ===
+                                                  (uploadedData.length > 0 ? dataColumns : Object.keys(previewData[0]))[
+                                                    (uploadedData.length > 0
+                                                      ? dataColumns
+                                                      : Object.keys(previewData[0])
+                                                    ).length - 1
+                                                  ]
+                                                ? "right-4"
+                                                : "left-1/2 transform -translate-x-1/2"
+                                          }`}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </th>
+                            )
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {(uploadedData.length > 0 ? uploadedData.slice(0, 5) : previewData).map((row, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            {Object.entries(row).map(([key, value], cellIndex) => (
+                              <td key={cellIndex} className="px-6 py-4 text-sm text-gray-900">
+                                {String(value)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  onClick={() => setShowDatasetConfig(false)}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowDatasetConfig(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Metric Modal */}
+           <EditMetricModal
+        metric={editingMetric}
+        metrics={criteria}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveMetric}
+      />
+    </PageLayout>
+  )
+}

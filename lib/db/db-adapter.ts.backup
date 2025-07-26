@@ -1,0 +1,362 @@
+import { Evaluation, Reviewer, ResultsDataset, ReviewerCompletion, initDatabase } from './models';
+import type { EvaluationResult } from '../results-dataset';
+
+// Initialize the database connection
+export const dbReady = initDatabase();
+
+// =============================================
+// Evaluation functions
+// =============================================
+
+/**
+ * Get all evaluations
+ */
+export async function getEvaluations() {
+  await dbReady;
+  try {
+    const evaluations = await Evaluation.findAll({
+      order: [['createdAt', 'DESC']]
+    });
+    return evaluations;
+  } catch (error) {
+    console.error('Error fetching evaluations:', error);
+    return [];
+  }
+}
+
+/**
+ * Get a single evaluation by ID
+ */
+export async function getEvaluation(id: number) {
+  await dbReady;
+  try {
+    return await Evaluation.findByPk(id);
+  } catch (error) {
+    console.error(`Error fetching evaluation ${id}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Create a new evaluation
+ */
+export async function createEvaluation(evaluationData: any) {
+  await dbReady;
+  try {
+    const evaluation = await Evaluation.create(evaluationData);
+    return evaluation;
+  } catch (error) {
+    console.error('Error creating evaluation:', error);
+    return null;
+  }
+}
+
+/**
+ * Update an existing evaluation
+ */
+export async function updateEvaluation(id: number, evaluationData: any) {
+  await dbReady;
+  try {
+    const evaluation = await Evaluation.findByPk(id);
+    if (!evaluation) return null;
+    
+    await evaluation.update(evaluationData);
+    return evaluation;
+  } catch (error) {
+    console.error(`Error updating evaluation ${id}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Delete an evaluation
+ */
+export async function deleteEvaluation(id: number) {
+  await dbReady;
+  try {
+    const evaluation = await Evaluation.findByPk(id);
+    if (!evaluation) return false;
+    
+    await evaluation.destroy();
+    return true;
+  } catch (error) {
+    console.error(`Error deleting evaluation ${id}:`, error);
+    return false;
+  }
+}
+
+// =============================================
+// Reviewer functions
+// =============================================
+
+/**
+ * Get all reviewers for an evaluation
+ */
+export async function getReviewers(evaluationId: number) {
+  await dbReady;
+  try {
+    const reviewers = await Reviewer.findAll({
+      where: { evaluationId }
+    });
+    return reviewers;
+  } catch (error) {
+    console.error(`Error fetching reviewers for evaluation ${evaluationId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Create a new reviewer
+ */
+export async function createReviewer(reviewerData: any) {
+  await dbReady;
+  try {
+    const reviewer = await Reviewer.create(reviewerData);
+    return reviewer;
+  } catch (error) {
+    console.error('Error creating reviewer:', error);
+    return null;
+  }
+}
+
+/**
+ * Update a reviewer
+ */
+export async function updateReviewer(id: string, reviewerData: any) {
+  await dbReady;
+  try {
+    const reviewer = await Reviewer.findByPk(id);
+    if (!reviewer) return null;
+    
+    await reviewer.update(reviewerData);
+    return reviewer;
+  } catch (error) {
+    console.error(`Error updating reviewer ${id}:`, error);
+    return null;
+  }
+}
+
+// =============================================
+// Results Dataset functions
+// =============================================
+
+/**
+ * Initialize an empty results dataset for a new evaluation
+ */
+export async function initializeEmptyResultsDataset(
+  evaluationId: number,
+  evaluationName: string,
+  originalData: any[],
+  criteria: any[]
+) {
+  await dbReady;
+  
+  // Extract column names from the first item in original data
+  const originalColumns = originalData.length > 0 ? Object.keys(originalData[0]) : [];
+
+  // Extract criterion names for response columns
+  const responseColumns = criteria.map((c) => c.name);
+
+  const dataset = {
+    evaluationId,
+    evaluationName,
+    lastUpdated: new Date(),
+    columns: {
+      original: originalColumns,
+      responses: responseColumns
+    },
+    results: []
+  };
+
+  try {
+    // Check if a dataset already exists for this evaluation
+    const existingDataset = await ResultsDataset.findByPk(evaluationId);
+    
+    if (existingDataset) {
+      await existingDataset.update(dataset);
+      return existingDataset;
+    } else {
+      const newDataset = await ResultsDataset.create(dataset);
+      return newDataset;
+    }
+  } catch (error) {
+    console.error(`Error initializing results dataset for evaluation ${evaluationId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Get results dataset for an evaluation
+ */
+export async function getResultsDataset(evaluationId: number) {
+  await dbReady;
+  try {
+    const dataset = await ResultsDataset.findByPk(evaluationId);
+    return dataset;
+  } catch (error) {
+    console.error(`Error fetching results dataset for evaluation ${evaluationId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Add a new result to the dataset
+ */
+export async function addResultToDataset(evaluationId: number, result: EvaluationResult) {
+  await dbReady;
+  try {
+    const dataset = await ResultsDataset.findByPk(evaluationId);
+    if (!dataset) return null;
+    
+    const results = dataset.results;
+    results.push(result);
+    
+    await dataset.update({
+      results,
+      lastUpdated: new Date()
+    });
+    
+    return dataset;
+  } catch (error) {
+    console.error(`Error adding result to dataset for evaluation ${evaluationId}:`, error);
+    return null;
+  }
+}
+
+// =============================================
+// Reviewer Completion functions
+// =============================================
+
+/**
+ * Get completed items for a reviewer
+ */
+export async function getReviewerCompletions(reviewerId: string) {
+  await dbReady;
+  try {
+    const completion = await ReviewerCompletion.findByPk(reviewerId);
+    return completion ? completion.completedItemIds : [];
+  } catch (error) {
+    console.error(`Error fetching completions for reviewer ${reviewerId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Add a completed item for a reviewer
+ */
+export async function addReviewerCompletion(reviewerId: string, evaluationId: number, itemId: number) {
+  await dbReady;
+  try {
+    let completion = await ReviewerCompletion.findByPk(reviewerId);
+    
+    if (completion) {
+      const completedItemIds = completion.completedItemIds;
+      if (!completedItemIds.includes(itemId)) {
+        completedItemIds.push(itemId);
+        await completion.update({ completedItemIds });
+      }
+    } else {
+      completion = await ReviewerCompletion.create({
+        reviewerId,
+        evaluationId,
+        completedItemIds: [itemId]
+      });
+    }
+    
+    // Also update the reviewer's completion count
+    const reviewer = await Reviewer.findByPk(reviewerId);
+    if (reviewer) {
+      await reviewer.update({
+        completed: completion.completedItemIds.length
+      });
+    }
+    
+    return completion;
+  } catch (error) {
+    console.error(`Error adding completion for reviewer ${reviewerId}:`, error);
+    return null;
+  }
+}
+
+// =============================================
+// Migration functions
+// =============================================
+
+/**
+ * Migrate data from localStorage to the database
+ */
+export async function migrateFromLocalStorage() {
+  if (typeof window === 'undefined') return { success: false, message: 'Not in browser environment' };
+  
+  await dbReady;
+  let migratedEvaluations = 0;
+  let migratedReviewers = 0;
+  let migratedDatasets = 0;
+  
+  try {
+    // Migrate evaluations
+    const storedEvaluations = JSON.parse(localStorage.getItem('evaluations') || '[]');
+    for (const evaluation of storedEvaluations) {
+      const existing = await Evaluation.findByPk(evaluation.id);
+      if (!existing) {
+        await Evaluation.create(evaluation);
+        migratedEvaluations++;
+      }
+    }
+    
+    // Migrate reviewers
+    const storedReviewers = JSON.parse(localStorage.getItem('evaluationReviewers') || '[]');
+    for (const reviewer of storedReviewers) {
+      const existing = await Reviewer.findByPk(reviewer.id);
+      if (!existing) {
+        await Reviewer.create({
+          id: reviewer.id,
+          evaluationId: parseInt(reviewer.evaluationId),
+          name: reviewer.name,
+          email: reviewer.email,
+          status: reviewer.status,
+          completed: reviewer.completed,
+          total: reviewer.total,
+          avgTime: reviewer.avgTime
+        });
+        migratedReviewers++;
+      }
+    }
+    
+    // Migrate results datasets
+    const resultsDatasets = JSON.parse(localStorage.getItem('resultsDatasets') || '{}');
+    for (const [evaluationId, dataset] of Object.entries(resultsDatasets)) {
+      const existing = await ResultsDataset.findByPk(parseInt(evaluationId));
+      if (!existing) {
+        await ResultsDataset.create({
+          ...dataset,
+          evaluationId: parseInt(evaluationId),
+          lastUpdated: new Date(dataset.lastUpdated)
+        });
+        migratedDatasets++;
+      }
+    }
+    
+    // Migrate reviewer completions
+    const reviewerCompletions = JSON.parse(localStorage.getItem('reviewerCompletions') || '[]');
+    // This needs to be processed per reviewer, so we'll skip for now
+    
+    return {
+      success: true,
+      message: `Migration complete: ${migratedEvaluations} evaluations, ${migratedReviewers} reviewers, ${migratedDatasets} datasets migrated.`
+    };
+  } catch (error) {
+    console.error('Error during migration:', error);
+    return { success: false, message: `Migration failed: ${error.message}` };
+  }
+}
+
+/**
+ * Check if there's any data in the database
+ * Used to determine if migration is needed
+ */
+export async function hasExistingData() {
+  await dbReady;
+  const evaluationCount = await Evaluation.count();
+  return evaluationCount > 0;
+}
