@@ -2,13 +2,14 @@
 
 import type React from "react"
 import { getResultsDataset, addResultToDataset, saveResultsDataset, type EvaluationResult } from "@/lib/results-dataset"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
 import ContentRenderer from "@/components/content-renderer"
 import { useReviewerDataInitialization } from "@/components/reviewer/useReviewerDataInitialization"
 import { useReviewerFormNavigation } from "@/components/reviewer/useReviewerFormNavigation"
+import { useReviewerUIHelpers } from "@/components/reviewer/useReviewerUIHelpers"
 
 interface Evaluation {
   id: number
@@ -66,13 +67,26 @@ export default function ReviewTaskPage() {
     setIsReviewComplete,
   })
 
-  // Remaining state for UI only
-  const [showInstructions, setShowInstructions] = useState(false)
-
-  // Column resizing state (shared with preview page)
-  const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
-  const [isDragging, setIsDragging] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  // Use the UI helpers hook
+  const {
+    showInstructions,
+    setShowInstructions,
+    leftColumnWidth,
+    setLeftColumnWidth,
+    isDragging,
+    setIsDragging,
+    containerRef,
+    getCurrentContent,
+    getCurrentMetadata,
+    generateInputTitle,
+    getProgressWidth,
+    progressWidth,
+    handleMouseDown,
+  } = useReviewerUIHelpers({
+    evaluation,
+    currentItem,
+    submittedItems,
+  })
 
   const taskId = params.id
 
@@ -124,42 +138,6 @@ export default function ReviewTaskPage() {
   }
 
     // Form navigation and submission handling is now managed by the hook
-
-  // Handle column resizing (shared logic with preview page)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !containerRef.current) return
-
-      const containerRect = containerRef.current.getBoundingClientRect()
-      const containerWidth = containerRect.width
-      const mouseX = e.clientX - containerRect.left
-
-      // Calculate percentage (constrain between 30% and 70%)
-      let newLeftWidth = (mouseX / containerWidth) * 100
-      newLeftWidth = Math.max(30, Math.min(70, newLeftWidth))
-
-      setLeftColumnWidth(newLeftWidth)
-    }
-
-    const handleMouseUp = () => {
-      setIsDragging(false)
-    }
-
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isDragging])
 
   // Auto-save mechanism to periodically save state
   useEffect(() => {
@@ -288,66 +266,9 @@ export default function ReviewTaskPage() {
     )
   }
 
-  // Get current content to display
-  const getCurrentContent = () => {
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
-    const currentRow = evaluation.data[currentRowIndex]
-
-    const inputColumns = evaluation.columnRoles.filter(
-      (role) => role.userRole === "Input" || role.userRole === "Model Output",
-    )
-
-    // Always return array format for consistent rendering with labels
-    return inputColumns.map((col) => ({
-      name: col.name,
-      content: currentRow[col.name] || "No content available",
-      type: col.userRole,
-    }))
-  }
-
-  const getCurrentMetadata = () => {
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
-    const currentRow = evaluation.data[currentRowIndex]
-
-    return evaluation.columnRoles
-      .filter((role) => role.userRole === "Metadata")
-      .map((col) => ({
-        name: col.name.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        value: currentRow[col.name] || "N/A",
-      }))
-  }
-
-const generateInputTitle = (columnName: string) => {
-  // Check if there's a custom display name for this column
-  const columnConfig = evaluation.columnRoles.find((col) => col.name === columnName)
-  if (columnConfig?.displayName && columnConfig.displayName.trim()) {
-    return columnConfig.displayName
-  }
-
-  // Fallback to formatted column name
-  const formatted = columnName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-  return formatted
-}
-
+  // Get current content and metadata from the UI helpers hook
   const currentContent = getCurrentContent()
   const currentMetadata = getCurrentMetadata()
-
-  // Calculate progress - ensure it starts at 0% and reaches 100% on final submission
-  const getProgressWidth = () => {
-    if (!evaluation || evaluation.totalItems === 0) {
-      return 0
-    }
-
-    // If current item is submitted, show progress as if we've completed this question
-    // Otherwise, show progress based on position (currentItem - 1)
-    const isCurrentSubmitted = submittedItems.has(currentItem)
-    const progressPosition = isCurrentSubmitted ? currentItem : currentItem - 1
-    const progress = (progressPosition / evaluation.totalItems) * 100
-
-    return progress
-  }
-
-  const progressWidth = getProgressWidth()
 
   // Actions for PageLayout (matching preview page)
   const actions = (
