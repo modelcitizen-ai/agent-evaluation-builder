@@ -56,6 +56,7 @@ export default function ReviewTaskPage() {
     setCurrentItem,
     setIsSubmitting,
     saveCurrentResponsesBeforeNavigation,
+    updateReviewerAverageTime,
   } = useReviewerFormNavigation({
     evaluation,
     currentReviewer,
@@ -90,54 +91,7 @@ export default function ReviewTaskPage() {
 
   const taskId = params.id
 
-  // Helper function to update reviewer's average time
-  const updateReviewerAverageTime = (reviewerId: string, newTimeSpent: number) => {
-    try {
-      const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      
-      // Find the current reviewer
-      const reviewerIndex = evaluationReviewers.findIndex(
-        (r: any) => r.id === reviewerId && 
-        (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-      )
-      
-      if (reviewerIndex !== -1) {
-        const reviewer = evaluationReviewers[reviewerIndex]
-        
-        // Get existing time tracking data for this reviewer
-        const timeTrackingKey = `time_tracking_${reviewerId}_${taskId}`
-        const existingTimeData = JSON.parse(localStorage.getItem(timeTrackingKey) || "[]")
-        
-        // Add the new time spent to the tracking data
-        existingTimeData.push(newTimeSpent)
-        
-        // Calculate the average time (in seconds)
-        const totalTime = existingTimeData.reduce((sum: number, time: number) => sum + time, 0)
-        const averageTime = totalTime / existingTimeData.length
-        
-        // Update reviewer's avgTime field (convert to string for consistency)
-        evaluationReviewers[reviewerIndex].avgTime = averageTime.toFixed(1)
-        
-        // Save updated reviewer data
-        localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
-        
-        // Save time tracking data
-        localStorage.setItem(timeTrackingKey, JSON.stringify(existingTimeData))
-        
-        console.log(`[updateReviewerAverageTime] Updated reviewer ${reviewerId} average time: ${averageTime.toFixed(1)}s (${existingTimeData.length} questions completed)`)
-        
-        return averageTime
-      } else {
-        console.warn(`[updateReviewerAverageTime] Reviewer ${reviewerId} not found for evaluation ${taskId}`)
-        return 0
-      }
-    } catch (error) {
-      console.error('[updateReviewerAverageTime] Error updating reviewer average time:', error)
-      return 0
-    }
-  }
-
-    // Form navigation and submission handling is now managed by the hook
+  // Form navigation and submission handling is now managed by the hook
 
   // Auto-save mechanism to periodically save state
   useEffect(() => {

@@ -61,6 +61,7 @@ interface UseReviewerFormNavigationReturn {
   
   // Utility functions
   saveCurrentResponsesBeforeNavigation: () => void
+  updateReviewerAverageTime: (reviewerId: string, newTimeSpent: number) => number
 }
 
 export function useReviewerFormNavigation({
@@ -232,9 +233,15 @@ export function useReviewerFormNavigation({
         
         localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
         console.log(`[updateReviewerAverageTime] Updated average time for reviewer ${reviewerId}: ${avgTime}s (based on ${newTimesArray.length} submissions)`)
+        
+        return avgTime
+      } else {
+        console.warn(`[updateReviewerAverageTime] Reviewer ${reviewerId} not found for evaluation ${taskId}`)
+        return 0
       }
     } catch (error) {
       console.error('[updateReviewerAverageTime] Error updating reviewer average time:', error)
+      return 0
     }
   }
 
@@ -398,5 +405,6 @@ export function useReviewerFormNavigation({
     
     // Utility functions
     saveCurrentResponsesBeforeNavigation,
+    updateReviewerAverageTime,
   }
 }
