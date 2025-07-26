@@ -10,7 +10,7 @@
  * - Completion state detection for current reviewer
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 
 interface Evaluation {
@@ -60,6 +60,20 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
   const params = useParams()
   const searchParams = useSearchParams()
   const taskId = params.id
+  const participantId = searchParams.get('participant')
+
+  // Memoize storage keys to prevent infinite re-renders
+  const storageKey = useMemo(() => {
+    return participantId 
+      ? `evaluation_${taskId}_reviewer_${participantId}_responses`
+      : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+  }, [taskId, participantId])
+
+  const progressKey = useMemo(() => {
+    return participantId 
+      ? `evaluation_${taskId}_reviewer_${participantId}_progress`
+      : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
+  }, [taskId, participantId])
 
   // Core state
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
@@ -74,63 +88,51 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
   const [isReviewComplete, setIsReviewComplete] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Utility functions for storage keys
-  const getStorageKey = () => {
-    const participantId = searchParams.get('participant')
-    return participantId 
-      ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-      : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
-  }
+  // Utility functions for storage keys (now return memoized values)
+  const getStorageKey = () => storageKey
+  const getProgressKey = () => progressKey
 
-  const getProgressKey = () => {
-    const participantId = searchParams.get('participant')
-    return participantId 
-      ? `evaluation_${taskId}_reviewer_${participantId}_progress`
-      : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
-  }
-
-  // Helper function to identify current reviewer
-  const identifyCurrentReviewer = (evaluationReviewers: any[]): ReviewerInfo => {
-    const participantId = searchParams.get('participant')
-    
-    if (participantId) {
-      // Look for the specific reviewer by ID
-      const specificReviewer = evaluationReviewers.find(
-        (r: any) => r.id === participantId && 
-        (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+  // Helper function to identify current reviewer (memoized to prevent recreations)
+  const identifyCurrentReviewer = useMemo(() => 
+    (evaluationReviewers: any[]): ReviewerInfo => {
+      if (participantId) {
+        // Look for the specific reviewer by ID
+        const specificReviewer = evaluationReviewers.find(
+          (r: any) => r.id === participantId && 
+          (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+        )
+        
+        if (specificReviewer) {
+          console.log(`[identifyCurrentReviewer] Found specific reviewer from URL: ${specificReviewer.name} (ID: ${specificReviewer.id}) for evaluation ${taskId}`)
+          return {
+            id: specificReviewer.id,
+            name: specificReviewer.name
+          }
+        } else {
+          console.warn(`[identifyCurrentReviewer] Reviewer ${participantId} not found for evaluation ${taskId}`)
+        }
+      }
+      
+      // If no specific reviewer found, fall back to first matching reviewer
+      const matchingReviewers = evaluationReviewers.filter(
+        (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
       )
       
-      if (specificReviewer) {
-        console.log(`[identifyCurrentReviewer] Found specific reviewer from URL: ${specificReviewer.name} (ID: ${specificReviewer.id}) for evaluation ${taskId}`)
+      if (matchingReviewers.length > 0) {
+        console.log(`[identifyCurrentReviewer] Using first matching reviewer: ${matchingReviewers[0].name} (ID: ${matchingReviewers[0].id}) for evaluation ${taskId}`)
         return {
-          id: specificReviewer.id,
-          name: specificReviewer.name
+          id: matchingReviewers[0].id,
+          name: matchingReviewers[0].name
         }
-      } else {
-        console.warn(`[identifyCurrentReviewer] Reviewer ${participantId} not found for evaluation ${taskId}`)
       }
-    }
-    
-    // If no specific reviewer found, fall back to first matching reviewer
-    const matchingReviewers = evaluationReviewers.filter(
-      (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
-    )
-    
-    if (matchingReviewers.length > 0) {
-      console.log(`[identifyCurrentReviewer] Using first matching reviewer: ${matchingReviewers[0].name} (ID: ${matchingReviewers[0].id}) for evaluation ${taskId}`)
+      
+      // Final fallback
+      console.log(`[identifyCurrentReviewer] Using fallback anonymous reviewer for evaluation ${taskId}`)
       return {
-        id: matchingReviewers[0].id,
-        name: matchingReviewers[0].name
+        id: "reviewer-1",
+        name: "Anonymous Reviewer"
       }
-    }
-    
-    // Final fallback
-    console.log(`[identifyCurrentReviewer] Using fallback anonymous reviewer for evaluation ${taskId}`)
-    return {
-      id: "reviewer-1",
-      name: "Anonymous Reviewer"
-    }
-  }
+    }, [taskId, participantId])
 
   // Load evaluation data
   useEffect(() => {
@@ -159,11 +161,10 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
       const reviewer = identifyCurrentReviewer(evaluationReviewers)
       setCurrentReviewer(reviewer)
 
-      // Load saved responses
-      const savedResponsesKey = getStorageKey()
-      console.log(`[useReviewerDataInitialization] Looking for saved responses with key: ${savedResponsesKey}`)
+      // Load saved responses using memoized key
+      console.log(`[useReviewerDataInitialization] Looking for saved responses with key: ${storageKey}`)
       
-      const savedResponsesString = localStorage.getItem(savedResponsesKey)
+      const savedResponsesString = localStorage.getItem(storageKey)
       if (savedResponsesString) {
         console.log(`[useReviewerDataInitialization] Found saved responses:`, savedResponsesString)
         try {
@@ -172,7 +173,6 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
           setAllResponses(savedResponses)
 
           // Check if this evaluation is completed for the current reviewer
-          const participantId = searchParams.get('participant')
           let currentReviewerRecord
           
           if (participantId) {
@@ -196,8 +196,7 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
           const isCompleted = currentReviewerRecord?.status === "completed" || 
                             (currentReviewerRecord?.completed === currentReviewerRecord?.total && currentReviewerRecord?.total > 0)
           
-          // Load progress (furthest item reached) from localStorage  
-          const progressKey = getProgressKey()
+          // Load progress (furthest item reached) from localStorage using memoized key
           const savedProgressString = localStorage.getItem(progressKey)
           
           if (savedProgressString) {
@@ -234,7 +233,7 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
     } finally {
       setIsLoading(false)
     }
-  }, [taskId])
+  }, [taskId, storageKey, progressKey, participantId, identifyCurrentReviewer])
 
   return {
     // Core data

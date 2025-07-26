@@ -156,7 +156,7 @@ export default function ReviewTaskPage() {
         setSubmittedItems(new Set<number>())
       }
     }
-  }, [evaluation, allResponses, taskId, isReviewComplete, getStorageKey])
+  }, [evaluation, allResponses, taskId, isReviewComplete])
 
   // Handle column resizing (shared logic with preview page)
   const handleMouseDown = (e: React.MouseEvent) => {
