@@ -21,6 +21,7 @@ import TableCellRenderer from "@/components/table-cell-renderer"
 import { createEvaluation } from "@/lib/client-db"
 import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
 import { usePreviewFormNavigation } from "@/components/data-scientist/preview/usePreviewFormNavigation"
+import { usePreviewColumnManagement } from "@/components/data-scientist/preview/usePreviewColumnManagement"
 
 // Import the results dataset utilities at the top of the file
 import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
@@ -92,6 +93,7 @@ export default function PreviewPage() {
   const {
     uploadedData,
     dataColumns,
+    previewData,
     evaluationName,
     instructions,
     criteria,
@@ -128,6 +130,26 @@ export default function PreviewPage() {
   } = usePreviewFormNavigation({
     criteria,
     uploadedData
+  })
+
+  // Use the column management hook
+  const {
+    normalizeRole,
+    updateColumnRole,
+    updateColumnDisplayName,
+    generateInputTitle,
+    getInputColumnContent,
+    getConfidenceColor,
+    getConfidenceBarColor,
+    getInputColumns,
+    getMetadataColumns,
+    hasMetadataColumns,
+  } = usePreviewColumnManagement({
+    columnRoles,
+    setColumnRoles,
+    uploadedData,
+    previewData,
+    currentItem
   })
 
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null)
@@ -224,152 +246,9 @@ export default function PreviewPage() {
     }
   }, [isDragging])
 
-  // Sample data for preview
-  const previewData =
-    uploadedData.length > 0
-      ? uploadedData
-      : [
-          {
-            user_query: "How do I reset my password?",
-            ai_response: "To reset your password, click on 'Forgot Password' on the login page and follow the instructions sent to your email.",
-            category: "support",
-            item_id: "item_001",
-          },
-          {
-            user_query: "How do I reset my password?",
-            ai_response: "You can reset your password by visiting our password reset page at example.com/reset and entering your email address.",
-            category: "support", 
-            item_id: "item_002",
-          },
-          {
-            user_query: "How do I reset my password?",
-            ai_response: "Password reset is simple! Just go to the login page, click 'Forgot Password', and we'll send you a reset link via email within minutes.",
-            category: "support",
-            item_id: "item_003",
-          },
-          {
-            user_query: "What are your business hours?",
-            ai_response: "Our business hours are Monday through Friday, 9 AM to 6 PM EST. We're closed on weekends and major holidays.",
-            category: "general",
-            item_id: "item_004",
-          },
-          {
-            user_query: "What are your business hours?",
-            ai_response: "We're open Monday-Friday from 9 AM to 6 PM Eastern Time. Weekend and holiday hours may vary.",
-            category: "general",
-            item_id: "item_005",
-          },
-          {
-            user_query: "What are your business hours?",
-            ai_response: "Our team is available to help you Monday through Friday, 9:00 AM to 6:00 PM EST. We're closed weekends and on major holidays.",
-            category: "general",
-            item_id: "item_006",
-          },
-          {
-            user_query: "Can I return an item after 30 days?",
-            ai_response: "Our standard return policy is 30 days from purchase. However, you may still be eligible for store credit depending on the item condition.",
-            category: "returns",
-            item_id: "item_007",
-          },
-          {
-            user_query: "Can I return an item after 30 days?",
-            ai_response: "Returns are typically accepted within 30 days, but we can offer store credit for items in good condition beyond that timeframe.",
-            category: "returns",
-            item_id: "item_008",
-          },
-          {
-            user_query: "Can I return an item after 30 days?",
-            ai_response: "While our standard policy is 30 days, we understand that sometimes life gets in the way. Contact us and we'll work with you to find a solution, possibly including store credit.",
-            category: "returns",
-            item_id: "item_009",
-          },
-        ]
 
-  const generateInputTitle = (columnName: string) => {
-    // Check if there's a custom display name for this column
-    const columnConfig = columnRoles.find((col) => col.name === columnName)
-    if (columnConfig?.displayName && columnConfig.displayName.trim()) {
-      return columnConfig.displayName
-    }
 
-    // Fallback to formatted column name
-    const formatted = columnName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    return formatted
-  }
 
-  const normalizeRole = (role: string): "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" => {
-    if (role === "Input Data" || role === "Input") return "Input";
-    if (role === "Model Output" || role === "Output") return "Model Output";
-    if (role === "Reference") return "Reference";
-    if (role === "Excluded Data" || role === "Excluded") return "Excluded";
-    return "Metadata";
-  };
-
-  const updateColumnRole = (
-    columnId: string,
-    newRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded",
-  ) => {
-    setColumnRoles((prev) =>
-      prev.map((col) => {
-        if (col.id === columnId) {
-          // Update reasoning based on new role
-          let newReason = col.reason
-          if (normalizeRole(col.userRole) !== newRole) {
-            switch (newRole) {
-              case "Input":
-                newReason = "Manually set as input data for evaluation"
-                break
-              case "Model Output":
-                newReason = "Manually set as model output data for evaluation"
-                break
-              case "Reference":
-                newReason = "Manually set as reference data for evaluation"
-                break
-              case "Excluded":
-                newReason = "Manually excluded from evaluation (may contain labels or sensitive information)"
-                break
-              case "Metadata":
-                newReason = "Manually set as metadata (provides context but not directly evaluated)"
-                break
-            }
-          }
-
-          return {
-            ...col,
-            userRole: newRole,
-            reason: newReason,
-          }
-        }
-        return col
-      }),
-    )
-  }
-
-  const updateColumnDisplayName = (columnId: string, displayName: string) => {
-    setColumnRoles((prev) =>
-      prev.map((col) => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            displayName: displayName,
-          }
-        }
-        return col
-      }),
-    )
-  }
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return "text-green-600 bg-green-100"
-    if (confidence >= 75) return "text-yellow-600 bg-yellow-100"
-    return "text-red-600 bg-red-100"
-  }
-
-  const getConfidenceBarColor = (confidence: number) => {
-    if (confidence >= 90) return "bg-green-500"
-    if (confidence >= 75) return "bg-yellow-500"
-    return "bg-red-500"
-  }
 
   const handleEditMetric = (metricId: number) => {
     const metric = criteria.find((m) => m.id === metricId)
@@ -537,41 +416,6 @@ export default function PreviewPage() {
       alert("Error saving evaluation. Please try again.")
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  // Function to get input column content
-  const getInputColumnContent = () => {
-    try {
-      if (uploadedData.length === 0 && previewData.length === 0) return "No data available for preview."
-
-      // Use uploaded data if available, otherwise use preview data
-      const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
-      
-      // Safety check for columnRoles
-      if (!columnRoles || columnRoles.length === 0) {
-        return "Column roles not yet configured. Please wait for analysis to complete."
-      }
-      
-      const inputColumns = columnRoles.filter((role) => role.userRole === "Input" || role.userRole === "Model Output")
-
-      if (inputColumns.length === 0)
-        return "No input or model output columns identified. Please set at least one column as 'Input' or 'Model Output' in the Configure Dataset section."
-
-      const currentRowIndex = (currentItem - 1) % dataToUse.length
-      const currentRow = dataToUse[currentRowIndex]
-
-      if (!currentRow) return "No content available for this item."
-
-      // Always return array format for consistent rendering with labels
-      return inputColumns.map((col) => ({
-        name: col.name,
-        content: currentRow[col.name] || "No content available",
-        type: col.userRole,
-      }))
-    } catch (error) {
-      console.error('Error in getInputColumnContent:', error)
-      return "Error loading content. Please refresh the page."
     }
   }
 

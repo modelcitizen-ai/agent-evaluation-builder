@@ -62,6 +62,7 @@ interface UsePreviewDataInitializationProps {
 interface UsePreviewDataInitializationReturn {
   uploadedData: any[]
   dataColumns: string[]
+  previewData: any[]
   evaluationName: string
   instructions: string
   criteria: Metric[]
@@ -85,6 +86,65 @@ export function usePreviewDataInitialization({
   // State for data management
   const [uploadedData, setUploadedData] = useState<any[]>([])
   const [dataColumns, setDataColumns] = useState<string[]>([])
+  
+  // Sample data for preview when no uploaded data is available
+  const previewData = [
+    {
+      user_query: "How do I reset my password?",
+      ai_response: "To reset your password, click on 'Forgot Password' on the login page and follow the instructions sent to your email.",
+      category: "support",
+      item_id: "item_001",
+    },
+    {
+      user_query: "How do I reset my password?",
+      ai_response: "You can reset your password by visiting our password reset page at example.com/reset and entering your email address.",
+      category: "support", 
+      item_id: "item_002",
+    },
+    {
+      user_query: "How do I reset my password?",
+      ai_response: "Password reset is simple! Just go to the login page, click 'Forgot Password', and we'll send you a reset link via email within minutes.",
+      category: "support",
+      item_id: "item_003",
+    },
+    {
+      user_query: "What are your business hours?",
+      ai_response: "Our business hours are Monday through Friday, 9 AM to 6 PM EST. We're closed on weekends and major holidays.",
+      category: "general",
+      item_id: "item_004",
+    },
+    {
+      user_query: "What are your business hours?",
+      ai_response: "We're open Monday-Friday from 9 AM to 6 PM Eastern Time. Weekend and holiday hours may vary.",
+      category: "general",
+      item_id: "item_005",
+    },
+    {
+      user_query: "What are your business hours?",
+      ai_response: "Our team is available to help you Monday through Friday, 9:00 AM to 6:00 PM EST. We're closed weekends and on major holidays.",
+      category: "general",
+      item_id: "item_006",
+    },
+    {
+      user_query: "Can I return an item after 30 days?",
+      ai_response: "Our standard return policy is 30 days from purchase. However, you may still be eligible for store credit depending on the item condition.",
+      category: "returns",
+      item_id: "item_007",
+    },
+    {
+      user_query: "Can I return an item after 30 days?",
+      ai_response: "Returns are typically accepted within 30 days, but we can offer store credit for items in good condition beyond that timeframe.",
+      category: "returns",
+      item_id: "item_008",
+    },
+    {
+      user_query: "Can I return an item after 30 days?",
+      ai_response: "While our standard policy is 30 days, we understand that sometimes life gets in the way. Contact us and we'll work with you to find a solution, possibly including store credit.",
+      category: "returns",
+      item_id: "item_009",
+    },
+  ]
+  
   const [evaluationName, setEvaluationName] = useState("Content Quality Assessment")
   const [instructions, setInstructions] = useState(
     "Please evaluate each response carefully. Focus on quality, relevance, accuracy, and appropriateness of the generated content."
@@ -297,6 +357,7 @@ export function usePreviewDataInitialization({
   return {
     uploadedData,
     dataColumns,
+    previewData,
     evaluationName,
     instructions,
     criteria,
