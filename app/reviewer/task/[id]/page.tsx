@@ -8,6 +8,7 @@ import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
 import ContentRenderer from "@/components/content-renderer"
 import { useReviewerDataInitialization } from "@/components/reviewer/useReviewerDataInitialization"
+import { useReviewerFormNavigation } from "@/components/reviewer/useReviewerFormNavigation"
 
 interface Evaluation {
   id: number
@@ -40,16 +41,33 @@ export default function ReviewTaskPage() {
     getProgressKey,
   } = useReviewerDataInitialization()
 
-  // Remaining state for form navigation and UI
-  const [currentItem, setCurrentItem] = useState(1)
-  const [formData, setFormData] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showInstructions, setShowInstructions] = useState(false)
-  const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
-  const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
+  // Use the form navigation hook
+  const {
+    currentItem,
+    formData,
+    isSubmitting,
+    submittedItems,
+    isCurrentFormModified,
+    questionStartTime,
+    isFormValid,
+    handleSubmit,
+    handleInputChange,
+    setCurrentItem,
+    setIsSubmitting,
+    saveCurrentResponsesBeforeNavigation,
+  } = useReviewerFormNavigation({
+    evaluation,
+    currentReviewer,
+    allResponses,
+    furthestItemReached,
+    isReviewComplete,
+    setAllResponses,
+    setFurthestItemReached,
+    setIsReviewComplete,
+  })
 
-  // Time tracking state
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
+  // Remaining state for UI only
+  const [showInstructions, setShowInstructions] = useState(false)
 
   // Column resizing state (shared with preview page)
   const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
@@ -105,58 +123,7 @@ export default function ReviewTaskPage() {
     }
   }
 
-  // Initialize empty responses if none exist yet and set submitted items for completed evaluations
-  useEffect(() => {
-    if (evaluation && Object.keys(allResponses).length === 0) {
-      // Create an empty initial response to mark as started
-      const initialResponses = { 1: {} }
-      console.log(`[initResponses] Setting initial empty responses:`, initialResponses)
-      
-      // Update state
-      setAllResponses(initialResponses)
-      
-      // Also save directly to localStorage to mark as started
-      const storageKey = getStorageKey()
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(initialResponses))
-        console.log(`[initResponses] Saved initial empty responses to localStorage with key: ${storageKey}`)
-      } catch (error) {
-        console.error('[initResponses] Error saving initial responses to localStorage:', error)
-      }
-    }
-    
-    // Set submitted items for completed evaluations
-    if (evaluation && isReviewComplete) {
-      // For completed evaluations, mark all items as submitted
-      const allItemsSubmitted = new Set<number>()
-      for (let i = 1; i <= evaluation.totalItems; i++) {
-        allItemsSubmitted.add(i)
-      }
-      setSubmittedItems(allItemsSubmitted)
-      console.log(`[initSubmittedItems] Set all items as submitted for completed evaluation:`, Array.from(allItemsSubmitted))
-    } else if (evaluation) {
-      // For non-completed evaluations, load submitted items from localStorage
-      try {
-        const participantId = searchParams.get('participant')
-        const submittedKey = participantId 
-          ? `evaluation_${taskId}_reviewer_${participantId}_submitted`
-          : `evaluation_${taskId}_submitted` // Fallback for backwards compatibility
-        const savedSubmitted = localStorage.getItem(submittedKey)
-        if (savedSubmitted) {
-          const submittedArray = JSON.parse(savedSubmitted)
-          const submittedSet = new Set<number>(submittedArray)
-          setSubmittedItems(submittedSet)
-          console.log(`[initSubmittedItems] Loaded submitted items from localStorage:`, Array.from(submittedSet))
-        } else {
-          setSubmittedItems(new Set<number>())
-          console.log(`[initSubmittedItems] No submitted items found, starting with empty set`)
-        }
-      } catch (error) {
-        console.error('[initSubmittedItems] Error loading submitted items from localStorage:', error)
-        setSubmittedItems(new Set<number>())
-      }
-    }
-  }, [evaluation, allResponses, taskId, isReviewComplete])
+    // Form navigation and submission handling is now managed by the hook
 
   // Handle column resizing (shared logic with preview page)
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -194,66 +161,7 @@ export default function ReviewTaskPage() {
     }
   }, [isDragging])
 
-  // Load responses for current item
-  useEffect(() => {
-    // First, check localStorage for any saved data for the current item
-    try {
-      // Load from state first
-      const savedResponsesForItem = allResponses[currentItem] || {}
-      console.log(`[loadCurrentItem] Loading saved responses for item ${currentItem}:`, savedResponsesForItem)
-      
-      // Set the form data with saved responses
-      setFormData(savedResponsesForItem)
-      
-      // If we have saved responses in localStorage but not in state, try to reload from localStorage
-      if (Object.keys(savedResponsesForItem).length === 0) {
-        const participantId = searchParams.get('participant')
-        const storageKey = participantId 
-          ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-          : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
-        const savedResponsesString = localStorage.getItem(storageKey)
-        
-        if (savedResponsesString) {
-          try {
-            const savedResponses = JSON.parse(savedResponsesString)
-            if (savedResponses[currentItem]) {
-              console.log(`[loadCurrentItem] Found responses in localStorage for item ${currentItem}:`, savedResponses[currentItem])
-              setFormData(savedResponses[currentItem])
-            }
-          } catch (error) {
-            console.error('[loadCurrentItem] Error parsing saved responses:', error)
-          }
-        }
-      }
-    } catch (error) {
-      console.error('[loadCurrentItem] Error loading item responses:', error)
-    }
-
-    // Reset modification flag when loading a new item
-    setIsCurrentFormModified(false)
-
-    // Reset question start time when moving to a new question
-    setQuestionStartTime(Date.now())
-
-    // Update furthest item reached if current item is further
-    if (currentItem > furthestItemReached) {
-      setFurthestItemReached(currentItem)
-      
-      // Save furthest item reached to localStorage
-      const participantId = searchParams.get('participant')
-      const progressKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_progress`
-        : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
-      try {
-        localStorage.setItem(progressKey, JSON.stringify({ furthestItem: currentItem }))
-        console.log(`[updateProgress] Saved furthest item reached to localStorage: ${currentItem} with key: ${progressKey}`)
-      } catch (error) {
-        console.error('[updateProgress] Error saving progress to localStorage:', error)
-      }
-    }
-  }, [currentItem, allResponses, furthestItemReached, taskId])
-
-  // Save responses to localStorage whenever they change
+  // Auto-save mechanism to periodically save state
   useEffect(() => {
     if (taskId) {
       const participantId = searchParams.get('participant')
@@ -378,239 +286,6 @@ export default function ReviewTaskPage() {
         </div>
       </PageLayout>
     )
-  }
-
-  const isFormValid = evaluation.criteria.every((criterion) => {
-    if (!criterion.required) return true
-    const value = formData[`criterion-${criterion.id}`]
-    return value !== undefined && value !== null && value.trim() !== ""
-  })
-
-  const handleInputChange = (criterionId: number, value: string) => {
-    // Update form data
-    setFormData((prev) => {
-      const newFormData = {
-        ...prev,
-        [`criterion-${criterionId}`]: value,
-      }
-      
-      // Update responses immediately when a user enters input
-      // This ensures we have data to detect "Continue" state
-      const updatedAllResponses = {
-        ...allResponses,
-        [currentItem]: newFormData,
-      }
-      
-      // Save to state
-      setAllResponses(updatedAllResponses)
-      
-      // Also save directly to localStorage for immediate persistence (for navigation)
-      const storageKey = getStorageKey()
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(updatedAllResponses))
-        console.log(`[handleInputChange] Saved responses to localStorage for item ${currentItem} with key: ${storageKey}`, newFormData)
-      } catch (error) {
-        console.error('[handleInputChange] Error saving to localStorage:', error)
-      }
-      
-      // Mark form as modified when user changes an answer
-      setIsCurrentFormModified(true)
-      
-      return newFormData
-    })
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!isFormValid) return
-
-    setIsSubmitting(true)
-
-    // Save current responses
-    const updatedAllResponses = {
-      ...allResponses,
-      [currentItem]: formData,
-    }
-    setAllResponses(updatedAllResponses)
-    
-    // Explicitly save to localStorage right now
-    const storageKey = getStorageKey()
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(updatedAllResponses))
-      console.log(`[handleSubmit] Explicitly saved responses to localStorage with key: ${storageKey}:`, updatedAllResponses)
-    } catch (error) {
-      console.error('[handleSubmit] Error saving to localStorage:', error)
-    }
-
-    // Calculate actual time spent on this question (in seconds)
-    const currentTime = Date.now()
-    const timeSpent = Math.round((currentTime - questionStartTime) / 1000)
-    
-    console.log(`[handleSubmit] Question completed in ${timeSpent} seconds`)
-
-    // Get current data item
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
-    const currentRow = evaluation.data[currentRowIndex]
-
-    // Get the assigned reviewer from the hook
-    console.log(`[handleSubmit] Using reviewer from hook: ${currentReviewer.name} (ID: ${currentReviewer.id}) for evaluation ${taskId}`)
-
-    // Create result object
-    const result: EvaluationResult = {
-      evaluationId: Number(taskId),
-      itemId: currentRow.item_id || currentRow.id || `item-${currentItem}`,
-      reviewerId: currentReviewer.id,
-      reviewerName: currentReviewer.name,
-      submittedAt: new Date().toISOString(),
-      timeSpent,
-responses: Object.fromEntries(
-  Object.entries(formData)
-    .map(([key, value]) => {
-      const criterionId = Number(key.split("-")[1])
-      const criterion = evaluation.criteria.find((c) => c.id === criterionId)
-      if (!criterion) {
-        console.warn(`Criterion with ID ${criterionId} not found in evaluation criteria`)
-        return null
-      }
-      return [criterion.name, value]
-    })
-    .filter((entry): entry is [string, string] => entry !== null)
-),
-      originalData: currentRow,
-    }
-
-    // Get and update results dataset
-    const resultsDataset = getResultsDataset(Number(taskId))
-    if (resultsDataset) {
-      const updatedDataset = addResultToDataset(resultsDataset, result)
-      saveResultsDataset(updatedDataset)
-    }
-
-    // Update reviewer's average time with the actual time spent
-    updateReviewerAverageTime(currentReviewer.id, timeSpent)
-
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSubmitting(false)
-
-    // Mark the current item as submitted
-    const newSubmittedItems = new Set([...submittedItems, currentItem])
-    setSubmittedItems(newSubmittedItems)
-    setIsCurrentFormModified(false)
-
-    // Save submitted items to localStorage for progress tracking
-    try {
-      const participantId = searchParams.get('participant')
-      const submittedKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_submitted`
-        : `evaluation_${taskId}_submitted` // Fallback for backwards compatibility
-      const submittedArray = Array.from(newSubmittedItems)
-      localStorage.setItem(submittedKey, JSON.stringify(submittedArray))
-      console.log(`[handleSubmit] Saved submitted items to localStorage with key: ${submittedKey}:`, submittedArray)
-    } catch (error) {
-      console.error('[handleSubmit] Error saving submitted items to localStorage:', error)
-    }
-
-    // Update progress in evaluationReviewers after each submission
-    try {
-      const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      
-      // Find the current reviewer
-      const currentReviewerId = currentReviewer.id
-      const reviewerIndex = evaluationReviewers.findIndex(
-        (r: any) => r.id === currentReviewerId && 
-        (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-      )
-      
-      if (reviewerIndex !== -1) {
-        // Update the completed count to reflect actual submitted items count
-        const submittedCount = newSubmittedItems.size
-        evaluationReviewers[reviewerIndex].completed = submittedCount
-        
-        // Update the total to match the actual evaluation size (which may be filtered for segments)
-        evaluationReviewers[reviewerIndex].total = evaluation.totalItems
-        
-        localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
-        console.log(`[updateProgress] Updated reviewer ${currentReviewerId} progress: ${submittedCount}/${evaluation.totalItems} submitted`)
-        
-        // Dispatch event to notify Progress Dashboard of the update
-        try {
-          if (typeof window !== 'undefined') {
-            const progressEvent = new CustomEvent('reviewerProgressUpdated', { 
-              detail: { 
-                evaluationId: Number(taskId), 
-                reviewerId: currentReviewerId,
-                completed: submittedCount,
-                total: evaluation.totalItems,
-                avgTime: evaluationReviewers[reviewerIndex].avgTime || "0.0"
-              } 
-            });
-            window.dispatchEvent(progressEvent);
-            console.log(`[updateProgress] Dispatched reviewerProgressUpdated event for reviewer ${currentReviewerId}: ${submittedCount}/${evaluation.totalItems}, avgTime: ${evaluationReviewers[reviewerIndex].avgTime}s`);
-          }
-        } catch (eventError) {
-          console.error('[updateProgress] Error dispatching progress event:', eventError);
-        }
-      } else {
-        console.warn(`[updateProgress] Reviewer ${currentReviewerId} not found for evaluation ${taskId}`);
-      }
-    } catch (error) {
-      console.error('[updateProgress] Error updating reviewer progress:', error)
-    }
-
-    if (currentItem >= evaluation.totalItems) {
-      // Mark this evaluation as completed for this reviewer by updating their status in evaluationReviewers
-      try {
-        const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-        
-        // Find the current reviewer
-        const currentReviewerId = currentReviewer.id
-        const reviewerIndex = evaluationReviewers.findIndex(
-          (r: any) => r.id === currentReviewerId && 
-          (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-        )
-        
-        if (reviewerIndex !== -1) {
-          // Update the reviewer's status and completion count  
-          evaluationReviewers[reviewerIndex].status = "completed"
-          evaluationReviewers[reviewerIndex].completed = evaluation.totalItems
-          evaluationReviewers[reviewerIndex].total = evaluation.totalItems
-          localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
-          console.log(`[updateReviewerStatus] Updated reviewer ${currentReviewerId} status to completed for evaluation ${taskId}`)
-          
-          // Force an update check on the data scientist page by triggering a custom event
-          try {
-            if (typeof window !== 'undefined') {
-              const event = new CustomEvent('evaluationCompleted', { 
-                detail: { evaluationId: Number(taskId) } 
-              });
-              window.dispatchEvent(event);
-              console.log(`[updateReviewerStatus] Dispatched evaluationCompleted event for ${taskId}`);
-              
-              // Also dispatch reviewerStatusUpdated for Progress Dashboard
-              const statusEvent = new CustomEvent('reviewerStatusUpdated', { 
-                detail: { evaluationId: Number(taskId), reviewerId: currentReviewerId } 
-              });
-              window.dispatchEvent(statusEvent);
-              console.log(`[updateReviewerStatus] Dispatched reviewerStatusUpdated event for reviewer ${currentReviewerId}`);
-            }
-          } catch (eventError) {
-            console.error('[updateReviewerStatus] Error dispatching completion event:', eventError);
-          }
-        } else {
-          console.warn(`[updateReviewerStatus] Reviewer ${currentReviewerId} not found for evaluation ${taskId}`);
-        }
-      } catch (error) {
-        console.error('[updateReviewerStatus] Error updating reviewer status:', error)
-      }
-
-      // Set review complete state
-      setIsReviewComplete(true)
-    } else {
-      const nextItem = currentItem + 1
-      setCurrentItem(nextItem)
-      setFurthestItemReached(Math.max(furthestItemReached, nextItem))
-    }
   }
 
   // Get current content to display
