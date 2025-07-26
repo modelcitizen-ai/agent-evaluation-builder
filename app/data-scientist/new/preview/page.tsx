@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import {
   ArrowRightIcon,
@@ -17,59 +17,11 @@ import PageLayout from "@/components/layout/page-layout"
 import EditMetricModal from "@/components/edit-metric-modal"
 import ConfigureDatasetModal from "@/components/configure-dataset-modal"
 import ContentRenderer from "@/components/content-renderer"
-import TableCellRenderer from "@/components/table-cell-renderer"
-import { createEvaluation } from "@/lib/client-db"
 import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
 import { usePreviewFormNavigation } from "@/components/data-scientist/preview/usePreviewFormNavigation"
 import { usePreviewColumnManagement } from "@/components/data-scientist/preview/usePreviewColumnManagement"
-
-// Import the results dataset utilities at the top of the file
-import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
-
-interface Metric {
-  id: number
-  name: string
-  type: string
-  options: string[]
-  required: boolean
-  likertLabels?: { low: string; high: string }
-  aiGenerated?: boolean
-}
-
-interface DeletedMetric {
-  metric: Metric
-  index: number
-}
-
-interface ColumnRole {
-  id: string
-  name: string
-  suggestedRole: string
-  confidence: number
-  reason: string
-  userRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" | "Input Data"
-  displayName?: string
-}
-
-interface AIAnalysisResult {
-  columnAnalysis: Array<{
-    columnName: string
-    suggestedRole: "Input Data" | "Model Output" | "Excluded Data" | "Metadata"
-    confidence: number
-    reasoning: string
-  }>
-  suggestedMetrics: Array<{
-    name: string
-    type: "yes-no" | "likert-scale" | "custom-list" | "text-input"
-    options: string[]
-    reasoning: string
-    confidence: number
-    required: boolean
-    likertLabels?: { low: string; high: string }
-  }>
-  evaluationName: string
-  instructions: string
-}
+import { usePreviewUIHelpers } from "@/components/data-scientist/preview/usePreviewUIHelpers"
+import { usePreviewMetricManagement } from "@/components/data-scientist/preview/usePreviewMetricManagement"
 
 /**
  * IMPORTANT: The evaluationName is now a single source of truth from the backend API.
@@ -152,272 +104,58 @@ export default function PreviewPage() {
     currentItem
   })
 
-  const [editingMetric, setEditingMetric] = useState<Metric | null>(null)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null)
-  const [analysisError, setAnalysisError] = useState<string | null>(null)
-  const [showDatasetConfig, setShowDatasetConfig] = useState(false)
-  const [showInstructions, setShowInstructions] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [lastDeletedMetric, setLastDeletedMetric] = useState<DeletedMetric | null>(null)
+  // Use the UI helpers hook
+  const {
+    leftColumnWidth,
+    isDragging,
+    containerRef,
+    handleMouseDown,
+    showDatasetConfig,
+    setShowDatasetConfig,
+    showInstructions,
+    setShowInstructions,
+    isSaving,
+    setIsSaving,
+    analysisError,
+    setAnalysisError,
+    isComingFromUpload,
+    setIsComingFromUpload,
+    useAIAnalysis,
+    setUseAIAnalysis,
+  } = usePreviewUIHelpers()
 
-  // Column resizing state
-  const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
-  const [isDragging, setIsDragging] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // Near the top of the file, add a new state variable to track if we're coming from the upload page
-  const [isComingFromUpload, setIsComingFromUpload] = useState(true)
-
-  // Add a new state variable to track AI analysis preference
-  const [useAIAnalysis, setUseAIAnalysis] = useState(false)
-
-  // Add this with the other state variables
-  // const [isInitialLoading, setIsInitialLoading] = useState(true)
-
-  // Add this useEffect near the beginning of the component, after state declarations
-  // Remove the useEffect for initial loading timer
-
-  // Add keyboard event listener for undo functionality
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
-      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
-        event.preventDefault()
-        handleUndoDelete()
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [lastDeletedMetric, criteria])
-
-  // Handle column resizing
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  // Add keyboard event listener for undo functionality
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
-      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
-        event.preventDefault()
-        handleUndoDelete()
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [lastDeletedMetric, criteria])
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !containerRef.current) return
-
-      const containerRect = containerRef.current.getBoundingClientRect()
-      const containerWidth = containerRect.width
-      const mouseX = e.clientX - containerRect.left
-
-      // Calculate percentage (constrain between 30% and 70%)
-      let newLeftWidth = (mouseX / containerWidth) * 100
-      newLeftWidth = Math.max(30, Math.min(70, newLeftWidth))
-
-      setLeftColumnWidth(newLeftWidth)
-    }
-
-    const handleMouseUp = () => {
-      setIsDragging(false)
-    }
-
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isDragging])
-
-
-
-
-
-  const handleEditMetric = (metricId: number) => {
-    const metric = criteria.find((m) => m.id === metricId)
-    if (metric) {
-      setEditingMetric(metric)
-      setIsEditModalOpen(true)
-    }
-  }
-
-  const handleAddMetric = () => {
-    const newId = criteria.length > 0 ? Math.max(...criteria.map((m) => m.id)) + 1 : 1
-    const newMetric: Metric = {
-      id: newId,
-      name: "",
-      type: "yes-no",
-      options: ["Yes", "No"],
-      required: false,
-    }
-    setEditingMetric(newMetric)
-    setIsEditModalOpen(true)
-  }
-
-  const handleSaveMetric = (updatedMetric: Metric) => {
-    const existingMetricIndex = criteria.findIndex((m) => m.id === updatedMetric.id)
-
-    if (existingMetricIndex >= 0) {
-      // Update existing metric
-      setCriteria(criteria.map((m) => (m.id === updatedMetric.id ? updatedMetric : m)))
-    } else {
-      // Add new metric
-      setCriteria([...criteria, updatedMetric])
-    }
-
-    setIsEditModalOpen(false)
-    setEditingMetric(null)
-  }
-
-  // Handler to update a metric in the criteria array
-  function handleEditMetricSave(updatedMetric: Metric) {
-    setCriteria((prev) =>
-      prev.map((metric) =>
-        metric.id === updatedMetric.id ? { ...metric, ...updatedMetric } : metric
-      )
-    );
-  }
-
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false)
-    setEditingMetric(null)
-  }
-
-  const handleDeleteMetric = (metricId: number) => {
-    const metricIndex = criteria.findIndex((metric) => metric.id === metricId)
-    if (metricIndex === -1) return
-
-    const metricToDelete = criteria[metricIndex]
-
-    // Store the deleted metric for potential undo
-    setLastDeletedMetric({
-      metric: metricToDelete,
-      index: metricIndex,
-    })
-
-    // Remove the metric immediately
-    setCriteria(criteria.filter((metric) => metric.id !== metricId))
-  }
-
-  const handleUndoDelete = () => {
-    if (!lastDeletedMetric) return
-
-    const newCriteria = [...criteria]
-    newCriteria.splice(lastDeletedMetric.index, 0, lastDeletedMetric.metric)
-    setCriteria(newCriteria)
-    setLastDeletedMetric(null)
-  }
-
-  const moveMetric = (metricId: number, direction: "up" | "down") => {
-    const index = criteria.findIndex((m) => m.id === metricId)
-    if (index === -1) return
-
-    // Can't move first item up or last item down
-    if ((direction === "up" && index === 0) || (direction === "down" && index === criteria.length - 1)) {
-      return
-    }
-
-    const newCriteria = [...criteria]
-    const targetIndex = direction === "up" ? index - 1 : index + 1
-
-    // Swap the items
-    ;[newCriteria[index], newCriteria[targetIndex]] = [newCriteria[targetIndex], newCriteria[index]]
-
-    setCriteria(newCriteria)
-  }
-
-  // Save evaluation function
-  const handleSaveEvaluation = async () => {
-    setIsSaving(true)
-
-    try {
-      const existingEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
-
-      if (isEditMode && editId) {
-        // Update existing evaluation
-        const updatedEvaluations = existingEvaluations.map((evaluation: any) =>
-          evaluation.id === editId
-            ? {
-                ...evaluation,
-                name: evaluationName,
-                instructions,
-                criteria,
-                columnRoles,
-                data: dataToUse,
-                totalItems: getTotalItems(),
-              }
-            : evaluation,
-        )
-        localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
-      } else {
-        // Create new evaluation
-        const evaluationId = Date.now()
-        const newEvaluation = {
-          id: evaluationId,
-          name: evaluationName,
-          instructions,
-          criteria,
-          columnRoles,
-          data: dataToUse,
-          totalItems: getTotalItems(),
-          status: "draft",
-          createdAt: new Date().toISOString(),
-        }
-
-        try {
-          // First try to save to database via API
-          const result = await createEvaluation(newEvaluation);
-          console.log("Evaluation created successfully:", result);
-          
-          // Also add to localStorage so it shows up in My Projects immediately
-          existingEvaluations.unshift(newEvaluation);
-          localStorage.setItem("evaluations", JSON.stringify(existingEvaluations));
-        } catch (error) {
-          console.error("Error creating evaluation in database:", error);
-          // Fall back to localStorage if database creation fails
-          console.log("Falling back to localStorage");
-          existingEvaluations.unshift(newEvaluation);
-          localStorage.setItem("evaluations", JSON.stringify(existingEvaluations));
-        }
-
-        // Initialize empty results dataset for this evaluation
-        const resultsDataset = initializeEmptyResultsDataset(evaluationId, evaluationName, dataToUse, criteria)
-        saveResultsDataset(resultsDataset)
-
-        // Clear session storage only for new evaluations
-        sessionStorage.removeItem("uploadedData")
-        sessionStorage.removeItem("fileName")
-        sessionStorage.removeItem("aiAnalysisResult")
-        sessionStorage.removeItem("useAIAnalysis")
-      }
-
-      // Redirect to data scientist dashboard without confirmation
-      router.push("/data-scientist")
-    } catch (error) {
-      console.error("Error saving evaluation:", error)
-      alert("Error saving evaluation. Please try again.")
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  // Use the metric management hook
+  const {
+    editingMetric,
+    setEditingMetric,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    aiAnalysisResult,
+    setAiAnalysisResult,
+    lastDeletedMetric,
+    setLastDeletedMetric,
+    handleEditMetric,
+    handleAddMetric,
+    handleSaveMetric,
+    handleEditMetricSave,
+    handleCloseEditModal,
+    handleDeleteMetric,
+    handleUndoDelete,
+    moveMetric,
+    handleSaveEvaluation,
+  } = usePreviewMetricManagement({
+    criteria,
+    setCriteria,
+    evaluationName,
+    instructions,
+    columnRoles,
+    uploadedData,
+    previewData,
+    isEditMode,
+    editId,
+    getTotalItems,
+    setIsSaving,
+  })
 
   // Update the PageLayout to only render main content when not analyzing
   return (
