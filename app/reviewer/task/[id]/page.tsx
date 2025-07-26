@@ -7,6 +7,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
 import ContentRenderer from "@/components/content-renderer"
+import { useReviewerDataInitialization } from "@/components/reviewer/useReviewerDataInitialization"
 
 interface Evaluation {
   id: number
@@ -23,15 +24,28 @@ export default function ReviewTaskPage() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
+
+  // Use the data initialization hook
+  const {
+    evaluation,
+    currentReviewer,
+    allResponses,
+    furthestItemReached,
+    isReviewComplete,
+    isLoading,
+    setAllResponses,
+    setFurthestItemReached,
+    setIsReviewComplete,
+    getStorageKey,
+    getProgressKey,
+  } = useReviewerDataInitialization()
+
+  // Remaining state for form navigation and UI
   const [currentItem, setCurrentItem] = useState(1)
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
-  const [allResponses, setAllResponses] = useState<Record<number, Record<string, string>>>({})
-  const [furthestItemReached, setFurthestItemReached] = useState(1)
   const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
-  const [isReviewComplete, setIsReviewComplete] = useState(false)
   const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
 
   // Time tracking state
@@ -91,114 +105,6 @@ export default function ReviewTaskPage() {
     }
   }
 
-  useEffect(() => {
-    const rawEvaluations = localStorage.getItem("evaluations")
-    const storedEvaluations = JSON.parse(rawEvaluations || "[]")
-
-    const taskIdNum = Number(taskId)
-
-    const foundEvaluation = storedEvaluations.find((evaluationItem: any) => Number(evaluationItem.id) === taskIdNum)
-    if (foundEvaluation) {
-      setEvaluation(foundEvaluation)
-      // Ensure submittedItems starts empty
-      setSubmittedItems(new Set())
-      console.log(`[loadEvaluation] Found evaluation with ID ${taskId}:`, foundEvaluation)
-    } else {
-      console.error(`❌ Evaluation with ID ${taskId} not found`)
-    }
-
-    // Load saved responses from localStorage if they exist
-    try {
-      // Get the specific reviewer ID from URL parameter for reviewer-specific storage
-      const participantId = searchParams.get('participant')
-      const savedResponsesKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-        : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
-      console.log(`[loadResponses] Looking for saved responses with key: ${savedResponsesKey}`)
-      const savedResponsesString = localStorage.getItem(savedResponsesKey)
-      
-      if (savedResponsesString) {
-        console.log(`[loadResponses] Found saved responses:`, savedResponsesString)
-        try {
-          const savedResponses = JSON.parse(savedResponsesString)
-          console.log(`[loadResponses] Parsed saved responses:`, savedResponses)
-          setAllResponses(savedResponses)
-          
-          // Check if this evaluation is completed for the current reviewer
-          const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-          
-          // Find the specific reviewer for this evaluation using participant URL parameter
-          const participantId = searchParams.get('participant')
-          
-          let currentReviewerRecord;
-          if (participantId) {
-            // Look for the specific reviewer by ID from URL parameter
-            currentReviewerRecord = evaluationReviewers.find(
-              (r: any) => r.id === participantId && 
-              (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-            )
-          }
-          
-          // If no specific reviewer found, fall back to first matching reviewer
-          if (!currentReviewerRecord) {
-            const matchingReviewers = evaluationReviewers.filter(
-              (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
-            )
-            
-            if (matchingReviewers.length > 0) {
-              currentReviewerRecord = matchingReviewers[0];
-            }
-          }
-          
-          const isCompleted = currentReviewerRecord?.status === "completed" || 
-                            (currentReviewerRecord?.completed === currentReviewerRecord?.total && currentReviewerRecord?.total > 0)
-          
-          // Load progress (furthest item reached) from localStorage  
-          const progressKey = participantId 
-            ? `evaluation_${taskId}_reviewer_${participantId}_progress`
-            : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
-          const savedProgressString = localStorage.getItem(progressKey)
-          
-          if (savedProgressString) {
-            try {
-              const savedProgress = JSON.parse(savedProgressString)
-              if (savedProgress.furthestItem) {
-                const furthestItem = savedProgress.furthestItem
-                console.log(`[loadProgress] Found saved progress. Setting to item ${furthestItem}`)
-                setFurthestItemReached(furthestItem)
-                
-                // If evaluation is completed, set current item to the first question and mark as complete
-                if (isCompleted && foundEvaluation) {
-                  console.log(`[loadProgress] Evaluation is completed. Setting current item to 1 for review`)
-                  setCurrentItem(1)
-                  setIsReviewComplete(true)
-                } else {
-                  setCurrentItem(furthestItem)
-                }
-              }
-            } catch (progressError) {
-              console.error('[loadProgress] Error parsing saved progress:', progressError)
-            }
-          } else if (isCompleted && foundEvaluation) {
-            // If no progress saved but evaluation is marked complete, go to first question for review
-            console.log(`[loadProgress] No saved progress but evaluation is completed. Setting to first item for review.`)
-            setCurrentItem(1)
-            setFurthestItemReached(foundEvaluation.totalItems)
-            setIsReviewComplete(true)
-          }
-        } catch (parseError) {
-          console.error('[loadResponses] Error parsing saved responses:', parseError)
-        }
-      } else {
-        // Initialize empty response and save it immediately to mark as started
-        console.log(`[loadResponses] No existing responses found. Creating initial state.`)
-        // We'll set this in a separate useEffect to avoid state update during render
-      }
-    } catch (error) {
-      console.error('[loadResponses] Error loading saved responses:', error)
-    }
-  }, [taskId])
-  
   // Initialize empty responses if none exist yet and set submitted items for completed evaluations
   useEffect(() => {
     if (evaluation && Object.keys(allResponses).length === 0) {
@@ -210,10 +116,7 @@ export default function ReviewTaskPage() {
       setAllResponses(initialResponses)
       
       // Also save directly to localStorage to mark as started
-      const participantId = searchParams.get('participant')
-      const storageKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-        : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+      const storageKey = getStorageKey()
       try {
         localStorage.setItem(storageKey, JSON.stringify(initialResponses))
         console.log(`[initResponses] Saved initial empty responses to localStorage with key: ${storageKey}`)
@@ -253,7 +156,7 @@ export default function ReviewTaskPage() {
         setSubmittedItems(new Set<number>())
       }
     }
-  }, [evaluation, allResponses, taskId, isReviewComplete])
+  }, [evaluation, allResponses, taskId, isReviewComplete, getStorageKey])
 
   // Handle column resizing (shared logic with preview page)
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -502,10 +405,7 @@ export default function ReviewTaskPage() {
       setAllResponses(updatedAllResponses)
       
       // Also save directly to localStorage for immediate persistence (for navigation)
-      const participantId = searchParams.get('participant')
-      const storageKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-        : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+      const storageKey = getStorageKey()
       try {
         localStorage.setItem(storageKey, JSON.stringify(updatedAllResponses))
         console.log(`[handleInputChange] Saved responses to localStorage for item ${currentItem} with key: ${storageKey}`, newFormData)
@@ -535,10 +435,7 @@ export default function ReviewTaskPage() {
     setAllResponses(updatedAllResponses)
     
     // Explicitly save to localStorage right now
-    const participantId = searchParams.get('participant')
-    const storageKey = participantId 
-      ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-      : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+    const storageKey = getStorageKey()
     try {
       localStorage.setItem(storageKey, JSON.stringify(updatedAllResponses))
       console.log(`[handleSubmit] Explicitly saved responses to localStorage with key: ${storageKey}:`, updatedAllResponses)
@@ -556,66 +453,8 @@ export default function ReviewTaskPage() {
     const currentRowIndex = (currentItem - 1) % evaluation.data.length
     const currentRow = evaluation.data[currentRowIndex]
 
-    // Get the assigned reviewer - fix the ID matching issue
-    // Get the specific reviewer from URL parameter if available
-    let currentReviewer;
-    
-    try {
-      const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      
-      // First try to get the specific reviewer from URL parameter
-      const participantId = searchParams.get('participant')
-      
-      if (participantId) {
-        // Look for the specific reviewer by ID
-        const specificReviewer = evaluationReviewers.find(
-          (r: any) => r.id === participantId && 
-          (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-        )
-        
-        if (specificReviewer) {
-          currentReviewer = {
-            id: specificReviewer.id,
-            name: specificReviewer.name
-          }
-          console.log(`[handleSubmit] Found specific reviewer from URL: ${currentReviewer.name} (ID: ${currentReviewer.id}) for evaluation ${taskId}`)
-        } else {
-          console.warn(`[handleSubmit] Reviewer ${participantId} not found for evaluation ${taskId}`)
-        }
-      }
-      
-      // If no specific reviewer found, fall back to first matching reviewer
-      if (!currentReviewer) {
-        const matchingReviewers = evaluationReviewers.filter(
-          (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
-        )
-        
-        if (matchingReviewers.length > 0) {
-          currentReviewer = {
-            id: matchingReviewers[0].id,
-            name: matchingReviewers[0].name
-          }
-          console.log(`[handleSubmit] Using first matching reviewer: ${currentReviewer.name} (ID: ${currentReviewer.id}) for evaluation ${taskId}`)
-        } else {
-          // Fallback to original logic
-          const assignedReviewers = evaluation.assignedReviewers || []
-          currentReviewer = assignedReviewers.length > 0
-            ? assignedReviewers[0]
-            : {
-                id: "reviewer-1",
-                name: "Anonymous Reviewer",
-              }
-          console.log(`[handleSubmit] Using fallback reviewer: ${currentReviewer.name} (ID: ${currentReviewer.id})`)
-        }
-      }
-    } catch (error) {
-      console.error('[handleSubmit] Error finding reviewer:', error)
-      // Final fallback
-      currentReviewer = {
-        id: "reviewer-1",
-        name: "Anonymous Reviewer",
-      }
-    }
+    // Get the assigned reviewer from the hook
+    console.log(`[handleSubmit] Using reviewer from hook: ${currentReviewer.name} (ID: ${currentReviewer.id}) for evaluation ${taskId}`)
 
     // Create result object
     const result: EvaluationResult = {
