@@ -20,6 +20,7 @@ import ContentRenderer from "@/components/content-renderer"
 import TableCellRenderer from "@/components/table-cell-renderer"
 import { createEvaluation } from "@/lib/client-db"
 import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
+import { usePreviewFormNavigation } from "@/components/data-scientist/preview/usePreviewFormNavigation"
 
 // Import the results dataset utilities at the top of the file
 import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
@@ -107,9 +108,28 @@ export default function PreviewPage() {
     evaluationNameEdited
   })
 
-  const [currentItem, setCurrentItem] = useState(1)
-  const [formData, setFormData] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Use the form navigation hook
+  const {
+    currentItem,
+    formData,
+    isSubmitting,
+    allResponses,
+    submittedItems,
+    furthestItemReached,
+    isReviewComplete,
+    isCurrentFormModified,
+    isFormValid,
+    handleSubmit,
+    handleInputChange,
+    saveCurrentResponse,
+    setCurrentItem,
+    setIsSubmitting,
+    getTotalItems,
+  } = usePreviewFormNavigation({
+    criteria,
+    uploadedData
+  })
+
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [aiAnalysisResult, setAiAnalysisResult] = useState<AIAnalysisResult | null>(null)
@@ -129,21 +149,6 @@ export default function PreviewPage() {
 
   // Add a new state variable to track AI analysis preference
   const [useAIAnalysis, setUseAIAnalysis] = useState(false)
-
-  // Add state to track responses for all items
-  const [allResponses, setAllResponses] = useState<Record<number, Record<string, string>>>({})
-
-  // Add a new state variable to track the furthest item reached:
-  const [furthestItemReached, setFurthestItemReached] = useState(1)
-
-  // Add this with the other state variables around line 100
-  const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
-
-  // Add this state variable with the other state declarations
-  const [isReviewComplete, setIsReviewComplete] = useState(false)
-
-  // Add a new state variable to track if the current form has been modified:
-  const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
 
   // Add this with the other state variables
   // const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -290,58 +295,6 @@ export default function PreviewPage() {
     // Fallback to formatted column name
     const formatted = columnName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     return formatted
-  }
-
-  const isFormValid = criteria.every((criterion) => {
-    if (!criterion.required) return true
-    const value = formData[`criterion-${criterion.id}`]
-    return value !== undefined && value !== null && value.trim() !== ""
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isFormValid) return
-
-    setIsSubmitting(true)
-
-    // Save current responses
-    const updatedAllResponses = {
-      ...allResponses,
-      [currentItem]: formData,
-    }
-    setAllResponses(updatedAllResponses)
-
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSubmitting(false)
-
-    // Remove this line - don't clear the form data
-    // setFormData({})
-
-    // Mark the current item as submitted
-    const newSubmittedItems = new Set([...submittedItems, currentItem])
-    setSubmittedItems(newSubmittedItems)
-
-    // At the end of handleSubmit, after setting submittedItems, add:
-    setIsCurrentFormModified(false)
-
-    if (currentItem >= getTotalItems()) {
-      // Set review complete state
-      setIsReviewComplete(true)
-    } else {
-      const nextItem = currentItem + 1
-      setCurrentItem(nextItem)
-      setFurthestItemReached(Math.max(furthestItemReached, nextItem))
-    }
-  }
-
-  const handleInputChange = (criterionId: number, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [`criterion-${criterionId}`]: value,
-    }))
-
-    // Mark form as modified when user changes an answer
-    setIsCurrentFormModified(true)
   }
 
   const normalizeRole = (role: string): "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" => {
@@ -584,33 +537,6 @@ export default function PreviewPage() {
       alert("Error saving evaluation. Please try again.")
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  // Load responses for current item
-  useEffect(() => {
-    const savedResponses = allResponses[currentItem] || {}
-    setFormData(savedResponses)
-
-    // Reset modification flag when loading a new item
-    setIsCurrentFormModified(false)
-
-    // Update furthest item reached if current item is further
-    if (currentItem > furthestItemReached) {
-      setFurthestItemReached(currentItem)
-    }
-  }, [currentItem, allResponses, furthestItemReached])
-
-  // Function to calculate total items from actual data
-  const getTotalItems = () => {
-    try {
-      if (uploadedData && uploadedData.length > 0) {
-        return uploadedData.length
-      }
-      return 20 // fallback to 20 for demo
-    } catch (error) {
-      console.error('Error in getTotalItems:', error)
-      return 20 // fallback
     }
   }
 
@@ -904,10 +830,7 @@ export default function PreviewPage() {
                         onClick={() => {
                           if (currentItem > 1) {
                             // Save current responses before navigating
-                            setAllResponses((prev) => ({
-                              ...prev,
-                              [currentItem]: formData,
-                            }))
+                            saveCurrentResponse()
                             setCurrentItem(currentItem - 1)
                           }
                         }}
@@ -963,10 +886,7 @@ export default function PreviewPage() {
                       onClick={() => {
                         if (currentItem < getTotalItems() && currentItem < furthestItemReached) {
                           // Save current responses before navigating
-                          setAllResponses((prev) => ({
-                            ...prev,
-                            [currentItem]: formData,
-                          }))
+                          saveCurrentResponse()
                           setCurrentItem(currentItem + 1)
                         }
                       }}
