@@ -54,7 +54,7 @@ export default function ImageRenderer({ url, title, className = "" }: ImageRende
           <span className="text-sm">Failed to load image</span>
         </div>
         <div className="mt-2 text-xs text-gray-600">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600">
             Open image in new tab
           </a>
         </div>
@@ -63,7 +63,7 @@ export default function ImageRenderer({ url, title, className = "" }: ImageRende
             setHasError(false)
             setIsLoading(true)
           }}
-          className="mt-2 text-xs text-blue-600 hover:underline"
+          className="mt-2 text-xs text-blue-600"
         >
           Retry loading
         </button>

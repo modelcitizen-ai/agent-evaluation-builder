@@ -1,7 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
+import DOMPurify from "dompurify"
 import VideoPlayer from "./video-player"
 import ImageRenderer from "./image-renderer"
 
@@ -27,6 +28,12 @@ function isArrayOfObjects(content: any): content is any[] {
 }
 
 export default function ContentRenderer({ content, title, className = "" }: ContentRendererProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Clean medical report text if it's a ground truth impression
   // Only clean if this is the original version, not the already-cleaned version
   const shouldCleanText = title === "Ground Truth Impression (Original)" && typeof content === "string";
@@ -288,7 +295,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
             href={trimmedContent}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm break-all"
+            className="text-sm text-blue-600 break-all"
           >
             {trimmedContent}
           </a>
@@ -311,6 +318,28 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       )
     }
 
+    // HTML rendering block - check for HTML tags and render safely
+    if (/<[^>]+>/.test(displayContent)) {
+      // Sanitize HTML content for security (only on client side)
+      const sanitizedHtml = isClient 
+        ? DOMPurify.sanitize(displayContent, {
+            ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div', 'span', 'strong', 'em', 'b', 'i', 'u', 'br', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style'],
+            KEEP_CONTENT: true
+          })
+        : displayContent; // Fallback to original content during SSR
+      
+      return (
+        <div className={className}>
+          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+          <div 
+            className="prose prose-sm text-gray-900 leading-relaxed prose-a:text-blue-600 prose-a:no-underline"
+            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+          />
+        </div>
+      )
+    }
+
     // Markdown rendering block (fix: remove className from ReactMarkdown)
     if (
       displayContent.match(/[#*_`~>\[\]\(\)]/) // basic markdown characters
@@ -318,7 +347,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       return (
         <div className={className}>
           {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          <div className="prose prose-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+          <div className="prose prose-sm text-gray-900 whitespace-pre-wrap leading-relaxed prose-a:text-blue-600 prose-a:no-underline">
             <ReactMarkdown>
               {displayContent}
             </ReactMarkdown>

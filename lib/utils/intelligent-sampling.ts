@@ -307,6 +307,10 @@ function calculateContentScore(row: any, columns: string[]): number {
       if (/[.!?]/.test(strValue)) score += 0.1; // Sentences indicate structured content
       if (strValue.split(' ').length > 10) score += 0.1; // Longer text
       
+      // Reward HTML content (indicates rich formatting)
+      if (/<[^>]+>/.test(strValue)) score += 0.15; // HTML tags indicate structured content
+      if (/<(h[1-6]|p|div|span|strong|em|ul|ol|li)/.test(strValue)) score += 0.1; // Common HTML elements
+      
       contentScore += Math.min(1, score) / columns.length;
     }
   });
@@ -497,8 +501,13 @@ function detectContentPatterns(sampledData: any[], columns: string[]): string[] 
       patterns.push('long-text');
     }
     
-    // Check for structured content
-    if (strings.some(s => s.includes('{') || s.includes('<'))) {
+    // Check for HTML content
+    if (strings.some(s => /<[^>]+>/.test(s))) {
+      patterns.push('html');
+    }
+    
+    // Check for other structured content (JSON, XML)
+    if (strings.some(s => s.includes('{') && !/<[^>]+>/.test(s))) {
       patterns.push('structured');
     }
     

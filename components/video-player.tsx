@@ -56,7 +56,7 @@ export default function VideoPlayer({ url, title, className = "" }: VideoPlayerP
           <span className="text-sm">Failed to load video</span>
         </div>
         <div className="mt-2 text-xs text-gray-600">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600">
             Open video in new tab
           </a>
         </div>
