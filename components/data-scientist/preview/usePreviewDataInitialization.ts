@@ -274,15 +274,25 @@ export function usePreviewDataInitialization({
       }
 
       // Convert fallback column analysis to column roles
-      const fallbackColumnRoles = fallbackResult.columnAnalysis.map((col: any) => ({
-        id: col.columnName,
-        name: col.columnName,
-        suggestedRole: col.suggestedRole,
-        confidence: col.confidence,
-        reason: col.reasoning,
-        reasoning: col.reasoning,
-        userRole: col.suggestedRole,
-      }))
+      const fallbackColumnRoles = fallbackResult.columnAnalysis.map((col: any) => {
+        // Apply the same conversion logic as AI analysis
+        let convertedRole = col.suggestedRole
+        if (col.suggestedRole === "Input Data" || col.suggestedRole === "Input") convertedRole = "Input"
+        if (col.suggestedRole === "Model Output" || col.suggestedRole === "Output") convertedRole = "Model Output"
+        if (col.suggestedRole === "Excluded Data" || col.suggestedRole === "Excluded") convertedRole = "Excluded"
+        if (col.suggestedRole === "Reference") convertedRole = "Reference"
+        if (col.suggestedRole === "Metadata") convertedRole = "Metadata"
+
+        return {
+          id: col.columnName,
+          name: col.columnName,
+          suggestedRole: col.suggestedRole,
+          confidence: col.confidence,
+          reason: col.reasoning,
+          reasoning: col.reasoning,
+          userRole: convertedRole,
+        }
+      })
       setColumnRoles(fallbackColumnRoles)
 
       // Convert fallback metrics to criteria
