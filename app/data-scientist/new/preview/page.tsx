@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowRightIcon,
   CogIcon,
@@ -32,11 +32,11 @@ import { usePreviewMetricManagement } from "@/components/data-scientist/preview/
 
 export default function PreviewPage() {
   const router = useRouter()
-  const params = useParams()
+  const searchParams = useSearchParams()
 
   // Detect if we're in edit mode
-  const isEditMode = params?.id !== undefined
-  const editId = params?.id ? Number(params.id) : null
+  const editId = searchParams.get('editId') ? Number(searchParams.get('editId')) : null
+  const isEditMode = editId !== null
 
   // Track evaluation name editing state
   const [evaluationNameEdited, setEvaluationNameEdited] = useState(false)

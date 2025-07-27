@@ -5,8 +5,8 @@ export function useDataScientistOperations() {
 
   // Handle editing an evaluation
   const handleEditEvaluation = (evaluationId: number) => {
-    // Navigate to edit page
-    router.push(`/data-scientist/new?editId=${evaluationId}`)
+    // Navigate to preview page for editing
+    router.push(`/data-scientist/new/preview?editId=${evaluationId}`)
   }
 
   // Handle viewing progress for an evaluation
