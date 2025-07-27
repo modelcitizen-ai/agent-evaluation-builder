@@ -113,36 +113,17 @@ export function useReviewerUIHelpers({
     return formatted
   }
 
-  // Calculate progress - ensure it starts at 0% and reaches 100% on final submission
+  // Calculate progress based on actual completion (number of submitted items)
   const getProgressWidth = () => {
     if (!evaluation || evaluation.totalItems === 0) {
       return 0
     }
 
-    // Special case: Q1 not submitted is always 0% (you're at the beginning)
-    if (currentItem === 1 && !submittedItems.has(currentItem)) {
-      return 0
-    }
-    
-    const isCurrentSubmitted = submittedItems.has(currentItem)
-    
-    // Special case: Final question submitted = 100%
-    if (currentItem === evaluation.totalItems && isCurrentSubmitted) {
-      return 100
-    }
-    
-    // For all other cases (Q1-Q4), calculate incremental progress
-    // We want Q1 submitted = 20%, Q2 = 40%, Q3 = 60%, Q4 = 80%, Q5 = 100%
-    // So stepSize = 80 / (totalItems - 1) to leave room for the final 100%
-    const stepSize = 80 / (evaluation.totalItems - 1)
-    
-    // Progress represents how many questions we've completed
-    // If current is submitted, show progress for completing this question
-    // Otherwise, show progress for reaching this question (previous questions completed)
-    const progressPosition = isCurrentSubmitted ? currentItem : currentItem - 1
-    const progress = progressPosition * stepSize
+    // Simple completion-based progress: percentage of questions actually completed
+    const completedCount = submittedItems.size
+    const progressPercentage = (completedCount / evaluation.totalItems) * 100
 
-    return Math.min(progress, 80) // Cap at 80% (only final question reaches 100%)
+    return progressPercentage
   }
 
   const progressWidth = getProgressWidth()
