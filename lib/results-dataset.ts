@@ -46,12 +46,30 @@ export function initializeEmptyResultsDataset(
   }
 }
 
-// Add a new result to the dataset
+// Add a new result to the dataset or update existing one
 export function addResultToDataset(dataset: ResultsDataset, result: EvaluationResult): ResultsDataset {
+  // Check if there's already a result for this reviewer and item
+  const existingResultIndex = dataset.results.findIndex(
+    (r) => r.reviewerId === result.reviewerId && r.itemId === result.itemId
+  )
+  
+  let updatedResults: EvaluationResult[]
+  
+  if (existingResultIndex !== -1) {
+    // Update existing result
+    updatedResults = [...dataset.results]
+    updatedResults[existingResultIndex] = result
+    console.log(`[addResultToDataset] Updated existing result for reviewer ${result.reviewerId}, item ${result.itemId}`)
+  } else {
+    // Add new result
+    updatedResults = [...dataset.results, result]
+    console.log(`[addResultToDataset] Added new result for reviewer ${result.reviewerId}, item ${result.itemId}`)
+  }
+  
   return {
     ...dataset,
     lastUpdated: new Date().toISOString(),
-    results: [...dataset.results, result],
+    results: updatedResults,
   }
 }
 

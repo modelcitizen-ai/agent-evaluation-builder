@@ -86,6 +86,133 @@ export function useReviewerFormNavigation({
   const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
   const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
+  const [hasInitialized, setHasInitialized] = useState(false)
+
+  // Initialize submitted items based on existing responses (for resume functionality)
+  useEffect(() => {
+    if (!evaluation || !currentReviewer.id) return
+
+    // Determine which items have been submitted based on existing responses and results dataset
+    const submittedItemNumbers = new Set<number>()
+
+    // Check results dataset for completed submissions
+    try {
+      const resultsDataset = JSON.parse(localStorage.getItem(`results_dataset_${taskId}`) || '{"results": []}')
+      const currentReviewerId = currentReviewer.id
+
+      if (resultsDataset && resultsDataset.results) {
+        resultsDataset.results.forEach((result: any) => {
+          if (result.reviewerId === currentReviewerId) {
+            // Extract item number from result data
+            const itemId = result.itemId
+            if (typeof itemId === 'string' && itemId.startsWith('item-')) {
+              const itemNumber = parseInt(itemId.replace('item-', ''))
+              if (!isNaN(itemNumber)) {
+                submittedItemNumbers.add(itemNumber)
+              }
+            } else if (typeof itemId === 'number') {
+              submittedItemNumbers.add(itemId)
+            }
+          }
+        })
+      }
+    } catch (error) {
+      console.error('[useReviewerFormNavigation] Error loading submitted items from results dataset:', error)
+    }
+
+    // ALSO check if we have response data in localStorage for additional items
+    try {
+      const participantId = searchParams.get('participant')
+      const storageKey = participantId 
+        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
+        : `evaluation_${taskId}_responses`
+      
+      const savedResponsesString = localStorage.getItem(storageKey)
+      if (savedResponsesString) {
+        const savedResponses = JSON.parse(savedResponsesString)
+        Object.keys(savedResponses).forEach(itemKey => {
+          const itemNumber = parseInt(itemKey)
+          if (!isNaN(itemNumber) && Object.keys(savedResponses[itemKey]).length > 0) {
+            // Only add if this item has actual response data
+            submittedItemNumbers.add(itemNumber)
+          }
+        })
+      }
+    } catch (error) {
+      console.error('[useReviewerFormNavigation] Error loading items from response storage:', error)
+    }
+
+    if (submittedItemNumbers.size > 0) {
+      console.log(`[useReviewerFormNavigation] Found ${submittedItemNumbers.size} previously submitted items:`, Array.from(submittedItemNumbers).sort((a, b) => a - b))
+      setSubmittedItems(submittedItemNumbers)
+      
+      // Find the first unanswered question for smart resume
+      if (!hasInitialized && currentItem === 1) {
+        let nextUnansweredItem = 1
+        for (let i = 1; i <= evaluation.totalItems; i++) {
+          if (!submittedItemNumbers.has(i)) {
+            nextUnansweredItem = i
+            break
+          }
+        }
+        
+        // If all questions are answered, go to the last question
+        if (nextUnansweredItem === 1 && submittedItemNumbers.has(1)) {
+          nextUnansweredItem = evaluation.totalItems
+        }
+        
+        console.log(`[useReviewerFormNavigation] Smart resume: jumping to first unanswered question ${nextUnansweredItem}`)
+        setCurrentItem(nextUnansweredItem)
+        setFurthestItemReached(Math.max(furthestItemReached, nextUnansweredItem))
+        setHasInitialized(true)
+      }
+      
+      // Synchronize the progress dashboard with the restored submission count
+      try {
+        const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
+        const reviewerIndex = evaluationReviewers.findIndex(
+          (r: any) => r.id === currentReviewer.id && 
+          (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+        )
+        
+        if (reviewerIndex !== -1) {
+          const currentProgress = evaluationReviewers[reviewerIndex].completed || 0
+          const actualSubmittedCount = submittedItemNumbers.size
+          
+          // Only update if the counts don't match
+          if (currentProgress !== actualSubmittedCount) {
+            evaluationReviewers[reviewerIndex].completed = actualSubmittedCount
+            localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
+            console.log(`[useReviewerFormNavigation] Synchronized progress dashboard: ${actualSubmittedCount} submitted items for reviewer ${currentReviewer.id}`)
+            
+            // Dispatch event to notify Progress Dashboard of the corrected count
+            try {
+              if (typeof window !== 'undefined') {
+                const progressEvent = new CustomEvent('reviewerProgressUpdated', { 
+                  detail: { 
+                    evaluationId: Number(taskId), 
+                    reviewerId: currentReviewer.id,
+                    completed: actualSubmittedCount,
+                    total: evaluation.totalItems,
+                    avgTime: evaluationReviewers[reviewerIndex].avgTime || "0.0"
+                  } 
+                });
+                window.dispatchEvent(progressEvent);
+                console.log(`[useReviewerFormNavigation] Dispatched reviewerProgressUpdated event to sync progress dashboard`);
+              }
+            } catch (eventError) {
+              console.error('[useReviewerFormNavigation] Error dispatching progress sync event:', eventError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[useReviewerFormNavigation] Error synchronizing progress dashboard:', error)
+      }
+    } else if (!hasInitialized) {
+      // No submitted items found, initialize normally
+      setHasInitialized(true)
+    }
+  }, [evaluation, taskId, currentReviewer.id, searchParams, hasInitialized, currentItem, furthestItemReached, setFurthestItemReached])
 
   // Memoized storage keys to prevent infinite render loops
   const memoizedStorageKey = useMemo(() => {
@@ -164,7 +291,7 @@ export function useReviewerFormNavigation({
         console.error('[updateProgress] Error saving progress to localStorage:', error)
       }
     }
-  }, [currentItem, allResponses, furthestItemReached, taskId, evaluation, memoizedStorageKey, memoizedProgressKey, setFurthestItemReached])
+  }, [currentItem, furthestItemReached, taskId, evaluation, memoizedStorageKey, memoizedProgressKey, setFurthestItemReached])
 
   // Handle input changes with immediate localStorage persistence
   const handleInputChange = (criterionId: number, value: string) => {
@@ -322,6 +449,8 @@ export function useReviewerFormNavigation({
     const newSubmittedItems = new Set([...submittedItems, currentItem])
     setSubmittedItems(newSubmittedItems)
     setIsCurrentFormModified(false)
+    
+    console.log(`[handleSubmit] Added item ${currentItem} to submitted items. Full set:`, Array.from(newSubmittedItems).sort((a, b) => a - b))
 
     if (currentItem >= evaluation.totalItems) {
       // Update completion status and reviewer tracking

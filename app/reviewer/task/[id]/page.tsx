@@ -299,6 +299,7 @@ export default function ReviewTaskPage() {
   )
 
   const isCurrentItemSubmitted = submittedItems.has(currentItem)
+  // Enable submit when: form is valid AND (item not submitted OR item submitted but form modified)
   const canSubmit = isFormValid && (!isCurrentItemSubmitted || isCurrentFormModified)
 
   return (
@@ -387,13 +388,15 @@ export default function ReviewTaskPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      console.log(`[BackButton] Current item: ${currentItem}, attempting to go back`)
                       if (currentItem > 1) {
                         // Save current responses before navigating
-                        setAllResponses((prev) => ({
-                          ...prev,
-                          [currentItem]: formData,
-                        }))
-                        setCurrentItem(currentItem - 1)
+                        saveCurrentResponsesBeforeNavigation()
+                        const newItem = currentItem - 1
+                        console.log(`[BackButton] Navigating from ${currentItem} to ${newItem}`)
+                        setCurrentItem(newItem)
+                      } else {
+                        console.log(`[BackButton] Cannot go back from item ${currentItem}`)
                       }
                     }}
                     disabled={currentItem <= 1}
