@@ -365,7 +365,7 @@ export function usePreviewDataInitialization({
         }
       }
     }
-  }, [isEditMode, editId, evaluationNameEdited])
+  }, [isEditMode, editId])
 
   return {
     uploadedData,

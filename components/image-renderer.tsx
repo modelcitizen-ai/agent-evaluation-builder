@@ -76,7 +76,7 @@ export default function ImageRenderer({ url, title, className = "" }: ImageRende
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center min-h-[200px]">
           <div className="flex flex-col items-center space-y-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="text-sm text-gray-500">Loading image...</span>
           </div>
         </div>

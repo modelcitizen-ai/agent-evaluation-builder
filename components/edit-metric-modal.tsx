@@ -132,7 +132,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   type="text"
                   value={editedMetric.name}
                   onChange={handleNameChange}
-                  className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Add a Question"
                 />
               </div>
@@ -143,7 +143,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   <select
                     value={editedMetric.type}
                     onChange={handleTypeChange}
-                    className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white"
+                    className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="yes-no">Yes/No</option>
                     <option value="likert-scale">Likert Scale</option>
@@ -173,7 +173,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                         type="text"
                         value={editedMetric.likertLabels?.low || ""}
                         onChange={(e) => handleLikertLabelChange("low", e.target.value)}
-                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="Low"
                       />
                     </div>
@@ -183,7 +183,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                         type="text"
                         value={editedMetric.likertLabels?.high || ""}
                         onChange={(e) => handleLikertLabelChange("high", e.target.value)}
-                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="High"
                       />
                     </div>
@@ -202,7 +202,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                           type="text"
                           value={option}
                           onChange={(e) => handleOptionChange(index, e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           placeholder={`Option ${index + 1}`}
                         />
                         <button
@@ -229,7 +229,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   id="metric-required"
                   checked={editedMetric.required}
                   onChange={handleRequiredChange}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="metric-required" className="ml-3 block text-sm text-gray-900">
                   Required
@@ -249,7 +249,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
             <button
               type="button"
               onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
               Cancel
             </button>

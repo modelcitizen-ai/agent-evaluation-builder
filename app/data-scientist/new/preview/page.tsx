@@ -39,19 +39,53 @@ export default function PreviewPage() {
   const renderInlineContent = (content: string) => {
     if (!content) return content
 
-    console.log('[renderInlineContent] Processing content:', content)
-
     // Check if content contains HTML tags (already formatted)
     if (content.includes('<') && content.includes('>')) {
-      console.log('[renderInlineContent] Found HTML tags, using dangerouslySetInnerHTML')
-      // Sanitize HTML and render inline with link styling
+      
+      // Process HTML to standardize link colors before sanitization
+      let processedHtml = content
+      
+      // Remove any existing color styles from links and apply our standard blue colors
+      if (typeof window !== 'undefined') {
+        // Create a temporary DOM element to process the HTML
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = content
+        
+        // Find all links and standardize their styling
+        const links = tempDiv.querySelectorAll('a')
+        links.forEach(link => {
+          // Remove any existing styling that might conflict
+          link.removeAttribute('style')
+          link.removeAttribute('color')
+          
+          // Remove legacy color classes
+          if (link.className) {
+            link.className = link.className
+              .split(' ')
+              .filter(cls => !cls.includes('indigo') && !cls.includes('purple'))
+              .join(' ')
+          }
+          
+          // Add our standard link classes AND inline styles to force blue color
+          link.className = 'text-blue-600 hover:text-blue-800 no-underline'
+          link.style.color = 'rgb(37, 99, 235) !important' // Force blue-600 inline with !important
+          link.style.textDecoration = 'none !important' // Remove underline
+        })
+        
+        processedHtml = tempDiv.innerHTML
+      }
+      
+      // Sanitize the processed HTML
       const sanitizedHtml = typeof window !== 'undefined' 
-        ? DOMPurify.sanitize(content)
-        : content
+        ? DOMPurify.sanitize(processedHtml, {
+            ADD_ATTR: ['class', 'style'], // Allow both class and style attributes
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+          })
+        : processedHtml
       
       return (
         <span 
-          className="inline [&_a]:text-blue-600 [&_a]:hover:text-blue-800"
+          className="inline html-content"
           dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       )
@@ -60,7 +94,6 @@ export default function PreviewPage() {
     // Check for Markdown links: [text](url)
     const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
     if (markdownLinkRegex.test(content)) {
-      console.log('[renderInlineContent] Found Markdown links, converting to HTML')
       // Reset regex for replacement
       markdownLinkRegex.lastIndex = 0
       
@@ -103,10 +136,8 @@ export default function PreviewPage() {
     // Check if content is a URL (plain text URL that needs to be converted to link)
     const urlRegex = /^(https?:\/\/[^\s]+)$/
     const trimmedContent = content.trim()
-    console.log('[renderInlineContent] Checking if URL:', trimmedContent, 'matches:', urlRegex.test(trimmedContent))
     
     if (urlRegex.test(trimmedContent)) {
-      console.log('[renderInlineContent] Creating link for URL:', trimmedContent)
       return (
         <a
           href={trimmedContent}
@@ -122,7 +153,6 @@ export default function PreviewPage() {
     // Also check if content contains URLs within text
     const hasUrl = /https?:\/\/[^\s]+/.test(trimmedContent)
     if (hasUrl) {
-      console.log('[renderInlineContent] Found URL within text, converting to links')
       const parts = trimmedContent.split(/(https?:\/\/[^\s]+)/g)
       return (
         <span>
@@ -146,7 +176,6 @@ export default function PreviewPage() {
       )
     }
 
-    console.log('[renderInlineContent] Rendering as plain text')
     // Plain text content
     return <span>{content}</span>
   }
@@ -299,7 +328,7 @@ export default function PreviewPage() {
           {/* Configure Dataset Button */}
           <button
             onClick={() => setShowDatasetConfig(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <CogIcon className="h-4 w-4 mr-2" />
             Configure Dataset
@@ -328,7 +357,7 @@ export default function PreviewPage() {
           {/* Cancel Button */}
           <button
             onClick={() => router.push("/data-scientist")}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
           </button>
@@ -393,7 +422,7 @@ export default function PreviewPage() {
           {/* Animated Logo (copied from upload page for consistency) */}
           <div className="mb-8">
             <div className="relative">
-              <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center relative animate-bounce">
+              <div className="h-16 w-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center relative animate-bounce">
                 <div className="h-6 w-6 bg-white rounded-full animate-pulse"></div>
                 <div className="absolute inset-0 animate-spin">
                   <div className="absolute top-1 right-1 h-3 w-3 bg-yellow-300 rounded-full animate-ping"></div>
@@ -404,17 +433,17 @@ export default function PreviewPage() {
                 <div className="absolute -top-2 -left-2 h-1.5 w-1.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
                 <div className="absolute -bottom-2 -right-2 h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
               </div>
-              <div className="absolute inset-0 rounded-full border-4 border-indigo-200 animate-ping opacity-20"></div>
-              <div className="absolute inset-0 rounded-full border-2 border-purple-200 animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
+              <div className="absolute inset-0 rounded-full border-4 border-blue-200 animate-ping opacity-20"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-blue-300 animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
             </div>
           </div>
           <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Interpreting your Data...</h3>
             <p className="text-sm text-gray-600">This may take a few moments</p>
             <div className="flex justify-center mt-4 space-x-1">
-              <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce"></div>
-              <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
+              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
           </div>
         </div>
@@ -506,15 +535,14 @@ export default function PreviewPage() {
               onMouseDown={handleMouseDown}
             >
               <div
-                className="h-full w-1 bg-transparent group-hover:bg-indigo-400 transition-colors duration-200"
-                style={{ backgroundColor: isDragging ? "rgb(79 70 229)" : "" }}
+                className="h-full w-1 bg-transparent group-hover:bg-blue-400 transition-colors duration-200"
+                style={{ backgroundColor: isDragging ? "rgb(59 130 246)" : "" }}
               ></div>
             </div>
           </div>
 
           {/* Right Column - Evaluation Form */}
           <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
-            {/* Task Instructions - Moved above evaluation */}
             {/* Instructions Panel - conditionally rendered */}
             {showInstructions && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -658,7 +686,7 @@ export default function PreviewPage() {
                           <button
                             type="button"
                             onClick={() => handleEditMetric(criterion.id)}
-                            className="text-indigo-600 hover:text-indigo-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
                             aria-label="Edit question"
                           >
                             <PencilIcon className="h-4 w-4" />
@@ -751,7 +779,7 @@ export default function PreviewPage() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm px-3 py-1.5"
+                          className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-1.5"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}
@@ -769,9 +797,6 @@ export default function PreviewPage() {
                   </button>
 
                   <div className="pt-4">
-                    {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
-                    {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
-                    {/* Update the submit button logic to check if the item was already submitted and if form was modified: */}
                     {(() => {
                       const isCurrentItemSubmitted = submittedItems.has(currentItem)
                       const canSubmit = isFormValid && (!isCurrentItemSubmitted || isCurrentFormModified)

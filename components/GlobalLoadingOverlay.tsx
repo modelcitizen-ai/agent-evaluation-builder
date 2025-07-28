@@ -47,9 +47,9 @@ export function GlobalLoadingOverlay({ isLoading }: { isLoading: boolean }) {
           <h3 className="text-lg font-medium text-gray-900 mb-2">Interpreting your Data...</h3>
           <p className="text-sm text-gray-600">This may take a few moments</p>
           <div className="flex justify-center mt-4 space-x-1">
-            <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce"></div>
-            <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="h-2 w-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
+            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
       </div>

@@ -94,7 +94,7 @@ export default function ConfigureDatasetModal({
                                       | "Excluded"
                                   )
                                 }
-                                className="block w-48 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="block w-48 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                               >
                                 <option value="Input">Input (Prompt)</option>
                                 <option value="Model Output">Output (Completion)</option>
@@ -175,7 +175,7 @@ export default function ConfigureDatasetModal({
                                 value={columnConfig?.displayName || ""}
                                 onChange={(e) => onUpdateColumnDisplayName(header, e.target.value)}
                                 disabled={!isLabelVisible}
-                                className={`block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                                className={`block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:border-blue-500 ${
                                   !isLabelVisible ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
                               />
