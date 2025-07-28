@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import ReactMarkdown from "react-markdown"
+import { marked } from "marked"
 import DOMPurify from "dompurify"
 import VideoPlayer from "./video-player"
 import ImageRenderer from "./image-renderer"
@@ -10,6 +10,74 @@ interface ContentRendererProps {
   content: string | any[] | { data: any[]; columns: string[]; fileType?: string };
   title?: string;
   className?: string;
+}
+
+// Unified function to convert any content to HTML
+function convertContentToHtml(content: string, title?: string): string {
+  if (!content || typeof content !== "string") return content;
+
+  // Clean medical report text if it's a ground truth impression
+  const shouldCleanText = title === "Ground Truth Impression (Original)";
+  let processedText = shouldCleanText ? cleanTextContentForDisplay(content) : content;
+
+  // Check if content already contains HTML tags
+  const hasHtmlTags = /<[^>]+>/.test(processedText);
+  
+  if (hasHtmlTags) {
+    console.log('[ContentRenderer] Content already contains HTML, using as-is');
+    return processedText;
+  }
+
+  // Check if content has markdown syntax
+  const hasMarkdownSyntax = /[#*_`~\[\]\(\)]/.test(processedText);
+  
+  if (hasMarkdownSyntax) {
+    console.log('[ContentRenderer] Converting markdown to HTML');
+    try {
+      // Configure marked for safe, compact output
+      marked.setOptions({
+        breaks: true, // Convert line breaks to <br>
+        gfm: true,    // GitHub flavored markdown
+      });
+      
+      const htmlResult = marked(processedText);
+      return typeof htmlResult === 'string' ? htmlResult : processedText;
+    } catch (error) {
+      console.error('[ContentRenderer] Markdown conversion failed:', error);
+      return processedText; // Fallback to original text
+    }
+  }
+
+  console.log('[ContentRenderer] Plain text content, converting newlines to <br>');
+  // For plain text, convert newlines to <br> tags
+  return processedText.replace(/\n/g, '<br>');
+}
+
+// Helper function to clean medical report text
+function cleanTextContentForDisplay(text: string): string {
+  if (!text || typeof text !== "string") return text;
+  
+  let cleaned = text;
+  
+  // Convert XXXX redactions to [REDACTED] format for professional display
+  cleaned = cleaned.replace(/\bXXXX\b/g, '[REDACTED]');
+  
+  // Clean up orphaned punctuation and formatting artifacts
+  cleaned = cleaned.replace(/^\s*[.,;:]\s*/gm, ''); // Remove leading punctuation on lines
+  cleaned = cleaned.replace(/\n\s*[.,;:]\s*\n/g, '\n'); // Remove punctuation on its own line
+  
+  // Fix double punctuation artifacts
+  cleaned = cleaned.replace(/\.\s*,/g, '.'); // Period followed by comma
+  cleaned = cleaned.replace(/,\s*\./g, '.'); // Comma followed by period
+  cleaned = cleaned.replace(/;\s*,/g, ';'); // Semicolon followed by comma
+  cleaned = cleaned.replace(/:\s*,/g, ':'); // Colon followed by comma
+  
+  // Clean up extra whitespace and newlines
+  cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n'); // Multiple newlines to double
+  cleaned = cleaned.replace(/^\s+|\s+$/g, ''); // Trim start and end
+  cleaned = cleaned.replace(/\s+\n/g, '\n'); // Remove trailing spaces before newlines
+  
+  return cleaned;
 }
 
 function isParsedTableData(
@@ -46,119 +114,6 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
   // Only clean if this is the original version, not the already-cleaned version
   const shouldCleanText = title === "Ground Truth Impression (Original)" && typeof content === "string";
   const displayContent = shouldCleanText ? cleanTextContentForDisplay(content) : content;
-
-  // Helper function to convert numbered lists to HTML ordered list
-  function formatNumberedListsAsHtml(text: string): React.ReactElement {
-    // First, try to split the text at numbered list patterns
-    // Handle both line-based and inline numbered lists
-    let processedText = text;
-    
-    // Check if we have inline numbered lists (like "text. 1. item 2. item")
-    if (text.match(/[.]\s+\d+\.\s+/) || text.match(/,\s*\d+\.\s+/)) {
-      // Split at the first numbered item to separate narrative from list
-      const splitPattern = /([^]*?)(?=\s*\d+\.\s+)/;
-      const match = text.match(splitPattern);
-      
-      if (match && match[1]) {
-        const narrativeText = match[1].trim();
-        const listPart = text.substring(match[1].length).trim();
-        
-        // Extract numbered items from the list part
-        const numberedItems = listPart.match(/\d+\.\s+[^0-9]*?(?=\d+\.|$)/g);
-        
-        if (numberedItems && numberedItems.length > 0) {
-          const cleanedItems = numberedItems.map(item => 
-            item.replace(/^\d+\.\s+/, '').replace(/,\s*$/, '').trim()
-          ).filter(item => item.length > 0);
-          
-          return (
-            <div className="leading-relaxed space-y-1">
-              {narrativeText && <div className="text-sm text-gray-900 mb-3">{narrativeText}</div>}
-              <ol className="list-decimal ml-6 mb-2 space-y-1" style={{ listStylePosition: 'outside' }}>
-                {cleanedItems.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-900 pl-2">{item}</li>
-                ))}
-              </ol>
-            </div>
-          );
-        }
-      }
-    }
-    
-    // Fallback to line-based processing for traditional format
-    const lines = processedText.split('\n');
-    const result: (string | React.ReactElement)[] = [];
-    let currentList: string[] = [];
-    let listIndex = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Check if line starts with numbered item (e.g., "1. ", "2. ", etc.)
-      // More flexible pattern to handle various spacing
-      const numberedMatch = line.match(/^\s*(\d+)\.\s+(.+)$/);
-      if (numberedMatch) {
-        currentList.push(numberedMatch[2]);
-      } else {
-        // If we were building a list and hit a non-numbered line, render the list
-        if (currentList.length > 0) {
-          result.push(
-            <ol key={`list-${listIndex++}`} className="list-decimal ml-6 mb-2 space-y-1" style={{ listStylePosition: 'outside' }}>
-              {currentList.map((item, idx) => (
-                <li key={idx} className="text-sm text-gray-900 pl-2">{item}</li>
-              ))}
-            </ol>
-          );
-          currentList = [];
-        }
-        
-        // Add non-numbered line (if not empty)
-        if (line.trim()) {
-          result.push(<div key={`text-${i}`} className="text-sm text-gray-900">{line}</div>);
-        } else {
-          result.push(<div key={`space-${i}`} className="h-2" />);
-        }
-      }
-    }
-
-    // Handle any remaining list items
-    if (currentList.length > 0) {
-      result.push(
-        <ol key={`list-${listIndex}`} className="list-decimal ml-6 mb-2 space-y-1" style={{ listStylePosition: 'outside' }}>
-          {currentList.map((item, idx) => (
-            <li key={idx} className="text-sm text-gray-900 pl-2">{item}</li>
-          ))}
-        </ol>
-      );
-    }
-
-    return <div className="leading-relaxed space-y-1">{result}</div>;
-  }
-  function cleanTextContentForDisplay(text: string): string {
-    if (!text || typeof text !== "string") return text;
-    
-    let cleaned = text;
-    
-    // Convert XXXX redactions to [REDACTED] format for professional display
-    cleaned = cleaned.replace(/\bXXXX\b/g, '[REDACTED]');
-    
-    // Clean up orphaned punctuation and formatting artifacts
-    cleaned = cleaned.replace(/^\s*[.,;:]\s*/gm, ''); // Remove leading punctuation on lines
-    cleaned = cleaned.replace(/\n\s*[.,;:]\s*\n/g, '\n'); // Remove punctuation on its own line
-    
-    // Fix double punctuation artifacts
-    cleaned = cleaned.replace(/\.\s*,/g, '.'); // Period followed by comma
-    cleaned = cleaned.replace(/,\s*\./g, '.'); // Comma followed by period
-    cleaned = cleaned.replace(/;\s*,/g, ';'); // Semicolon followed by comma
-    cleaned = cleaned.replace(/:\s*,/g, ':'); // Colon followed by comma
-    
-    // Clean up extra whitespace and newlines
-    cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n'); // Multiple newlines to double
-    cleaned = cleaned.replace(/^\s+|\s+$/g, ''); // Trim start and end
-    cleaned = cleaned.replace(/\s+\n/g, '\n'); // Remove trailing spaces before newlines
-    
-    return cleaned;
-  }
 
   // Table rendering for parsed data (CSV, Excel, JSONL)
   if (isParsedTableData(displayContent)) {
@@ -223,7 +178,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
     );
   }
 
-  // Legacy string rendering logic
+  // Unified string rendering with HTML pipeline
   if (typeof displayContent === "string") {
     // Check if content is a URL (simple check)
     const isUrl = (text: string): boolean => {
@@ -311,73 +266,29 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       )
     }
 
-    // Otherwise render as text with proper multi-line formatting
-    // Check if content contains numbered lists and format as HTML ordered list
-    // More flexible regex to catch various numbered list formats including inline lists
-    if (displayContent.match(/^[\s]*\d+\.\s+/m) || 
-        displayContent.match(/\n\s*\d+\.\s+/) || 
-        displayContent.match(/,\s*\d+\.\s+/) ||
-        displayContent.match(/\.\s+\d+\.\s+/)) {
-      return (
-        <div className={className}>
-          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          {formatNumberedListsAsHtml(displayContent)}
-        </div>
-      )
-    }
-
-    // HTML rendering block - check for HTML tags and render safely (FIRST PRIORITY)
-    if (/<[^>]+>/.test(displayContent)) {
-      console.log('[ContentRenderer] HTML content detected:', displayContent.substring(0, 200) + '...')
-      console.log('[ContentRenderer] Full HTML content for debugging:', JSON.stringify(displayContent))
-      
-      // Sanitize HTML content for security (only on client side)
-      const sanitizedHtml = isClient 
-        ? DOMPurify.sanitize(displayContent, {
-            ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div', 'span', 'strong', 'em', 'b', 'i', 'u', 'br', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
-            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style'],
-            KEEP_CONTENT: true
-          })
-        : displayContent; // Fallback to original content during SSR
-      
-      console.log('[ContentRenderer] Sanitized HTML:', sanitizedHtml)
-      
-      return (
-        <div className={className}>
-          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          <div 
-            className="prose prose-sm text-gray-900 leading-relaxed prose-a:text-blue-600 prose-a:no-underline"
-            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-          />
-        </div>
-      )
-    }
-
-    // Pure markdown content (contains markdown but no HTML tags)
-    if (
-      typeof displayContent === "string" &&
-      displayContent.match(/[#*_`~\[\]\(\)]/) && // contains markdown characters
-      !/<[^>]+>/.test(displayContent) // but no HTML tags
-    ) {
-      console.log('[ContentRenderer] Pure markdown content detected:', displayContent.substring(0, 200) + '...')
-      
-      return (
-        <div className={className}>
-          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          <div className="compact-markdown text-gray-900 whitespace-pre-wrap leading-relaxed">
-            <ReactMarkdown>
-              {displayContent}
-            </ReactMarkdown>
-          </div>
-        </div>
-      )
-    }
-
-    console.log('[ContentRenderer] Falling back to plain text rendering for:', displayContent.substring(0, 200) + '...')
+    // UNIFIED PIPELINE: Convert all content to HTML and render consistently
+    console.log('[ContentRenderer] Using unified HTML pipeline for content:', displayContent.substring(0, 100) + '...')
+    
+    const htmlContent = convertContentToHtml(displayContent, title);
+    
+    // Sanitize HTML content for security (only on client side)
+    const sanitizedHtml = isClient 
+      ? DOMPurify.sanitize(htmlContent, {
+          ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div', 'span', 'strong', 'em', 'b', 'i', 'u', 'br', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
+          ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style'],
+          KEEP_CONTENT: true
+        })
+      : htmlContent; // Fallback to original content during SSR
+    
+    console.log('[ContentRenderer] Final sanitized HTML:', sanitizedHtml)
+    
     return (
       <div className={className}>
         {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-        <div className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{displayContent}</div>
+        <div 
+          className="prose prose-sm max-w-none text-gray-900 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-a:text-blue-600 prose-a:no-underline"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
       </div>
     )
   }
