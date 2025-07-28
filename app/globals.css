@@ -159,3 +159,40 @@ a[style*="text-decoration"],
 .html-content a[style*="text-decoration"] {
   text-decoration: none !important;
 }
+
+/* Animation delays for loading spinner */
+.animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-500 {
+  animation-delay: 0.5s;
+}
+
+.animate-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animate-reverse-slow {
+  animation-direction: reverse;
+  animation-duration: 3s;
+}
+
+/* Scrollable content area with custom scrollbar */
+.scrollable-content-area {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6; /* gray-400 gray-100 */
+}
+
+/* Dynamic height classes for content area */
+.content-height-with-metadata {
+  max-height: calc(100vh - 400px);
+}
+
+.content-height-without-metadata {
+  max-height: calc(100vh - 274px);
+}

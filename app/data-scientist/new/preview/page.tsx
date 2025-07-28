@@ -427,14 +427,14 @@ export default function PreviewPage() {
                 <div className="absolute inset-0 animate-spin">
                   <div className="absolute top-1 right-1 h-3 w-3 bg-yellow-300 rounded-full animate-ping"></div>
                 </div>
-                <div className="absolute inset-0 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '3s' }}>
+                <div className="absolute inset-0 animate-spin animate-reverse-slow">
                   <div className="absolute bottom-1 left-1 h-2 w-2 bg-pink-300 rounded-full animate-pulse"></div>
                 </div>
-                <div className="absolute -top-2 -left-2 h-1.5 w-1.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-                <div className="absolute -bottom-2 -right-2 h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute -top-2 -left-2 h-1.5 w-1.5 bg-green-400 rounded-full animate-bounce animate-delay-500"></div>
+                <div className="absolute -bottom-2 -right-2 h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce animate-delay-1000"></div>
               </div>
               <div className="absolute inset-0 rounded-full border-4 border-blue-200 animate-ping opacity-20"></div>
-              <div className="absolute inset-0 rounded-full border-2 border-blue-300 animate-ping opacity-30" style={{ animationDelay: '0.5s' }}></div>
+              <div className="absolute inset-0 rounded-full border-2 border-blue-300 animate-ping opacity-30 animate-delay-500"></div>
             </div>
           </div>
           <div className="text-center">
@@ -442,8 +442,8 @@ export default function PreviewPage() {
             <p className="text-sm text-gray-600">This may take a few moments</p>
             <div className="flex justify-center mt-4 space-x-1">
               <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce animate-delay-100"></div>
+              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce animate-delay-200"></div>
             </div>
           </div>
         </div>
@@ -469,14 +469,11 @@ export default function PreviewPage() {
                   } else if (Array.isArray(content)) {
                     return (
                       <div 
-                        className="space-y-4 overflow-y-auto pr-3 -mr-3"
-                        style={{ 
-                          maxHeight: columnRoles.filter((role) => role.userRole === "Metadata").length > 0 
-                            ? 'calc(100vh - 400px)' // Leave space for metadata card + padding
-                            : 'calc(100vh - 274px)',  // More conservative with additional 24px bottom buffer
-                          scrollbarWidth: 'thin',
-                          scrollbarColor: '#9ca3af #f3f4f6' // thumb: gray-400, track: gray-100
-                        }}
+                        className={`space-y-4 overflow-y-auto pr-3 -mr-3 scrollable-content-area ${
+                          columnRoles.filter((role) => role.userRole === "Metadata").length > 0 
+                            ? 'content-height-with-metadata' 
+                            : 'content-height-without-metadata'
+                        }`}
                       >
                         {content.map((item, index) => (
                           <ContentRenderer key={index} content={item.content} title={generateInputTitle(item.name)} />
