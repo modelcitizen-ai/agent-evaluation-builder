@@ -34,6 +34,14 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
     setIsClient(true);
   }, []);
 
+  // Add debug logging for all content
+  console.log('[ContentRenderer] Called with title:', title, 'content type:', typeof content, 'content preview:', 
+    typeof content === 'string' ? content.substring(0, 100) + '...' : 'non-string content')
+  
+  if (title === 'Completion' && typeof content === 'string') {
+    console.log('[ContentRenderer] FULL COMPLETION CONTENT:', JSON.stringify(content))
+  }
+
   // Clean medical report text if it's a ground truth impression
   // Only clean if this is the original version, not the already-cleaned version
   const shouldCleanText = title === "Ground Truth Impression (Original)" && typeof content === "string";
@@ -318,8 +326,11 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       )
     }
 
-    // HTML rendering block - check for HTML tags and render safely
+    // HTML rendering block - check for HTML tags and render safely (FIRST PRIORITY)
     if (/<[^>]+>/.test(displayContent)) {
+      console.log('[ContentRenderer] HTML content detected:', displayContent.substring(0, 200) + '...')
+      console.log('[ContentRenderer] Full HTML content for debugging:', JSON.stringify(displayContent))
+      
       // Sanitize HTML content for security (only on client side)
       const sanitizedHtml = isClient 
         ? DOMPurify.sanitize(displayContent, {
@@ -328,6 +339,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
             KEEP_CONTENT: true
           })
         : displayContent; // Fallback to original content during SSR
+      
+      console.log('[ContentRenderer] Sanitized HTML:', sanitizedHtml)
       
       return (
         <div className={className}>
@@ -340,14 +353,18 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       )
     }
 
-    // Markdown rendering block (fix: remove className from ReactMarkdown)
+    // Pure markdown content (contains markdown but no HTML tags)
     if (
-      displayContent.match(/[#*_`~>\[\]\(\)]/) // basic markdown characters
+      typeof displayContent === "string" &&
+      displayContent.match(/[#*_`~\[\]\(\)]/) && // contains markdown characters
+      !/<[^>]+>/.test(displayContent) // but no HTML tags
     ) {
+      console.log('[ContentRenderer] Pure markdown content detected:', displayContent.substring(0, 200) + '...')
+      
       return (
         <div className={className}>
           {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          <div className="prose prose-sm text-gray-900 whitespace-pre-wrap leading-relaxed prose-a:text-blue-600 prose-a:no-underline">
+          <div className="compact-markdown text-gray-900 whitespace-pre-wrap leading-relaxed">
             <ReactMarkdown>
               {displayContent}
             </ReactMarkdown>
@@ -355,7 +372,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
         </div>
       )
     }
-    
+
+    console.log('[ContentRenderer] Falling back to plain text rendering for:', displayContent.substring(0, 200) + '...')
     return (
       <div className={className}>
         {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}

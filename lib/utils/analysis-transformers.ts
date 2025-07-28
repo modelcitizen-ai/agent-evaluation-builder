@@ -55,6 +55,7 @@ export function transformAnalysisResult(analysisResult: any) {
       reasoning: col.reasoning,
       reason: col.reasoning,
       userRole: convertedRole,
+      labelVisible: true, // Default to visible
     };
   });
 

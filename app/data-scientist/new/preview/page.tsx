@@ -22,6 +22,7 @@ import { usePreviewFormNavigation } from "@/components/data-scientist/preview/us
 import { usePreviewColumnManagement } from "@/components/data-scientist/preview/usePreviewColumnManagement"
 import { usePreviewUIHelpers } from "@/components/data-scientist/preview/usePreviewUIHelpers"
 import { usePreviewMetricManagement } from "@/components/data-scientist/preview/usePreviewMetricManagement"
+import DOMPurify from "dompurify"
 
 /**
  * IMPORTANT: The evaluationName is now a single source of truth from the backend API.
@@ -33,6 +34,122 @@ import { usePreviewMetricManagement } from "@/components/data-scientist/preview/
 export default function PreviewPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Simple inline content renderer for metadata
+  const renderInlineContent = (content: string) => {
+    if (!content) return content
+
+    console.log('[renderInlineContent] Processing content:', content)
+
+    // Check if content contains HTML tags (already formatted)
+    if (content.includes('<') && content.includes('>')) {
+      console.log('[renderInlineContent] Found HTML tags, using dangerouslySetInnerHTML')
+      // Sanitize HTML and render inline with link styling
+      const sanitizedHtml = typeof window !== 'undefined' 
+        ? DOMPurify.sanitize(content)
+        : content
+      
+      return (
+        <span 
+          className="inline [&_a]:text-blue-600 [&_a]:hover:text-blue-800"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
+      )
+    }
+
+    // Check for Markdown links: [text](url)
+    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+    if (markdownLinkRegex.test(content)) {
+      console.log('[renderInlineContent] Found Markdown links, converting to HTML')
+      // Reset regex for replacement
+      markdownLinkRegex.lastIndex = 0
+      
+      const parts = []
+      let lastIndex = 0
+      let match
+      
+      while ((match = markdownLinkRegex.exec(content)) !== null) {
+        // Add text before the link
+        if (match.index > lastIndex) {
+          parts.push(content.substring(lastIndex, match.index))
+        }
+        
+        // Add the link without underline
+        const linkText = match[1]
+        const linkUrl = match[2]
+        parts.push(
+          <a
+            key={match.index}
+            href={linkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 no-underline"
+          >
+            {linkText}
+          </a>
+        )
+        
+        lastIndex = match.index + match[0].length
+      }
+      
+      // Add remaining text
+      if (lastIndex < content.length) {
+        parts.push(content.substring(lastIndex))
+      }
+      
+      return <span>{parts}</span>
+    }
+
+    // Check if content is a URL (plain text URL that needs to be converted to link)
+    const urlRegex = /^(https?:\/\/[^\s]+)$/
+    const trimmedContent = content.trim()
+    console.log('[renderInlineContent] Checking if URL:', trimmedContent, 'matches:', urlRegex.test(trimmedContent))
+    
+    if (urlRegex.test(trimmedContent)) {
+      console.log('[renderInlineContent] Creating link for URL:', trimmedContent)
+      return (
+        <a
+          href={trimmedContent}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline break-all"
+        >
+          {trimmedContent}
+        </a>
+      )
+    }
+
+    // Also check if content contains URLs within text
+    const hasUrl = /https?:\/\/[^\s]+/.test(trimmedContent)
+    if (hasUrl) {
+      console.log('[renderInlineContent] Found URL within text, converting to links')
+      const parts = trimmedContent.split(/(https?:\/\/[^\s]+)/g)
+      return (
+        <span>
+          {parts.map((part, index) => {
+            if (/^https?:\/\/[^\s]+$/.test(part)) {
+              return (
+                <a
+                  key={index}
+                  href={part}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline break-all"
+                >
+                  {part}
+                </a>
+              )
+            }
+            return part
+          })}
+        </span>
+      )
+    }
+
+    console.log('[renderInlineContent] Rendering as plain text')
+    // Plain text content
+    return <span>{content}</span>
+  }
 
   // Detect if we're in edit mode
   const editId = searchParams.get('editId') ? Number(searchParams.get('editId')) : null
@@ -89,6 +206,7 @@ export default function PreviewPage() {
     normalizeRole,
     updateColumnRole,
     updateColumnDisplayName,
+    updateColumnVisibility,
     generateInputTitle,
     getInputColumnContent,
     getConfidenceColor,
@@ -354,10 +472,24 @@ export default function PreviewPage() {
                         // Use uploaded data if available, otherwise use preview data
                         const dataToUse = uploadedData.length > 0 ? uploadedData : previewData
                         const currentValue = dataToUse[(currentItem - 1) % dataToUse.length]?.[metadataCol.name] || "N/A"
+                        const columnTitle = generateInputTitle(metadataCol.name)
+                        
+                        // Always render metadata content, but conditionally show the label
                         return (
                           <div key={metadataCol.name}>
-                            <span className="font-medium text-gray-600">{generateInputTitle(metadataCol.name)}:</span>
-                            <span className="ml-2 text-gray-900">{String(currentValue)}</span>
+                            {columnTitle && (
+                              <>
+                                <span className="font-medium text-gray-600">{columnTitle}: </span>
+                                <span className="text-gray-900">
+                                  {renderInlineContent(String(currentValue))}
+                                </span>
+                              </>
+                            )}
+                            {!columnTitle && (
+                              <span className="text-gray-900">
+                                {renderInlineContent(String(currentValue))}
+                              </span>
+                            )}
                           </div>
                         )
                       })}
@@ -707,6 +839,7 @@ export default function PreviewPage() {
         columnRoles={columnRoles}
         onUpdateColumnRole={updateColumnRole}
         onUpdateColumnDisplayName={updateColumnDisplayName}
+        onUpdateColumnVisibility={updateColumnVisibility}
       />
 
       {/* Edit Metric Modal */}

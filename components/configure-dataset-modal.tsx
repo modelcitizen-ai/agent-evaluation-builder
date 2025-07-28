@@ -1,6 +1,6 @@
 "use client"
 
-import { XMarkIcon } from "@heroicons/react/24/outline"
+import { XMarkIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
 import TableCellRenderer from "./table-cell-renderer"
 
 interface ColumnRole {
@@ -11,6 +11,7 @@ interface ColumnRole {
   reason: string
   userRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" | "Input Data"
   displayName?: string
+  labelVisible?: boolean
 }
 
 interface ConfigureDatasetModalProps {
@@ -25,6 +26,7 @@ interface ConfigureDatasetModalProps {
     newRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded"
   ) => void
   onUpdateColumnDisplayName: (columnId: string, displayName: string) => void
+  onUpdateColumnVisibility: (columnId: string, visible: boolean) => void
 }
 
 export default function ConfigureDatasetModal({
@@ -36,6 +38,7 @@ export default function ConfigureDatasetModal({
   columnRoles,
   onUpdateColumnRole,
   onUpdateColumnDisplayName,
+  onUpdateColumnVisibility,
 }: ConfigureDatasetModalProps) {
   if (!isOpen) return null
 
@@ -99,7 +102,7 @@ export default function ConfigureDatasetModal({
                                 <option value="Metadata">Metadata</option>
                                 <option value="Excluded">Excluded</option>
                               </select>
-                              <div className="ml-1 relative">
+                              <div className="ml-1.5 relative">
                                 <div className="group">
                                   <svg
                                     className="h-4 w-4 text-gray-400 cursor-help"
@@ -162,15 +165,33 @@ export default function ConfigureDatasetModal({
                     <tr className="bg-blue-50">
                       {tableHeaders.map((header) => {
                         const columnConfig = columnRoles.find((col) => col.name === header)
+                        const isLabelVisible = columnConfig?.labelVisible !== false // default to true
                         return (
                           <th key={header} className="px-6 pt-3 pb-2 text-left">
-                            <input
-                              type="text"
-                              placeholder="UI-Visible Label"
-                              value={columnConfig?.displayName || ""}
-                              onChange={(e) => onUpdateColumnDisplayName(header, e.target.value)}
-                              className="block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            />
+                            <div className="flex items-center">
+                              <input
+                                type="text"
+                                placeholder={isLabelVisible ? "UI-Visible Label" : "Label is off"}
+                                value={columnConfig?.displayName || ""}
+                                onChange={(e) => onUpdateColumnDisplayName(header, e.target.value)}
+                                disabled={!isLabelVisible}
+                                className={`block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                                  !isLabelVisible ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => onUpdateColumnVisibility(header, !isLabelVisible)}
+                                className="ml-0.5 p-1 text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600"
+                                title={isLabelVisible ? "Hide label" : "Show label"}
+                              >
+                                {isLabelVisible ? (
+                                  <EyeIcon className="h-4 w-4" />
+                                ) : (
+                                  <EyeSlashIcon className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
                           </th>
                         )
                       })}

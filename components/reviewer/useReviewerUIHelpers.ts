@@ -90,12 +90,30 @@ export function useReviewerUIHelpers({
     const currentRowIndex = (currentItem - 1) % evaluation.data.length
     const currentRow = evaluation.data[currentRowIndex]
 
-    return evaluation.columnRoles
-      .filter((role) => role.userRole === "Metadata")
-      .map((col) => ({
-        name: col.name.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        value: currentRow[col.name] || "N/A",
-      }))
+    const metadataRoles = evaluation.columnRoles.filter((role) => role.userRole === "Metadata")
+    console.log('[getCurrentMetadata] Found metadata roles:', metadataRoles.map(r => ({ name: r.name, labelVisible: r.labelVisible })))
+
+    const result = metadataRoles.map((col) => {
+        const isLabelVisible = col.labelVisible !== false // default to true
+        
+        // For metadata, if label is hidden, use empty string for name but still show value
+        const displayName = isLabelVisible 
+          ? (col.displayName && col.displayName.trim() 
+              ? col.displayName 
+              : col.name.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()))
+          : "" // Hide label but still show content
+        
+        const item = {
+          name: displayName,
+          value: currentRow[col.name] || "N/A",
+        }
+        
+        console.log(`[getCurrentMetadata] ${col.name}: labelVisible=${isLabelVisible}, displayName="${displayName}", value="${item.value}"`)
+        return item
+      })
+    
+    console.log('[getCurrentMetadata] Final result:', result)
+    return result
   }
 
   // Generate display title for input columns
@@ -104,6 +122,14 @@ export function useReviewerUIHelpers({
     
     // Check if there's a custom display name for this column
     const columnConfig = evaluation.columnRoles.find((col) => col.name === columnName)
+    const isLabelVisible = columnConfig?.labelVisible !== false // default to true
+    
+    // If label visibility is turned off, return empty string to hide the title
+    if (!isLabelVisible) {
+      return ""
+    }
+    
+    // If visible and has custom display name, use it
     if (columnConfig?.displayName && columnConfig.displayName.trim()) {
       return columnConfig.displayName
     }

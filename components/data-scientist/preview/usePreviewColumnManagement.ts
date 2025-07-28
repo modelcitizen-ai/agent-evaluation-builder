@@ -20,6 +20,7 @@ interface ColumnRole {
   reason: string
   userRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" | "Input Data"
   displayName?: string
+  labelVisible?: boolean
 }
 
 interface UsePreviewColumnManagementProps {
@@ -35,6 +36,7 @@ interface UsePreviewColumnManagementReturn {
   normalizeRole: (role: string) => "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded"
   updateColumnRole: (columnId: string, newRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded") => void
   updateColumnDisplayName: (columnId: string, displayName: string) => void
+  updateColumnVisibility: (columnId: string, visible: boolean) => void
   
   // Column display utilities
   generateInputTitle: (columnName: string) => string
@@ -62,6 +64,14 @@ export function usePreviewColumnManagement({
   const generateInputTitle = (columnName: string) => {
     // Check if there's a custom display name for this column
     const columnConfig = columnRoles.find((col) => col.name === columnName)
+    const isLabelVisible = columnConfig?.labelVisible !== false // default to true
+    
+    // If label visibility is turned off, return empty string to hide the title
+    if (!isLabelVisible) {
+      return ""
+    }
+    
+    // If visible and has custom display name, use it
     if (columnConfig?.displayName && columnConfig.displayName.trim()) {
       return columnConfig.displayName
     }
@@ -136,6 +146,27 @@ export function usePreviewColumnManagement({
     )
   }
 
+  // Update column label visibility
+  const updateColumnVisibility = (columnId: string, visible: boolean) => {
+    console.log(`[updateColumnVisibility] Called with columnId="${columnId}", visible=${visible}`)
+    
+    setColumnRoles((prev) => {
+      const updated = prev.map((col) => {
+        if (col.id === columnId) {
+          console.log(`[updateColumnVisibility] Updating column ${col.name} from labelVisible=${col.labelVisible} to ${visible}`)
+          return {
+            ...col,
+            labelVisible: visible,
+          }
+        }
+        return col
+      })
+      
+      console.log('[updateColumnVisibility] Updated columnRoles:', updated.map(r => ({ name: r.name, userRole: r.userRole, labelVisible: r.labelVisible })))
+      return updated
+    })
+  }
+
   // Get confidence color classes for styling
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 90) return "text-green-600 bg-green-100"
@@ -203,6 +234,7 @@ export function usePreviewColumnManagement({
     normalizeRole,
     updateColumnRole,
     updateColumnDisplayName,
+    updateColumnVisibility,
     
     // Column display utilities
     generateInputTitle,

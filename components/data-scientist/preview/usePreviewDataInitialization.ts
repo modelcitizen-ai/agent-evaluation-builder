@@ -31,6 +31,7 @@ interface ColumnRole {
   reason: string
   userRole: "Input" | "Model Output" | "Reference" | "Metadata" | "Excluded" | "Input Data"
   displayName?: string
+  labelVisible?: boolean
 }
 
 interface AIAnalysisResult {
@@ -242,6 +243,7 @@ export function usePreviewDataInitialization({
         reasoning: col.reasoning,
         reason: col.reasoning,
         userRole: convertedRole,
+        labelVisible: true, // Default to visible
       }
     })
     setColumnRoles(aiColumnRoles)
@@ -291,6 +293,7 @@ export function usePreviewDataInitialization({
           reason: col.reasoning,
           reasoning: col.reasoning,
           userRole: convertedRole,
+          labelVisible: true, // Default to visible
         }
       })
       setColumnRoles(fallbackColumnRoles)
