@@ -226,35 +226,43 @@ export default function ConfigureDatasetModal({
           </div>
 
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:items-center">
-            <div className="flex space-x-3">
+            <div className="flex items-center">
+              {/* Randomization Toggle */}
+              <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mr-3">
+                <span>Present samples in random order</span>
+                <button
+                  type="button"
+                  onClick={() => onUpdateRandomization(!randomizationEnabled)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    randomizationEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                  role="switch"
+                  aria-checked={randomizationEnabled}
+                  aria-label="Toggle present samples in random order"
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      randomizationEnabled ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </label>
+              
+              {/* Vertical Separator */}
+              <div className="h-9 w-px bg-gray-300 mr-4"></div>
+              
               <button
                 onClick={onClose}
-                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
-              >
-                Save
-              </button>
-              <button
-                onClick={onClose}
-                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm mr-3"
               >
                 Cancel
               </button>
-            </div>
-            
-            {/* Randomization Toggle */}
-            <div className="flex items-center space-x-3 sm:mr-auto mt-3 sm:mt-0">
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={randomizationEnabled}
-                  onChange={(e) => onUpdateRandomization(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span>Randomize sample order</span>
-              </label>
-              <div className="text-xs text-gray-500">
-                Present samples in random order to reduce bias
-              </div>
+              <button
+                onClick={onClose}
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
