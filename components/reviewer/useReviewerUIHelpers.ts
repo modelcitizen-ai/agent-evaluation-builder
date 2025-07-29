@@ -8,9 +8,12 @@
  * - Progress calculation and visualization
  * - UI state management (instructions panel, column widths)
  * - Data formatting and title generation helpers
+ * - Sample randomization for participants
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { getDataIndexForPosition } from '@/lib/utils/randomization'
 
 interface Evaluation {
   id: number
@@ -20,6 +23,7 @@ interface Evaluation {
   columnRoles: any[]
   data: any[]
   totalItems: number
+  randomizationEnabled?: boolean
   assignedReviewers?: { id: string; name: string }[]
 }
 
@@ -63,12 +67,31 @@ export function useReviewerUIHelpers({
   const [leftColumnWidth, setLeftColumnWidth] = useState(50) // percentage
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // Get URL parameters for participant-specific randomization
+  const searchParams = useSearchParams()
+  const participantId = searchParams.get('participant')
+  const isSequential = searchParams.get('sequential') === 'true'
 
-  // Get current content to display
+  // Get current content to display with randomization support
   const getCurrentContent = () => {
     if (!evaluation) return []
     
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
+    // Determine if randomization should be used
+    // Check both participant ID AND evaluation's randomization setting
+    const useRandomization = participantId && !isSequential && evaluation.randomizationEnabled === true
+    
+    let currentRowIndex: number
+    if (useRandomization) {
+      // Use randomized order for this participant
+      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluation.data.length)
+      console.log(`[getCurrentContent] Randomized mode: UI position ${currentItem} -> data index ${currentRowIndex} for participant ${participantId}`)
+    } else {
+      // Use sequential order (legacy behavior)
+      currentRowIndex = (currentItem - 1) % evaluation.data.length
+      console.log(`[getCurrentContent] Sequential mode: UI position ${currentItem} -> data index ${currentRowIndex}`)
+    }
+    
     const currentRow = evaluation.data[currentRowIndex]
 
     const inputColumns = evaluation.columnRoles.filter(
@@ -83,11 +106,23 @@ export function useReviewerUIHelpers({
     }))
   }
 
-  // Get current metadata to display
+  // Get current metadata to display with randomization support
   const getCurrentMetadata = () => {
     if (!evaluation) return []
     
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
+    // Use the same randomization logic as getCurrentContent
+    // Check both participant ID AND evaluation's randomization setting
+    const useRandomization = participantId && !isSequential && evaluation.randomizationEnabled === true
+    
+    let currentRowIndex: number
+    if (useRandomization) {
+      // Use randomized order for this participant
+      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluation.data.length)
+    } else {
+      // Use sequential order (legacy behavior)
+      currentRowIndex = (currentItem - 1) % evaluation.data.length
+    }
+    
     const currentRow = evaluation.data[currentRowIndex]
 
     const metadataRoles = evaluation.columnRoles.filter((role) => role.userRole === "Metadata")

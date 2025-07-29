@@ -68,12 +68,14 @@ interface UsePreviewDataInitializationReturn {
   instructions: string
   criteria: Metric[]
   columnRoles: ColumnRole[]
+  randomizationEnabled: boolean
   setEvaluationName: React.Dispatch<React.SetStateAction<string>>
   setInstructions: React.Dispatch<React.SetStateAction<string>>
   setCriteria: React.Dispatch<React.SetStateAction<Metric[]>>
   setColumnRoles: React.Dispatch<React.SetStateAction<ColumnRole[]>>
   setUploadedData: React.Dispatch<React.SetStateAction<any[]>>
   setDataColumns: React.Dispatch<React.SetStateAction<string[]>>
+  setRandomizationEnabled: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export function usePreviewDataInitialization({
@@ -216,6 +218,9 @@ export function usePreviewDataInitialization({
     },
   ])
 
+  // Randomization setting - defaults to false (off by default)
+  const [randomizationEnabled, setRandomizationEnabled] = useState<boolean>(false)
+
   // Helper function to apply AI results
   const applyAIResults = (aiResult: any) => {
     if (aiResult.evaluationName && !evaluationNameEdited) {
@@ -328,6 +333,9 @@ export function usePreviewDataInitialization({
         setCriteria(existingEvaluation.criteria)
         setColumnRoles(existingEvaluation.columnRoles)
         setUploadedData(existingEvaluation.data)
+        
+        // Restore randomization setting if it exists, otherwise default to false
+        setRandomizationEnabled(existingEvaluation.randomizationEnabled ?? false)
 
         if (existingEvaluation.data.length > 0) {
           const columns = Object.keys(existingEvaluation.data[0])
@@ -375,11 +383,13 @@ export function usePreviewDataInitialization({
     instructions,
     criteria,
     columnRoles,
+    randomizationEnabled,
     setEvaluationName,
     setInstructions,
     setCriteria,
     setColumnRoles,
     setUploadedData,
     setDataColumns,
+    setRandomizationEnabled,
   }
 }
