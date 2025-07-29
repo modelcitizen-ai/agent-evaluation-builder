@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Custom List Buttons</title>
+    <style>
+        .button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        .button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Custom List Button Debug</h1>
+    <p>Test the same logic as the React component:</p>
+    
+    <div id="buttons"></div>
+    
+    <script>
+        // Simulate the evaluation criterion data
+        const criterion = {
+            id: 1,
+            type: "custom-list",
+            options: ["Response 1", "Response 2"]
+        };
+        
+        let formData = {};
+        
+        function renderButtons() {
+            const container = document.getElementById('buttons');
+            container.innerHTML = '';
+            
+            criterion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'button';
+                
+                // Same logic as React component
+                const isSelected = formData[`criterion-${criterion.id}`] === option;
+                if (isSelected) {
+                    button.classList.add('active');
+                }
+                
+                button.onclick = () => {
+                    // Same logic as handleInputChange
+                    formData[`criterion-${criterion.id}`] = option;
+                    console.log('Selected:', option);
+                    console.log('Form data:', formData);
+                    renderButtons(); // Re-render to show changes
+                };
+                
+                container.appendChild(button);
+            });
+            
+            // Debug info
+            const debugInfo = document.createElement('div');
+            debugInfo.innerHTML = `
+                <h3>Debug Info:</h3>
+                <p>Current formData: ${JSON.stringify(formData)}</p>
+                <p>Button states:</p>
+                <ul>
+                    ${criterion.options.map(option => `
+                        <li>${option}: ${formData[`criterion-${criterion.id}`] === option ? 'ACTIVE' : 'inactive'}</li>
+                    `).join('')}
+                </ul>
+            `;
+            container.appendChild(debugInfo);
+        }
+        
+        // Initial render
+        renderButtons();
+    </script>
+</body>
+</html>
