@@ -50,6 +50,7 @@ interface UsePreviewMetricManagementProps {
   editId: number | null
   getTotalItems: () => number
   setIsSaving: (saving: boolean) => void
+  randomizationEnabled: boolean
 }
 
 interface UsePreviewMetricManagementReturn {
@@ -93,6 +94,7 @@ export function usePreviewMetricManagement({
   editId,
   getTotalItems,
   setIsSaving,
+  randomizationEnabled,
 }: UsePreviewMetricManagementProps): UsePreviewMetricManagementReturn {
   const router = useRouter()
 
@@ -235,6 +237,7 @@ export function usePreviewMetricManagement({
                 columnRoles,
                 data: dataToUse,
                 totalItems: getTotalItems(),
+                randomizationEnabled,
               }
             : evaluation,
         )
@@ -250,6 +253,7 @@ export function usePreviewMetricManagement({
           columnRoles,
           data: dataToUse,
           totalItems: getTotalItems(),
+          randomizationEnabled,
           status: "draft",
           createdAt: new Date().toISOString(),
         }

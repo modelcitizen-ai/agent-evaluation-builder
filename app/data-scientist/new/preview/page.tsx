@@ -197,12 +197,14 @@ function PreviewPageContent() {
     instructions,
     criteria,
     columnRoles,
+    randomizationEnabled,
     setEvaluationName,
     setInstructions,
     setCriteria,
     setColumnRoles,
     setUploadedData,
     setDataColumns,
+    setRandomizationEnabled,
   } = usePreviewDataInitialization({
     isEditMode,
     editId,
@@ -303,6 +305,7 @@ function PreviewPageContent() {
     editId,
     getTotalItems,
     setIsSaving,
+    randomizationEnabled,
   })
 
   // Update the PageLayout to only render main content when not analyzing
@@ -860,9 +863,11 @@ function PreviewPageContent() {
         dataColumns={dataColumns}
         previewData={previewData}
         columnRoles={columnRoles}
+        randomizationEnabled={randomizationEnabled}
         onUpdateColumnRole={updateColumnRole}
         onUpdateColumnDisplayName={updateColumnDisplayName}
         onUpdateColumnVisibility={updateColumnVisibility}
+        onUpdateRandomization={setRandomizationEnabled}
       />
 
       {/* Edit Metric Modal */}
