@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowRightIcon,
@@ -31,7 +31,8 @@ import DOMPurify from "dompurify"
  * - This eliminates bugs and duplication. See /app/api/analyze-data/route.ts for naming logic.
  */
 
-export default function PreviewPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function PreviewPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -873,5 +874,23 @@ export default function PreviewPage() {
         onSave={handleSaveMetric}
       />
     </PageLayout>
+  )
+}
+
+// Main component with Suspense boundary
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout title="Loading Preview">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading preview...</p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <PreviewPageContent />
+    </Suspense>
   )
 }
