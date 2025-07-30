@@ -11,10 +11,11 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const evaluation = await dbGetEvaluation(parseInt(params.id));
+    const { id } = await params;
+    const evaluation = await dbGetEvaluation(parseInt(id));
     if (!evaluation) {
       return NextResponse.json(
         { success: false, error: 'Evaluation not found' },
@@ -23,7 +24,8 @@ export async function GET(
     }
     return NextResponse.json({ success: true, data: evaluation });
   } catch (error) {
-    console.error(`Error fetching evaluation ${params.id}:`, error);
+    const { id } = await params;
+    console.error(`Error fetching evaluation ${id}:`, error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch evaluation' },
       { status: 500 }
@@ -33,14 +35,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
-    const updatedEvaluation = await dbUpdateEvaluation(parseInt(params.id), data);
+    const updatedEvaluation = await dbUpdateEvaluation(parseInt(id), data);
     return NextResponse.json({ success: true, data: updatedEvaluation });
   } catch (error) {
-    console.error(`Error updating evaluation ${params.id}:`, error);
+    const { id } = await params;
+    console.error(`Error updating evaluation ${id}:`, error);
     return NextResponse.json(
       { success: false, error: 'Failed to update evaluation' },
       { status: 500 }
@@ -50,13 +54,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbDeleteEvaluation(parseInt(params.id));
+    const { id } = await params;
+    await dbDeleteEvaluation(parseInt(id));
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(`Error deleting evaluation ${params.id}:`, error);
+    const { id } = await params;
+    console.error(`Error deleting evaluation ${id}:`, error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete evaluation' },
       { status: 500 }
