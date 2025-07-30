@@ -474,17 +474,37 @@ export async function getResultsDataset(evaluationId: number): Promise<ResultsDa
   if (!result) return null;
   
   // Parse JSON fields
+  const parsedOriginalData = typeof result.originalData === 'string' 
+    ? JSON.parse(result.originalData) 
+    : result.originalData;
+  
+  const parsedCriteria = typeof result.criteria === 'string' 
+    ? JSON.parse(result.criteria) 
+    : result.criteria;
+  
+  const parsedResults = typeof result.results === 'string' 
+    ? JSON.parse(result.results) 
+    : result.results;
+  
+  // Generate columns property from originalData and criteria
+  const originalColumns = Array.isArray(parsedOriginalData) && parsedOriginalData.length > 0 
+    ? Object.keys(parsedOriginalData[0]) 
+    : [];
+  
+  const responseColumns = Array.isArray(parsedCriteria) 
+    ? parsedCriteria.map((c: any) => c.name) 
+    : [];
+  
   return {
     ...result,
-    originalData: typeof result.originalData === 'string' 
-      ? JSON.parse(result.originalData) 
-      : result.originalData,
-    criteria: typeof result.criteria === 'string' 
-      ? JSON.parse(result.criteria) 
-      : result.criteria,
-    results: typeof result.results === 'string' 
-      ? JSON.parse(result.results) 
-      : result.results,
+    originalData: parsedOriginalData,
+    criteria: parsedCriteria,
+    results: parsedResults,
+    columns: {
+      original: originalColumns,
+      responses: responseColumns,
+    },
+    lastUpdated: result.createdAt, // Map createdAt to lastUpdated for interface compatibility
   };
 }
 
