@@ -235,7 +235,7 @@ export function usePreviewMetricManagement({
                 instructions,
                 criteria,
                 columnRoles,
-                data: dataToUse,
+                originalData: dataToUse,  // Changed from 'data' to 'originalData' for PostgreSQL compatibility
                 totalItems: getTotalItems(),
                 randomizationEnabled,
               }
@@ -251,7 +251,7 @@ export function usePreviewMetricManagement({
           instructions,
           criteria,
           columnRoles,
-          data: dataToUse,
+          originalData: dataToUse,  // Changed from 'data' to 'originalData' for PostgreSQL compatibility
           totalItems: getTotalItems(),
           randomizationEnabled,
           status: "draft",

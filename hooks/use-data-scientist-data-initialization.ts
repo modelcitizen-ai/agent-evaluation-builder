@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { getEvaluations, updateEvaluation } from '@/lib/client-db'
+import { getReviewers, updateReviewer } from '@/lib/client-db'
 
 interface Evaluation {
   id: number
@@ -17,13 +19,10 @@ export function useDataScientistDataInitialization() {
 
   // Load evaluations on component mount and set up periodic checks
   useEffect(() => {
-    const loadEvaluations = () => {
+    const loadEvaluations = async () => {
       try {
-        const storedEvaluations = localStorage.getItem("evaluations")
-        if (storedEvaluations) {
-          const parsedEvaluations = JSON.parse(storedEvaluations)
-          setEvaluations(parsedEvaluations)
-        }
+        const evaluations = await getEvaluations()
+        setEvaluations(evaluations)
         setIsLoading(false)
       } catch (error) {
         console.error("Error loading evaluations:", error)
@@ -63,8 +62,8 @@ export function useDataScientistDataInitialization() {
   const forceCheckAllEvaluationCompletions = async () => {
     try {
       console.log('[forceCheckAllEvaluationCompletions] Starting comprehensive completion check');
-      const allEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]");
-      const allReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]");
+      const allEvaluations = await getEvaluations();
+      const allReviewers = await getReviewers();
       
       let updatedCount = 0;
       let hasReviewerUpdates = false;
@@ -95,15 +94,18 @@ export function useDataScientistDataInitialization() {
                 isComplete
               });
               
-              // Update reviewer status if they completed all tasks but status hasn't been updated
+              return isComplete;
+            });
+            
+            // Update reviewer status if they completed all tasks but status hasn't been updated
+            for (const reviewer of assignedReviewers) {
+              const completedByCount = reviewer.completed === reviewer.total && reviewer.total > 0;
               if (completedByCount && reviewer.status !== "completed") {
-                reviewer.status = "completed";
+                await updateReviewer(reviewer.id, { status: "completed" });
                 hasReviewerUpdates = true;
                 console.log(`[forceCheckAllEvaluationCompletions] Updated reviewer ${reviewer.name} to completed status (completed all tasks)`);
               }
-              
-              return isComplete;
-            });
+            }
             
             if (allCompleted) {
               console.log(`[forceCheckAllEvaluationCompletions] Found completed evaluation: ${evaluation.name} (${evaluation.id})`);
@@ -116,12 +118,6 @@ export function useDataScientistDataInitialization() {
         }
       }
       
-      // Save reviewer updates if any were made
-      if (hasReviewerUpdates) {
-        localStorage.setItem("evaluationReviewers", JSON.stringify(allReviewers));
-        console.log(`[forceCheckAllEvaluationCompletions] Saved reviewer status updates`);
-      }
-      
       console.log(`[forceCheckAllEvaluationCompletions] Updated ${updatedCount} evaluation(s)`);
       return updatedCount;
     } catch (error) {
@@ -131,22 +127,19 @@ export function useDataScientistDataInitialization() {
   }
 
   // Check if all assigned reviewers have completed an evaluation
-  const checkIfEvaluationIsComplete = (evaluationId: number) => {
+  const checkIfEvaluationIsComplete = async (evaluationId: number) => {
     try {
       // Get the evaluation reviewers for this evaluation
-      const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      const evaluationAssignedReviewers = evaluationReviewers.filter(
-        (reviewer: any) => reviewer.evaluationId === evaluationId.toString() || reviewer.evaluationId === evaluationId
-      )
+      const evaluationReviewers = await getReviewers(evaluationId)
       
       // If there are no assigned reviewers, evaluation is not complete
-      if (evaluationAssignedReviewers.length === 0) {
+      if (evaluationReviewers.length === 0) {
         console.log(`[checkIfEvaluationIsComplete] No assigned reviewers found for evaluation ${evaluationId}`);
         return false
       }
       
       // Check if all assigned reviewers have completed their evaluations (individual status only)
-      const allCompleted = evaluationAssignedReviewers.every((reviewer: any) => {
+      const allCompleted = evaluationReviewers.every((reviewer: any) => {
         // Individual reviewer is completed if they have completed all tasks OR are explicitly marked completed
         const completedByStatus = reviewer.status === "completed";
         const completedByCount = reviewer.completed === reviewer.total && reviewer.total > 0;
@@ -157,7 +150,7 @@ export function useDataScientistDataInitialization() {
           status: reviewer.status,
           completedByStatus,
           completed: reviewer.completed,
-          total: reviewer.total, 
+          total: reviewer.total,
           completedByCount,
           isComplete
         });
@@ -167,9 +160,9 @@ export function useDataScientistDataInitialization() {
       
       // Log detailed completion information for debugging
       console.log(`[checkIfEvaluationIsComplete] Evaluation ${evaluationId}: ${allCompleted ? 'Complete' : 'Incomplete'}. 
-        ${evaluationAssignedReviewers.length} reviewers, 
-        ${evaluationAssignedReviewers.filter((r: any) => r.status === "completed").length} completed by status,
-        ${evaluationAssignedReviewers.filter((r: any) => r.completed === r.total && r.total > 0).length} completed by count`)
+        ${evaluationReviewers.length} reviewers, 
+        ${evaluationReviewers.filter((r: any) => r.status === "completed").length} completed by status,
+        ${evaluationReviewers.filter((r: any) => r.completed === r.total && r.total > 0).length} completed by count`)
       
       return allCompleted
     } catch (error) {
@@ -178,29 +171,30 @@ export function useDataScientistDataInitialization() {
     }
   }
 
-  // Update the evaluation status in localStorage if all reviewers have completed it
+  // Update the evaluation status in database if all reviewers have completed it
   const updateEvaluationStatus = async (evaluationId: number) => {
     try {
-      // Get the evaluation from localStorage
-      const evaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const evaluationIndex = evaluations.findIndex((e: any) => e.id === evaluationId)
+      // Get the evaluation from database
+      const evaluations = await getEvaluations()
+      const evaluation = evaluations.find((e: any) => e.id === evaluationId)
       
-      if (evaluationIndex === -1) {
+      if (!evaluation) {
         console.error(`[updateEvaluationStatus] Evaluation ${evaluationId} not found`)
         return false
       }
       
       // Check if all reviewers have completed this evaluation
-      const isComplete = checkIfEvaluationIsComplete(evaluationId)
+      const isComplete = await checkIfEvaluationIsComplete(evaluationId)
       
       // If all reviewers have completed and the evaluation is not already marked as completed
-      if (isComplete && evaluations[evaluationIndex].status !== "completed") {
+      if (isComplete && evaluation.status !== "completed") {
         // Update the evaluation status and set completion date
-        evaluations[evaluationIndex].status = "completed"
-        evaluations[evaluationIndex].completedAt = new Date().toISOString()
+        const updates = {
+          status: "completed",
+          completedAt: new Date().toISOString()
+        }
         
-        // Save back to localStorage
-        localStorage.setItem("evaluations", JSON.stringify(evaluations))
+        await updateEvaluation(evaluationId, updates)
         console.log(`[updateEvaluationStatus] Updated evaluation ${evaluationId} status to completed`)
         
         // Return true to indicate an update was made

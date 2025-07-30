@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { getEvaluations, updateEvaluation } from "@/lib/client-db"
+import { addReviewer, removeReviewer } from "@/lib/client-db"
 
 interface Reviewer {
   id: string
@@ -63,65 +65,54 @@ export function useAssignReviewersFormManagement({
 
     setIsGenerating(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const reviewerId = Date.now().toString()
-    const newReviewer: Reviewer = {
-      id: reviewerId,
-      name: reviewerName.trim(),
-      email: reviewerEmail.trim(),
-      notes: "", // Set to empty since notes input was removed
-      link: generateUniqueLink(reviewerId),
-      createdAt: new Date().toISOString(),
-      evaluationId: currentEvaluationId || "",
+      const reviewerId = Date.now().toString()
+      const newReviewer: Reviewer = {
+        id: reviewerId,
+        name: reviewerName.trim(),
+        email: reviewerEmail.trim(),
+        notes: "", // Set to empty since notes input was removed
+        link: generateUniqueLink(reviewerId),
+        createdAt: new Date().toISOString(),
+        evaluationId: currentEvaluationId || "",
+      }
+
+      // Get the actual total items from the current evaluation
+      const evaluations = await getEvaluations()
+      const currentEvaluation = evaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
+      let totalItems = currentEvaluation?.totalItems || 10 // Fallback to 10 if evaluation not found
+      
+      const progressReviewer = {
+        id: reviewerId,
+        name: newReviewer.name,
+        email: newReviewer.email || `${newReviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
+        status: "active",
+        completed: 0,
+        total: totalItems, // Use full dataset total items
+        avgTime: 0,
+        evaluationId: parseInt(currentEvaluationId || "0"), // Convert to number for API
+      }
+
+      // Add reviewer to database
+      await addReviewer(progressReviewer)
+      
+      // Update local state
+      setReviewers([newReviewer, ...reviewers])
+
+      // Update evaluation status to "active" when first reviewer is added
+      if (reviewers.length === 0) {
+        await updateEvaluation(parseInt(currentEvaluationId || "0"), { status: "active" })
+      }
+
+      // Clear form
+      setReviewerName("")
+      setReviewerEmail("")
+    } catch (error) {
+      console.error("Error adding reviewer:", error)
     }
-
-    setReviewers([newReviewer, ...reviewers])
-
-    // Add reviewer to evaluationReviewers for progress tracking
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    
-    // Get the actual total items from the current evaluation
-    const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-    const currentEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
-    let totalItems = currentEvaluation?.totalItems || 10 // Fallback to 10 if evaluation not found
-    
-    const progressReviewer = {
-      id: reviewerId,
-      name: newReviewer.name,
-      email: newReviewer.email || `${newReviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
-      status: "active",
-      completed: 0,
-      total: totalItems, // Use full dataset total items
-      avgTime: 0,
-      evaluationId: currentEvaluationId || "1234567890", // Use current evaluation ID
-    }
-
-    // Filter reviewers by evaluation ID and add new reviewer to the beginning of current evaluation's reviewers
-    const otherEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId !== currentEvaluationId)
-    const currentEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId === currentEvaluationId)
-    currentEvaluationReviewers.unshift(progressReviewer)
-    
-    const updatedReviewers = [...otherEvaluationReviewers, ...currentEvaluationReviewers]
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
-
-    // Update evaluation status to "active" when first reviewer is added
-    if (reviewers.length === 0) {
-      // This will be the first reviewer
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const updatedEvaluations = storedEvaluations.map((evaluation: any) => {
-        if (evaluation.id.toString() === currentEvaluationId) {
-          return { ...evaluation, status: "active" }
-        }
-        return evaluation
-      })
-      localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
-    }
-
-    // Clear form
-    setReviewerName("")
-    setReviewerEmail("")
 
     setIsGenerating(false)
   }
@@ -131,79 +122,73 @@ export function useAssignReviewersFormManagement({
 
     setIsGenerating(true)
 
-    // Add all uploaded reviewers
-    const newReviewers: Reviewer[] = uploadedReviewers.map((uploaded, index) => {
-      const reviewerId = Date.now().toString() + Math.random().toString(36).substr(2, 9)
-      
-      return {
-        id: reviewerId,
-        name: uploaded.ReviewerName,
-        email: uploaded.Email,
-        notes: '',
-        link: generateUniqueLink(reviewerId),
-        createdAt: new Date().toISOString(),
-        evaluationId: currentEvaluationId || "",
-      }
-    })
+    try {
+      // Get current evaluation for total items
+      const evaluations = await getEvaluations()
+      const currentEvaluation = evaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
+      const totalItems = currentEvaluation?.totalItems || 10
 
-    setReviewers([...newReviewers, ...reviewers])
-
-    // Add to evaluationReviewers for progress tracking
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-    const currentEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id.toString() === currentEvaluationId)
-    const totalItems = currentEvaluation?.totalItems || 10
-
-    const progressReviewers = newReviewers.map(reviewer => {
-      let totalItems = currentEvaluation?.totalItems || 10
-      
-      return {
-        id: reviewer.id,
-        name: reviewer.name,
-        email: reviewer.email || `${reviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
-        status: "active",
-        completed: 0,
-        total: totalItems,
-        avgTime: 0,
-        evaluationId: currentEvaluationId || "1234567890",
-      }
-    })
-
-    // Filter reviewers by evaluation ID and add new reviewers to the beginning of current evaluation's reviewers
-    const otherEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId !== currentEvaluationId)
-    const currentEvaluationReviewers = existingReviewers.filter((r: any) => r.evaluationId === currentEvaluationId)
-    currentEvaluationReviewers.unshift(...progressReviewers)
-    
-    const updatedReviewers = [...otherEvaluationReviewers, ...currentEvaluationReviewers]
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
-
-    // Update evaluation status to "active" when reviewers are added
-    if (reviewers.length === 0) {
-      const updatedEvaluations = storedEvaluations.map((evaluation: any) => {
-        if (evaluation.id.toString() === currentEvaluationId) {
-          return { ...evaluation, status: "active" }
+      // Add all uploaded reviewers
+      const newReviewers: Reviewer[] = uploadedReviewers.map((uploaded, index) => {
+        const reviewerId = Date.now().toString() + Math.random().toString(36).substr(2, 9)
+        
+        return {
+          id: reviewerId,
+          name: uploaded.ReviewerName,
+          email: uploaded.Email,
+          notes: '',
+          link: generateUniqueLink(reviewerId),
+          createdAt: new Date().toISOString(),
+          evaluationId: currentEvaluationId || "",
         }
-        return evaluation
       })
-      localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
-    }
 
-    // Clear uploaded data
-    setUploadedReviewers([])
-    if (clearFileInput) {
-      clearFileInput()
+      // Add all reviewers to database
+      for (const reviewer of newReviewers) {
+        const progressReviewer = {
+          id: reviewer.id,
+          name: reviewer.name,
+          email: reviewer.email || `${reviewer.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
+          status: "active",
+          completed: 0,
+          total: totalItems,
+          avgTime: 0,
+          evaluationId: parseInt(currentEvaluationId || "0"),
+        }
+        
+        await addReviewer(progressReviewer)
+      }
+
+      // Update local state
+      setReviewers([...newReviewers, ...reviewers])
+
+      // Update evaluation status to "active" when reviewers are added
+      if (reviewers.length === 0) {
+        await updateEvaluation(parseInt(currentEvaluationId || "0"), { status: "active" })
+      }
+
+      // Clear uploaded data
+      setUploadedReviewers([])
+      if (clearFileInput) {
+        clearFileInput()
+      }
+    } catch (error) {
+      console.error("Error bulk adding reviewers:", error)
     }
 
     setIsGenerating(false)
   }
 
-  const handleRemoveReviewer = (reviewerId: string) => {
-    setReviewers(reviewers.filter(r => r.id !== reviewerId))
-    
-    // Also remove from evaluationReviewers
-    const existingReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    const updatedReviewers = existingReviewers.filter((r: any) => r.id !== reviewerId)
-    localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
+  const handleRemoveReviewer = async (reviewerId: string) => {
+    try {
+      // Remove from database
+      await removeReviewer(reviewerId)
+      
+      // Update local state
+      setReviewers(reviewers.filter(r => r.id !== reviewerId))
+    } catch (error) {
+      console.error("Error removing reviewer:", error)
+    }
   }
 
   return {

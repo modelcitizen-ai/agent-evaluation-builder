@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react"
+import { getEvaluations } from "@/lib/client-db"
+import { getReviewers, addReviewer, updateReviewer } from "@/lib/client-db"
 
 interface Reviewer {
   id: string
@@ -38,36 +40,51 @@ export function useAssignReviewersDataInitialization({}: UseAssignReviewersDataI
   const [currentEvaluationId, setCurrentEvaluationId] = useState<string | null>(null)
   const [uploadedReviewers, setUploadedReviewers] = useState<UploadedReviewer[]>([])
 
-  // Initialize evaluation ID from URL params or localStorage
+  // Initialize evaluation ID from URL params or database
   useEffect(() => {
-    // Try to get evaluation ID from URL params first (if coming from edit mode)
-    const urlParams = new URLSearchParams(window.location.search)
-    const evalId = urlParams.get("evaluationId")
+    const initializeEvaluationId = async () => {
+      // Try to get evaluation ID from URL params first (if coming from edit mode)
+      const urlParams = new URLSearchParams(window.location.search)
+      const evalId = urlParams.get("evaluationId")
 
-    if (evalId) {
-      setCurrentEvaluationId(evalId)
-    } else {
-      // Fallback: get the most recent evaluation from localStorage
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      if (storedEvaluations.length > 0) {
-        setCurrentEvaluationId(storedEvaluations[0].id.toString())
+      if (evalId) {
+        setCurrentEvaluationId(evalId)
+      } else {
+        // Fallback: get the most recent evaluation from database
+        try {
+          const evaluations = await getEvaluations()
+          if (evaluations.length > 0) {
+            setCurrentEvaluationId(evaluations[0].id.toString())
+          }
+        } catch (error) {
+          console.error("Error loading evaluations:", error)
+        }
       }
     }
+
+    initializeEvaluationId()
   }, [])
 
   // Load existing reviewers for the current evaluation
   useEffect(() => {
     if (currentEvaluationId) {
-      const existingReviewers = JSON.parse(localStorage.getItem(`evaluation_${currentEvaluationId}_reviewers`) || "[]")
-      setReviewers(existingReviewers)
+      const loadReviewers = async () => {
+        try {
+          const existingReviewers = await getReviewers(parseInt(currentEvaluationId))
+          setReviewers(existingReviewers)
+        } catch (error) {
+          console.error("Error loading reviewers:", error)
+        }
+      }
+      
+      loadReviewers()
     }
   }, [currentEvaluationId])
 
-  // Save reviewers to localStorage whenever they change
+  // Auto-save reviewers whenever they change (removed localStorage dependency)
   useEffect(() => {
-    if (currentEvaluationId && reviewers.length > 0) {
-      localStorage.setItem(`evaluation_${currentEvaluationId}_reviewers`, JSON.stringify(reviewers))
-    }
+    // Note: Reviewers are now saved through API calls in form management hooks
+    // This effect is kept for potential future auto-save functionality
   }, [reviewers, currentEvaluationId])
 
   // Helper function to generate unique links

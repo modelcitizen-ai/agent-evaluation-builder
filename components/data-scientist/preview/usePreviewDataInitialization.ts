@@ -332,13 +332,15 @@ export function usePreviewDataInitialization({
         setInstructions(existingEvaluation.instructions)
         setCriteria(existingEvaluation.criteria)
         setColumnRoles(existingEvaluation.columnRoles)
-        setUploadedData(existingEvaluation.data)
+        // Use originalData first, fallback to data for backward compatibility
+        const evaluationData = existingEvaluation.originalData || existingEvaluation.data || []
+        setUploadedData(evaluationData)
         
         // Restore randomization setting if it exists, otherwise default to false
         setRandomizationEnabled(existingEvaluation.randomizationEnabled ?? false)
 
-        if (existingEvaluation.data.length > 0) {
-          const columns = Object.keys(existingEvaluation.data[0])
+        if (evaluationData.length > 0) {
+          const columns = Object.keys(evaluationData[0])
           setDataColumns(columns)
         }
       }

@@ -1,4 +1,6 @@
 import { useRouter } from 'next/navigation'
+import { deleteEvaluation } from '@/lib/client-db'
+import { getReviewers, removeReviewer } from '@/lib/client-db'
 
 export function useDataScientistOperations() {
   const router = useRouter()
@@ -22,20 +24,17 @@ export function useDataScientistOperations() {
   }
 
   // Handle deleting an evaluation
-  const handleDeleteEvaluation = (evaluationId: number) => {
+  const handleDeleteEvaluation = async (evaluationId: number) => {
     if (confirm("Are you sure you want to delete this evaluation? This action cannot be undone.")) {
       try {
-        // Remove the evaluation from localStorage
-        const evaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-        const updatedEvaluations = evaluations.filter((e: any) => e.id !== evaluationId)
-        localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
+        // Remove associated reviewers first
+        const evaluationReviewers = await getReviewers(evaluationId)
+        for (const reviewer of evaluationReviewers) {
+          await removeReviewer(reviewer.id)
+        }
 
-        // Remove associated reviewers
-        const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-        const updatedReviewers = evaluationReviewers.filter(
-          (reviewer: any) => reviewer.evaluationId !== evaluationId.toString() && reviewer.evaluationId !== evaluationId
-        )
-        localStorage.setItem("evaluationReviewers", JSON.stringify(updatedReviewers))
+        // Remove the evaluation from database
+        await deleteEvaluation(evaluationId)
 
         // Trigger a page refresh to update the UI
         window.location.reload()
