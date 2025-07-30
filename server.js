@@ -39,6 +39,23 @@ const hostname = '0.0.0.0';
 // Default to 8080 if neither is set
 const port = process.env.WEBSITES_PORT || process.env.PORT || 8080;
 
+// Simple database check for PostgreSQL (optional)
+async function checkDatabase() {
+  const USE_POSTGRESQL = process.env.USE_POSTGRESQL === 'true';
+  
+  if (!USE_POSTGRESQL) {
+    console.log('💾 Using localStorage - no database check needed');
+    return;
+  }
+  
+  if (!process.env.DATABASE_URL) {
+    console.warn('⚠️  PostgreSQL mode enabled but DATABASE_URL not set');
+    return;
+  }
+  
+  console.log('🐘 PostgreSQL mode enabled - database will initialize on first use');
+}
+
 console.log('Starting Next.js server in production mode');
 console.log('Port:', port);
 console.log('Port env vars:', {
@@ -61,12 +78,13 @@ try {
 
 // Simple health check response
 const handleHealthCheck = (req, res) => {
+  const USE_POSTGRESQL = process.env.USE_POSTGRESQL === 'true';
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    mode: 'localStorage',
+    mode: USE_POSTGRESQL ? 'PostgreSQL' : 'localStorage',
     version: require('./package.json').version || 'unknown'
   }));
 };
@@ -90,8 +108,11 @@ const handle = app.getRequestHandler();
 try {
   // Start the server
   app.prepare()
-    .then(() => {
+    .then(async () => {
       console.log('Next.js app prepared successfully');
+      
+      // Simple database check
+      await checkDatabase();
       
       createServer(async (req, res) => {
         try {

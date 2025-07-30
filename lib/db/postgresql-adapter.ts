@@ -22,13 +22,27 @@ function getPool(): Pool {
   return pool;
 }
 
-// Database ready promise - checks if we can connect
+// Database ready promise - checks if we can connect and sets up schema
 export const dbReady = new Promise<boolean>(async (resolve, reject) => {
   try {
     const client = await getPool().connect();
     await client.query('SELECT NOW()');
+    
+    // Auto-setup database schema if needed
+    try {
+      await client.query('SELECT 1 FROM evaluations LIMIT 1');
+      console.log('✅ PostgreSQL database ready');
+    } catch (error) {
+      console.log('🔄 Setting up PostgreSQL database schema...');
+      
+      // Run database schema setup
+      const { setupDatabase } = require('../../scripts/setup-database-schema.js');
+      await setupDatabase();
+      
+      console.log('✅ PostgreSQL database schema created');
+    }
+    
     client.release();
-    console.log('✅ PostgreSQL connection established');
     resolve(true);
   } catch (error) {
     console.error('❌ PostgreSQL connection failed:', error);
