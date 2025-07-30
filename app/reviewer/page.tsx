@@ -137,14 +137,25 @@ export default function ReviewerPage() {
           )
           
           if (reviewerRecord) {
+            const completedByStatus = reviewerRecord.status === "completed"
+            const completedByCount = reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0
+            const isComplete = completedByStatus || completedByCount
+            
+            console.log(`[ReviewerDashboard] Initial load - Evaluating completion for evaluation ${evaluationId}:`)
+            console.log(`  - Reviewer: ${reviewerRecord.name} (ID: ${reviewerRecord.id})`)
+            console.log(`  - Status: ${reviewerRecord.status} (completedByStatus: ${completedByStatus})`)
+            console.log(`  - Progress: ${reviewerRecord.completed}/${reviewerRecord.total} (completedByCount: ${completedByCount})`)
+            console.log(`  - Final isComplete: ${isComplete}`)
+            
             // Reviewer is completed if their status is "completed" OR they've completed all items
-            return reviewerRecord.status === "completed" || 
-                   (reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0)
+            return isComplete
           }
           
+          console.log(`[ReviewerDashboard] Initial load - No reviewer record found for evaluation ${evaluationId} and reviewer ${currentReviewerId}`)
           return false
         }).map((evaluationId: string) => Number(evaluationId))
         
+        console.log(`[ReviewerDashboard] Initial completed evaluations:`, currentReviewerCompletions)
         setCompletedEvaluations(currentReviewerCompletions)
       } catch (error) {
         console.error("Error loading reviewer data:", error)
@@ -183,17 +194,27 @@ export default function ReviewerPage() {
         )
         
         if (reviewerRecord) {
+          const completedByStatus = reviewerRecord.status === "completed"
+          const completedByCount = reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0
+          const isComplete = completedByStatus || completedByCount
+          
+          console.log(`[ReviewerDashboard] Evaluating completion for evaluation ${evaluationId}:`)
+          console.log(`  - Reviewer: ${reviewerRecord.name} (ID: ${reviewerRecord.id})`)
+          console.log(`  - Status: ${reviewerRecord.status} (completedByStatus: ${completedByStatus})`)
+          console.log(`  - Progress: ${reviewerRecord.completed}/${reviewerRecord.total} (completedByCount: ${completedByCount})`)
+          console.log(`  - Final isComplete: ${isComplete}`)
+          
           // Reviewer is completed if their status is "completed" OR they've completed all items
-          return reviewerRecord.status === "completed" || 
-                 (reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0)
+          return isComplete
         }
         
+        console.log(`[ReviewerDashboard] No reviewer record found for evaluation ${evaluationId} and reviewer ${currentReviewerId}`)
         return false
       }).map((evaluationId: string) => Number(evaluationId))
       
       setCompletedEvaluations(currentReviewerCompletions)
       console.log('[ReviewerDashboard] Refreshed completion status:', currentReviewerCompletions)
-      console.log('[ReviewerDashboard] All reviewer records:', evaluationReviewers.filter((r: any) => r.id === currentReviewerId))
+      console.log('[ReviewerDashboard] All reviewer records for current reviewer:', evaluationReviewers.filter((r: any) => r.id === currentReviewerId))
     } catch (error) {
       console.error('[ReviewerDashboard] Error refreshing completion status:', error)
     }
@@ -201,6 +222,10 @@ export default function ReviewerPage() {
 
   // Add event listeners for real-time updates
   useEffect(() => {
+    // Initial refresh to ensure we have the latest completion status
+    console.log('[ReviewerDashboard] useEffect triggered - doing initial completion refresh')
+    refreshCompletionStatus()
+    
     // Listen for custom events when reviewer completes evaluations
     const handleProgressUpdate = () => {
       console.log('[ReviewerDashboard] Progress update event received - refreshing status')

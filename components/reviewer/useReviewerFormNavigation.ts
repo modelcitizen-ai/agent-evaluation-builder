@@ -479,23 +479,45 @@ export function useReviewerFormNavigation({
     console.log(`[handleSubmit] Added item ${currentItem} to submitted items. Full set:`, Array.from(newSubmittedItems).sort((a, b) => a - b))
 
     if (currentItem >= evaluation.totalItems) {
-      // Update completion status and reviewer tracking
+      // Update completion status and reviewer tracking using database adapter
       try {
-        const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
+        // Import database functions at the top level
+        const { getReviewers, updateReviewer } = await import('@/lib/client-db')
+        
+        const currentReviewerId = currentReviewer.id
+        
+        // Get current reviewers from database
+        const evaluationReviewers = await getReviewers(Number(taskId))
         
         // Find the current reviewer
-        const currentReviewerId = currentReviewer.id
-        const reviewerIndex = evaluationReviewers.findIndex(
+        const reviewerRecord = evaluationReviewers.find(
           (r: any) => r.id === currentReviewerId && 
           (r.evaluationId === taskId || r.evaluationId === Number(taskId))
         )
         
-        if (reviewerIndex !== -1) {
-          // Update the reviewer's status and completion count
-          evaluationReviewers[reviewerIndex].status = "completed"
-          evaluationReviewers[reviewerIndex].completed = evaluation.totalItems
-          localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
+        if (reviewerRecord) {
+          // Update the reviewer's status and completion count in database
+          await updateReviewer(reviewerRecord.id, {
+            status: "completed",
+            completed: evaluation.totalItems
+          })
           console.log(`[updateReviewerStatus] Updated reviewer ${currentReviewerId} status to completed for evaluation ${taskId}`)
+          
+          // Also update localStorage for backward compatibility (in case any code still reads from it)
+          try {
+            const localReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
+            const localIndex = localReviewers.findIndex(
+              (r: any) => r.id === currentReviewerId && 
+              (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+            )
+            if (localIndex !== -1) {
+              localReviewers[localIndex].status = "completed"
+              localReviewers[localIndex].completed = evaluation.totalItems
+              localStorage.setItem("evaluationReviewers", JSON.stringify(localReviewers))
+            }
+          } catch (localError) {
+            console.warn('[updateReviewerStatus] Could not update localStorage (non-critical):', localError)
+          }
           
           // Force an update check on the data scientist page by triggering a custom event
           try {
