@@ -20,8 +20,9 @@ interface Evaluation {
   name: string
   instructions: string
   criteria: any[]
-  columnRoles: any[]
-  data: any[]
+  columnRoles?: any[]  // Made optional since it may not exist in PostgreSQL response
+  data?: any[]  // Made optional for backward compatibility
+  originalData?: any[]  // Added for PostgreSQL response
   totalItems: number
   randomizationEnabled?: boolean
   assignedReviewers?: { id: string; name: string }[]
@@ -82,19 +83,27 @@ export function useReviewerUIHelpers({
     const useRandomization = participantId && !isSequential && evaluation.randomizationEnabled === true
     
     let currentRowIndex: number
+    // Use originalData from API response, fallback to data for backward compatibility
+    const evaluationData = evaluation.originalData || evaluation.data || []
+    
+    if (!evaluationData || evaluationData.length === 0) {
+      console.error(`[getCurrentContent] No data available for evaluation ${evaluation.id} - this should not happen`)
+      return []
+    }
+    
     if (useRandomization) {
       // Use randomized order for this participant
-      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluation.data.length)
+      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluationData.length)
       console.log(`[getCurrentContent] Randomized mode: UI position ${currentItem} -> data index ${currentRowIndex} for participant ${participantId}`)
     } else {
       // Use sequential order (legacy behavior)
-      currentRowIndex = (currentItem - 1) % evaluation.data.length
+      currentRowIndex = (currentItem - 1) % evaluationData.length
       console.log(`[getCurrentContent] Sequential mode: UI position ${currentItem} -> data index ${currentRowIndex}`)
     }
     
-    const currentRow = evaluation.data[currentRowIndex]
+    const currentRow = evaluationData[currentRowIndex]
 
-    const inputColumns = evaluation.columnRoles.filter(
+    const inputColumns = (evaluation.columnRoles || []).filter(
       (role) => role.userRole === "Input" || role.userRole === "Model Output",
     )
 
@@ -113,19 +122,26 @@ export function useReviewerUIHelpers({
     // Use the same randomization logic as getCurrentContent
     // Check both participant ID AND evaluation's randomization setting
     const useRandomization = participantId && !isSequential && evaluation.randomizationEnabled === true
+    // Use originalData from API response, fallback to data for backward compatibility
+    const evaluationData = evaluation.originalData || evaluation.data || []
+    
+    if (!evaluationData || evaluationData.length === 0) {
+      console.error(`[getCurrentMetadata] No data available for evaluation ${evaluation.id} - this should not happen`)
+      return []
+    }
     
     let currentRowIndex: number
     if (useRandomization) {
       // Use randomized order for this participant
-      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluation.data.length)
+      currentRowIndex = getDataIndexForPosition(participantId, currentItem, evaluationData.length)
     } else {
       // Use sequential order (legacy behavior)
-      currentRowIndex = (currentItem - 1) % evaluation.data.length
+      currentRowIndex = (currentItem - 1) % evaluationData.length
     }
     
-    const currentRow = evaluation.data[currentRowIndex]
+    const currentRow = evaluationData[currentRowIndex]
 
-    const metadataRoles = evaluation.columnRoles.filter((role) => role.userRole === "Metadata")
+    const metadataRoles = (evaluation.columnRoles || []).filter((role) => role.userRole === "Metadata")
     console.log('[getCurrentMetadata] Found metadata roles:', metadataRoles.map(r => ({ name: r.name, labelVisible: r.labelVisible })))
 
     const result = metadataRoles.map((col) => {
@@ -156,7 +172,7 @@ export function useReviewerUIHelpers({
     if (!evaluation) return columnName
     
     // Check if there's a custom display name for this column
-    const columnConfig = evaluation.columnRoles.find((col) => col.name === columnName)
+    const columnConfig = (evaluation.columnRoles || []).find((col) => col.name === columnName)
     const isLabelVisible = columnConfig?.labelVisible !== false // default to true
     
     // If label visibility is turned off, return empty string to hide the title

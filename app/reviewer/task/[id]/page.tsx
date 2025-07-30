@@ -18,7 +18,8 @@ interface Evaluation {
   instructions: string
   criteria: any[]
   columnRoles: any[]
-  data: any[]
+  data?: any[]  // Made optional for backward compatibility
+  originalData?: any[]  // Added for PostgreSQL response
   totalItems: number
   assignedReviewers?: { id: string; name: string }[] // Added assignedReviewers property
 }
@@ -318,6 +319,20 @@ export default function ReviewTaskPage() {
       }
     }
   }, [evaluation, submittedItems, taskId])
+
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <PageLayout title="Loading...">
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading evaluation...</p>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
 
   if (!evaluation) {
     return (

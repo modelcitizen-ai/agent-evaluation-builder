@@ -20,7 +20,8 @@ interface Evaluation {
   instructions: string
   criteria: any[]
   columnRoles: any[]
-  data: any[]
+  data?: any[]  // Made optional for backward compatibility
+  originalData?: any[]  // Added for PostgreSQL response
   totalItems: number
   assignedReviewers?: { id: string; name: string }[]
 }
@@ -423,8 +424,9 @@ export function useReviewerFormNavigation({
     }
 
     // Get current data item
-    const currentRowIndex = (currentItem - 1) % evaluation.data.length
-    const currentRow = evaluation.data[currentRowIndex]
+    const evaluationData = evaluation.originalData || evaluation.data || []
+    const currentRowIndex = (currentItem - 1) % evaluationData.length
+    const currentRow = evaluationData[currentRowIndex]
 
     // Get the assigned reviewer from the hook
     console.log(`[handleSubmit] Using reviewer from hook: ${currentReviewer.name} (ID: ${currentReviewer.id}) for evaluation ${taskId}`)
