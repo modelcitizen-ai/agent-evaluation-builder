@@ -148,11 +148,15 @@ export async function deleteEvaluation(id: number) {
 /**
  * Get all reviewers for an evaluation from localStorage
  */
-export async function getReviewers(evaluationId: number) {
+export async function getReviewers(evaluationId?: number) {
   await dbReady;
   try {
     const reviewers = JSON.parse(safeLocalStorageGet('reviewers', '[]'));
-    return reviewers.filter((r: any) => r.evaluationId === evaluationId);
+    if (evaluationId !== undefined) {
+      return reviewers.filter((r: any) => r.evaluationId === evaluationId);
+    } else {
+      return reviewers;
+    }
   } catch (error) {
     console.error('Error fetching reviewers:', error);
     return [];
@@ -162,7 +166,7 @@ export async function getReviewers(evaluationId: number) {
 /**
  * Create a new reviewer in localStorage
  */
-export async function createReviewer(reviewerData: any) {
+export async function addReviewer(reviewerData: any) {
   await dbReady;
   try {
     const reviewers = JSON.parse(safeLocalStorageGet('reviewers', '[]'));
@@ -177,6 +181,44 @@ export async function createReviewer(reviewerData: any) {
   } catch (error) {
     console.error('Error creating reviewer:', error);
     return null;
+  }
+}
+
+/**
+ * Update a reviewer in localStorage
+ */
+export async function updateReviewer(id: string, updates: any) {
+  await dbReady;
+  try {
+    const reviewers = JSON.parse(safeLocalStorageGet('reviewers', '[]'));
+    const reviewerIndex = reviewers.findIndex((r: any) => r.id === id);
+    
+    if (reviewerIndex === -1) {
+      throw new Error(`Reviewer with id ${id} not found`);
+    }
+    
+    reviewers[reviewerIndex] = { ...reviewers[reviewerIndex], ...updates };
+    safeLocalStorageSet('reviewers', JSON.stringify(reviewers));
+    return reviewers[reviewerIndex];
+  } catch (error) {
+    console.error('Error updating reviewer:', error);
+    return null;
+  }
+}
+
+/**
+ * Remove a reviewer from localStorage
+ */
+export async function removeReviewer(id: string) {
+  await dbReady;
+  try {
+    const reviewers = JSON.parse(safeLocalStorageGet('reviewers', '[]'));
+    const filteredReviewers = reviewers.filter((r: any) => r.id !== id);
+    safeLocalStorageSet('reviewers', JSON.stringify(filteredReviewers));
+    return true;
+  } catch (error) {
+    console.error('Error removing reviewer:', error);
+    return false;
   }
 }
 

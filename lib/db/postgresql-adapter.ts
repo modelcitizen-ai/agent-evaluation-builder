@@ -107,7 +107,8 @@ export async function getEvaluation(id: number): Promise<Evaluation | null> {
       created_at as "createdAt",
       total_items as "totalItems",
       original_data as "originalData",
-      criteria
+      criteria,
+      column_roles as "columnRoles"
     FROM evaluations 
     WHERE id = $1
   `;
@@ -124,9 +125,10 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
       total_items,
       original_data,
       criteria,
+      column_roles,
       created_at
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) 
     RETURNING 
       id,
       name,
@@ -135,7 +137,8 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
       created_at as "createdAt",
       total_items as "totalItems",
       original_data as "originalData",
-      criteria
+      criteria,
+      column_roles as "columnRoles"
   `;
   
   const params = [
@@ -144,7 +147,8 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
     evaluationData.status || 'draft',
     evaluationData.totalItems || 0,
     JSON.stringify(evaluationData.originalData || []),
-    JSON.stringify(evaluationData.criteria || [])
+    JSON.stringify(evaluationData.criteria || []),
+    JSON.stringify(evaluationData.columnRoles || [])
   ];
   
   return await executeQuerySingle<Evaluation>(query, params);
@@ -186,6 +190,11 @@ export async function updateEvaluation(id: number, evaluationData: any): Promise
     params.push(JSON.stringify(evaluationData.criteria));
   }
   
+  if (evaluationData.columnRoles !== undefined) {
+    fields.push(`column_roles = $${paramIndex++}`);
+    params.push(JSON.stringify(evaluationData.columnRoles));
+  }
+  
   if (fields.length === 0) {
     // No fields to update, return existing evaluation
     return await getEvaluation(id);
@@ -205,7 +214,8 @@ export async function updateEvaluation(id: number, evaluationData: any): Promise
       created_at as "createdAt",
       total_items as "totalItems",
       original_data as "originalData",
-      criteria
+      criteria,
+      column_roles as "columnRoles"
   `;
   
   return await executeQuerySingle<Evaluation>(query, params);
@@ -224,26 +234,46 @@ export async function deleteEvaluation(id: number): Promise<boolean> {
 }
 
 // Reviewer operations
-export async function getReviewers(evaluationId: number): Promise<Reviewer[]> {
-  const query = `
-    SELECT 
-      id,
-      evaluation_id as "evaluationId",
-      name,
-      email,
-      status,
-      completed,
-      total,
-      created_at as "createdAt"
-    FROM reviewers 
-    WHERE evaluation_id = $1
-    ORDER BY created_at ASC
-  `;
+export async function getReviewers(evaluationId?: number): Promise<Reviewer[]> {
+  let query: string;
+  let params: any[] = [];
+
+  if (evaluationId !== undefined) {
+    query = `
+      SELECT 
+        id,
+        evaluation_id as "evaluationId",
+        name,
+        email,
+        status,
+        completed,
+        total,
+        created_at as "createdAt"
+      FROM reviewers
+      WHERE evaluation_id = $1
+      ORDER BY created_at ASC
+    `;
+    params = [evaluationId];
+  } else {
+    query = `
+      SELECT 
+        id,
+        evaluation_id as "evaluationId",
+        name,
+        email,
+        status,
+        completed,
+        total,
+        created_at as "createdAt"
+      FROM reviewers
+      ORDER BY created_at ASC
+    `;
+  }
   
-  return await executeQuery<Reviewer>(query, [evaluationId]);
+  return await executeQuery<Reviewer>(query, params);
 }
 
-export async function createReviewer(reviewerData: any): Promise<Reviewer | null> {
+export async function addReviewer(reviewerData: any): Promise<Reviewer | null> {
   const query = `
     INSERT INTO reviewers (
       id,
@@ -278,6 +308,66 @@ export async function createReviewer(reviewerData: any): Promise<Reviewer | null
   ];
   
   return await executeQuerySingle<Reviewer>(query, params);
+}
+
+export async function updateReviewer(id: string, updates: any): Promise<Reviewer | null> {
+  const setClause = [];
+  const params = [id];
+  let paramIndex = 2;
+
+  if (updates.name !== undefined) {
+    setClause.push(`name = $${paramIndex++}`);
+    params.push(updates.name);
+  }
+  if (updates.email !== undefined) {
+    setClause.push(`email = $${paramIndex++}`);
+    params.push(updates.email);
+  }
+  if (updates.status !== undefined) {
+    setClause.push(`status = $${paramIndex++}`);
+    params.push(updates.status);
+  }
+  if (updates.completed !== undefined) {
+    setClause.push(`completed = $${paramIndex++}`);
+    params.push(updates.completed);
+  }
+  if (updates.total !== undefined) {
+    setClause.push(`total = $${paramIndex++}`);
+    params.push(updates.total);
+  }
+
+  if (setClause.length === 0) {
+    throw new Error('No fields to update');
+  }
+
+  const query = `
+    UPDATE reviewers 
+    SET ${setClause.join(', ')}
+    WHERE id = $1
+    RETURNING 
+      id,
+      evaluation_id as "evaluationId",
+      name,
+      email,
+      status,
+      completed,
+      total,
+      created_at as "createdAt"
+  `;
+
+  return await executeQuerySingle<Reviewer>(query, params);
+}
+
+export async function removeReviewer(id: string): Promise<boolean> {
+  const query = `DELETE FROM reviewers WHERE id = $1`;
+  
+  try {
+    const result = await executeQuery(query, [id]);
+    return true;
+  } catch (error) {
+    console.error('Error removing reviewer:', error);
+    return false;
+  }
 }
 
 // Results dataset operations
