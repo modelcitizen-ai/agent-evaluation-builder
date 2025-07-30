@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState, useLayoutEffect } from "react"
+import { useState, useLayoutEffect, useEffect } from "react"
 import { ClockIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
 import { getEvaluations } from "@/lib/client-db"
@@ -153,6 +153,77 @@ export default function ReviewerPage() {
     }
 
     initializeReviewerData()
+  }, [])
+
+  // Function to refresh completion status (similar to progress dashboard)
+  const refreshCompletionStatus = async () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      const participantId = urlParams.get('participant')
+      const evaluationReviewers = await getReviewers()
+      
+      let currentReviewerId = participantId
+      if (!currentReviewerId && evaluationReviewers.length > 0) {
+        currentReviewerId = evaluationReviewers[0].id
+      }
+      if (!currentReviewerId) {
+        currentReviewerId = "reviewer-1"
+      }
+
+      // Get assigned evaluations for this reviewer
+      const assignedEvaluationIds = evaluationReviewers
+        .filter((reviewer: any) => reviewer.id === currentReviewerId)
+        .map((reviewer: any) => reviewer.evaluationId.toString())
+
+      // Determine completed evaluations for this specific reviewer
+      const currentReviewerCompletions = assignedEvaluationIds.filter((evaluationId: string) => {
+        const reviewerRecord = evaluationReviewers.find((reviewer: any) => 
+          reviewer.id === currentReviewerId && 
+          (reviewer.evaluationId === evaluationId || reviewer.evaluationId === Number(evaluationId))
+        )
+        
+        if (reviewerRecord) {
+          // Reviewer is completed if their status is "completed" OR they've completed all items
+          return reviewerRecord.status === "completed" || 
+                 (reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0)
+        }
+        
+        return false
+      }).map((evaluationId: string) => Number(evaluationId))
+      
+      setCompletedEvaluations(currentReviewerCompletions)
+      console.log('[ReviewerDashboard] Refreshed completion status:', currentReviewerCompletions)
+      console.log('[ReviewerDashboard] All reviewer records:', evaluationReviewers.filter((r: any) => r.id === currentReviewerId))
+    } catch (error) {
+      console.error('[ReviewerDashboard] Error refreshing completion status:', error)
+    }
+  }
+
+  // Add event listeners for real-time updates
+  useEffect(() => {
+    // Listen for custom events when reviewer completes evaluations
+    const handleProgressUpdate = () => {
+      console.log('[ReviewerDashboard] Progress update event received - refreshing status')
+      refreshCompletionStatus()
+    }
+
+    // Listen for visibility changes to update when user returns to dashboard
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log('[ReviewerDashboard] Page became visible - refreshing status')
+        refreshCompletionStatus()
+      }
+    }
+
+    window.addEventListener("reviewerProgressUpdated", handleProgressUpdate)
+    window.addEventListener("evaluationCompleted", handleProgressUpdate)
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener("reviewerProgressUpdated", handleProgressUpdate)
+      window.removeEventListener("evaluationCompleted", handleProgressUpdate)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
   }, [])
 
   const handleStartTask = (evaluationId: number) => {
@@ -317,6 +388,7 @@ export default function ReviewerPage() {
           <ul className="divide-y divide-gray-200">
             {evaluations.map((task) => {
               const isCompleted = completedEvaluations.includes(task.id)
+              console.log(`[ReviewerDashboard] Task ${task.name} (ID: ${task.id}): isCompleted = ${isCompleted}, completedEvaluations = [${completedEvaluations.join(', ')}]`)
               return (
                 <li key={task.id}>
                   <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
