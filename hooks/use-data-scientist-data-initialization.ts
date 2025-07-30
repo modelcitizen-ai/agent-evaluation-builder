@@ -42,19 +42,13 @@ export function useDataScientistDataInitialization() {
 
     window.addEventListener('evaluationCompleted', handleEvaluationCompleted)
 
-    // Set up periodic check every 3 seconds for completion updates
-    const intervalId = setInterval(async () => {
-      console.log('[useDataScientistDataInitialization] Periodic completion check triggered')
-      const updatedCount = await forceCheckAllEvaluationCompletions()
-      if (updatedCount > 0) {
-        console.log(`[useDataScientistDataInitialization] ${updatedCount} evaluation(s) updated, reloading data`)
-        loadEvaluations()
-      }
-    }, 3000)
-
+    // PostgreSQL backend provides real-time updates, so polling is not needed
+    // Event-driven updates via 'evaluationCompleted' events handle completion detection
+    // Removed periodic polling to improve performance and reduce database load
+    
     return () => {
       window.removeEventListener('evaluationCompleted', handleEvaluationCompleted)
-      clearInterval(intervalId)
+      // No interval to clear since polling was removed
     }
   }, [])
 
