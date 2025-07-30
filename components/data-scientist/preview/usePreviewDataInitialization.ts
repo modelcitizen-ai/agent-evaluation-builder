@@ -12,6 +12,7 @@
 import React, { useState, useLayoutEffect } from 'react'
 import { useDatasetAnalysis } from '@/lib/hooks/use-dataset-analysis'
 import { generateFallbackAnalysis } from '@/lib/analysis/fallback'
+import { getEvaluation } from '@/lib/client-db'
 
 interface Metric {
   id: number
@@ -322,59 +323,66 @@ export function usePreviewDataInitialization({
 
   // Data initialization effect
   useLayoutEffect(() => {
-    if (isEditMode && editId) {
-      // Load existing evaluation for editing
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const existingEvaluation = storedEvaluations.find((evaluation: any) => evaluation.id === editId)
+    const loadData = async () => {
+      if (isEditMode && editId) {
+        // Load existing evaluation for editing from database
+        try {
+          const existingEvaluation = await getEvaluation(editId)
+          
+          if (existingEvaluation) {
+            setEvaluationName(existingEvaluation.name)
+            setInstructions(existingEvaluation.instructions)
+            setCriteria(existingEvaluation.criteria)
+            setColumnRoles(existingEvaluation.columnRoles)
+            // Use originalData first, fallback to data for backward compatibility
+            const evaluationData = existingEvaluation.originalData || existingEvaluation.data || []
+            setUploadedData(evaluationData)
+            
+            // Restore randomization setting if it exists, otherwise default to false
+            setRandomizationEnabled(existingEvaluation.randomizationEnabled ?? false)
 
-      if (existingEvaluation) {
-        setEvaluationName(existingEvaluation.name)
-        setInstructions(existingEvaluation.instructions)
-        setCriteria(existingEvaluation.criteria)
-        setColumnRoles(existingEvaluation.columnRoles)
-        // Use originalData first, fallback to data for backward compatibility
-        const evaluationData = existingEvaluation.originalData || existingEvaluation.data || []
-        setUploadedData(evaluationData)
-        
-        // Restore randomization setting if it exists, otherwise default to false
-        setRandomizationEnabled(existingEvaluation.randomizationEnabled ?? false)
-
-        if (evaluationData.length > 0) {
-          const columns = Object.keys(evaluationData[0])
-          setDataColumns(columns)
+            if (evaluationData.length > 0) {
+              const columns = Object.keys(evaluationData[0])
+              setDataColumns(columns)
+            }
+          }
+        } catch (error) {
+          console.error('Error loading evaluation for edit:', error)
         }
-      }
-    } else {
-      // Load data from sessionStorage for new evaluations
-      const storedData = sessionStorage.getItem("uploadedData")
-      const storedAIResult = sessionStorage.getItem("aiAnalysisResult")
-      const storedAIPreference = sessionStorage.getItem("useAIAnalysis")
-      const storedJsonlColumnRoles = sessionStorage.getItem("jsonlColumnRoles")
+      } else {
+        // Load data from sessionStorage for new evaluations
+        const storedData = sessionStorage.getItem("uploadedData")
+        const storedAIResult = sessionStorage.getItem("aiAnalysisResult")
+        const storedAIPreference = sessionStorage.getItem("useAIAnalysis")
+        const storedJsonlColumnRoles = sessionStorage.getItem("jsonlColumnRoles")
 
-      if (storedData) {
-        const parsedData = JSON.parse(storedData)
-        setUploadedData(parsedData)
+        if (storedData) {
+          const parsedData = JSON.parse(storedData)
+          setUploadedData(parsedData)
 
-        if (parsedData.length > 0) {
-          const columns = Object.keys(parsedData[0])
-          setDataColumns(columns)
+          if (parsedData.length > 0) {
+            const columns = Object.keys(parsedData[0])
+            setDataColumns(columns)
 
-          // If JSONL column roles exist, use them
-          if (storedJsonlColumnRoles) {
-            setColumnRoles(JSON.parse(storedJsonlColumnRoles))
-          } else {
-            const shouldUseAI = storedAIResult && storedAIPreference === "true"
-            if (shouldUseAI) {
-              const aiResult = JSON.parse(storedAIResult)
-              applyAIResults(aiResult)
+            // If JSONL column roles exist, use them
+            if (storedJsonlColumnRoles) {
+              setColumnRoles(JSON.parse(storedJsonlColumnRoles))
             } else {
-              // Use fallback analysis
-              performFallbackAnalysis(parsedData, columns)
+              const shouldUseAI = storedAIResult && storedAIPreference === "true"
+              if (shouldUseAI) {
+                const aiResult = JSON.parse(storedAIResult)
+                applyAIResults(aiResult)
+              } else {
+                // Use fallback analysis
+                performFallbackAnalysis(parsedData, columns)
+              }
             }
           }
         }
       }
     }
+
+    loadData()
   }, [isEditMode, editId])
 
   return {
