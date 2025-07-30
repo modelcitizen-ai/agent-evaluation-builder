@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import ProgressDashboard from "@/components/progress-dashboard"
 import PageLayout from "@/components/layout/page-layout"
+import { getEvaluation } from "@/lib/client-db"
 
 export default function EvaluationProgressPage() {
   const router = useRouter()
@@ -11,18 +12,25 @@ export default function EvaluationProgressPage() {
   const evaluationId = params.id ? Number(params.id) : undefined
   const [evaluationName, setEvaluationName] = useState<string>("Loading...")
 
-  // Load evaluation name from localStorage
+  // Load evaluation name from API (PostgreSQL backend)
   useEffect(() => {
-    if (evaluationId) {
-      const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
-      const evaluation = storedEvaluations.find((item: any) => item.id === evaluationId)
-
-      if (evaluation) {
-        setEvaluationName(evaluation.name)
-      } else {
-        setEvaluationName("Evaluation Not Found")
+    const loadEvaluationName = async () => {
+      if (evaluationId) {
+        try {
+          const evaluation = await getEvaluation(evaluationId)
+          if (evaluation) {
+            setEvaluationName(evaluation.name)
+          } else {
+            setEvaluationName("Evaluation Not Found")
+          }
+        } catch (error) {
+          console.error("Error loading evaluation:", error)
+          setEvaluationName("Evaluation Not Found")
+        }
       }
     }
+
+    loadEvaluationName()
   }, [evaluationId])
 
   // Add the back handler function

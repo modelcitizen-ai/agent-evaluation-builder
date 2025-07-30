@@ -12,7 +12,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { getResultsDataset, addResultToDataset, saveResultsDataset, type EvaluationResult } from "@/lib/results-dataset"
+import { getResultsDataset, addResultToDataset } from "@/lib/client-db"
+import { type EvaluationResult } from "@/lib/results-dataset"
 
 interface Evaluation {
   id: number
@@ -455,11 +456,13 @@ export function useReviewerFormNavigation({
       originalData: currentRow,
     }
 
-    // Get and update results dataset
-    const resultsDataset = getResultsDataset(Number(taskId))
-    if (resultsDataset) {
-      const updatedDataset = addResultToDataset(resultsDataset, result)
-      saveResultsDataset(updatedDataset)
+    // Submit result to dataset via API
+    try {
+      await addResultToDataset(Number(taskId), result)
+      console.log(`[handleSubmit] Successfully submitted result for evaluation ${taskId}, item ${currentItem}`)
+    } catch (error) {
+      console.error(`[handleSubmit] Error submitting result for evaluation ${taskId}:`, error)
+      // For now, continue despite error - could show user notification in future
     }
 
     // Update reviewer's average time

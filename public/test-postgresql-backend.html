@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Backend Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .log {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #00ccff; }
+        .warning { color: #ffff00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐘 PostgreSQL Backend Test</h1>
+        <p>This test will demonstrate the PostgreSQL backend in action by creating a new evaluation.</p>
+        
+        <button onclick="runTest()">🚀 Test PostgreSQL Backend</button>
+        <button onclick="clearLogs()">🧹 Clear Logs</button>
+        
+        <div id="logs" class="log">
+Click "Test PostgreSQL Backend" to see the PostgreSQL backend in action...
+        </div>
+    </div>
+
+    <script>
+        const logElement = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            const entry = `[${timestamp}] ${message}`;
+            
+            logElement.innerHTML += `<span class="${className}">${entry}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logElement.innerHTML = 'Logs cleared...\n';
+        }
+
+        // Test function to create evaluation
+        const testCreateEvaluation = async () => {
+            log('🧪 Testing PostgreSQL Backend - Creating Evaluation', 'info');
+            
+            const testEvaluation = {
+                name: `Test Evaluation ${Date.now()}`,
+                instructions: 'This is a test evaluation to demonstrate PostgreSQL backend functionality.',
+                criteria: [
+                    {
+                        id: 1,
+                        name: 'Quality',
+                        description: 'Rate the overall quality',
+                        type: 'scale',
+                        scale: { min: 1, max: 5 }
+                    },
+                    {
+                        id: 2,
+                        name: 'Relevance',
+                        description: 'How relevant is this content?',
+                        type: 'scale',
+                        scale: { min: 1, max: 10 }
+                    }
+                ],
+                data: [
+                    { id: 1, text: 'Sample item 1', type: 'text' },
+                    { id: 2, text: 'Sample item 2', type: 'text' },
+                    { id: 3, text: 'Sample item 3', type: 'text' }
+                ]
+            };
+
+            try {
+                log('📤 Sending POST request to /api/evaluations', 'info');
+                const response = await fetch('/api/evaluations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testEvaluation),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                log(`✅ Evaluation created successfully: ${JSON.stringify(result.data, null, 2)}`, 'success');
+                
+                return result.data;
+            } catch (error) {
+                log(`❌ Error creating evaluation: ${error.message}`, 'error');
+                throw error;
+            }
+        };
+
+        // Test function to fetch all evaluations
+        const testFetchEvaluations = async () => {
+            log('📤 Fetching all evaluations from API', 'info');
+            try {
+                const response = await fetch('/api/evaluations');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                log(`📋 Current evaluations: ${JSON.stringify(result.data, null, 2)}`, 'info');
+                return result.data;
+            } catch (error) {
+                log(`❌ Error fetching evaluations: ${error.message}`, 'error');
+                throw error;
+            }
+        };
+
+        // Main test function
+        async function runTest() {
+            try {
+                log('🚀 Starting PostgreSQL Backend Test', 'success');
+                
+                // First, check current evaluations
+                log('\n--- BEFORE CREATING NEW EVALUATION ---', 'warning');
+                const beforeEvaluations = await testFetchEvaluations();
+                log(`Found ${beforeEvaluations.length} existing evaluations`, 'info');
+                
+                // Create a new evaluation
+                log('\n--- CREATING NEW EVALUATION ---', 'warning');
+                const newEvaluation = await testCreateEvaluation();
+                log(`New evaluation ID: ${newEvaluation.id}`, 'success');
+                
+                // Check evaluations after creation
+                log('\n--- AFTER CREATING NEW EVALUATION ---', 'warning');
+                const afterEvaluations = await testFetchEvaluations();
+                log(`Now found ${afterEvaluations.length} evaluations`, 'info');
+                
+                // Show the difference
+                if (afterEvaluations.length > beforeEvaluations.length) {
+                    log('🎉 SUCCESS: New evaluation was successfully saved to PostgreSQL!', 'success');
+                    log('📊 PostgreSQL Backend is working correctly!', 'success');
+                } else {
+                    log('⚠️  Something unexpected happened', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

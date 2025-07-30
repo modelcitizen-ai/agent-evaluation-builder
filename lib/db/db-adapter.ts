@@ -70,6 +70,16 @@ export async function getResultsDataset(evaluationId: number) {
   return adapterModule.getResultsDataset(evaluationId);
 }
 
+export async function addResultToDataset(evaluationId: number, result: any) {
+  const adapterModule = await getAdapter();
+  return adapterModule.addResultToDataset(evaluationId, result);
+}
+
+export async function initializeEmptyResultsDataset(evaluationId: number, evaluationName: string, originalData: any[], criteria: any[]) {
+  const adapterModule = await getAdapter();
+  return adapterModule.initializeEmptyResultsDataset(evaluationId, evaluationName, originalData, criteria);
+}
+
 export async function saveResultsDataset(dataset: any) {
   const adapterModule = await getAdapter();
   return adapterModule.saveResultsDataset(dataset);

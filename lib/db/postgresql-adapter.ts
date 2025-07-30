@@ -414,9 +414,34 @@ export async function initializeEmptyResultsDataset(
 
 export async function addResultToDataset(evaluationId: number, result: EvaluationResult): Promise<void> {
   // First, get the current results
-  const currentDataset = await getResultsDataset(evaluationId);
+  let currentDataset = await getResultsDataset(evaluationId);
+  
+  // If no dataset exists, auto-initialize one
   if (!currentDataset) {
-    throw new Error(`Results dataset not found for evaluation ${evaluationId}`);
+    console.log(`[addResultToDataset] No results dataset found for evaluation ${evaluationId}, auto-initializing...`);
+    
+    // Get evaluation details to initialize dataset
+    const evaluation = await getEvaluation(evaluationId);
+    if (!evaluation) {
+      throw new Error(`Evaluation ${evaluationId} not found, cannot initialize results dataset`);
+    }
+    
+    // Cast to any to access additional properties returned by the query
+    const evalData = evaluation as any;
+    
+    // Initialize empty results dataset
+    await initializeEmptyResultsDataset(
+      evaluationId,
+      evaluation.name,
+      evalData.originalData || [],
+      evalData.criteria || []
+    );
+    
+    // Get the newly created dataset
+    currentDataset = await getResultsDataset(evaluationId);
+    if (!currentDataset) {
+      throw new Error(`Failed to initialize results dataset for evaluation ${evaluationId}`);
+    }
   }
   
   // Add the new result
@@ -461,6 +486,29 @@ export async function getResultsDataset(evaluationId: number): Promise<ResultsDa
       ? JSON.parse(result.results) 
       : result.results,
   };
+}
+
+// Save/update entire results dataset (for compatibility with localStorage adapter)
+export async function saveResultsDataset(dataset: ResultsDataset): Promise<void> {
+  const query = `
+    UPDATE results_datasets 
+    SET 
+      evaluation_name = $1,
+      original_data = $2,
+      criteria = $3,
+      results = $4
+    WHERE evaluation_id = $5
+  `;
+  
+  const params = [
+    dataset.evaluationName,
+    JSON.stringify(dataset.originalData || []),
+    JSON.stringify(dataset.criteria || []),
+    JSON.stringify(dataset.results || []),
+    dataset.evaluationId
+  ];
+  
+  await executeQuery(query, params);
 }
 
 // Utility functions for compatibility with localStorage adapter

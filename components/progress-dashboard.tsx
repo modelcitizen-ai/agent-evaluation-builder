@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react"
 import ResultsModal from "./results-modal"
-import { getResultsDataset } from "@/lib/results-dataset"
+import { getResultsDataset } from "@/lib/client-db"
 import { getEvaluations, updateEvaluation } from "@/lib/client-db"
 import { getReviewers, updateReviewer } from "@/lib/client-db"
 
@@ -108,6 +108,17 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       const filteredReviewers: Reviewer[] = await getReviewers(evaluationId ? parseInt(evaluationId.toString()) : undefined);
       setReviewers(filteredReviewers)
       
+      // Also refresh results dataset if we have an evaluationId
+      if (evaluationId) {
+        try {
+          const dataset = await getResultsDataset(evaluationId)
+          setResultsDataset(dataset)
+          console.log(`[ProgressDashboard] Refreshed results dataset - found ${dataset?.results?.length || 0} results`);
+        } catch (error) {
+          console.error('[ProgressDashboard] Error refreshing results dataset:', error)
+        }
+      }
+      
       if (updatedCount > 0 || hasReviewerUpdates) {
         console.log(`[ProgressDashboard] Refreshed reviewer data after ${updatedCount} evaluation updates and reviewer status updates`);
       } else {
@@ -169,21 +180,21 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
 
-    // Set up periodic checking for completion status (every 1 second for real-time feel)
+    // Set up periodic checking for completion status (every 5 seconds for balance of real-time and performance)
     const intervalId = setInterval(async () => {
       try {
         // Only check if page is visible
         if (document.visibilityState === "visible") {
-          console.log('[ProgressDashboard] Real-time check');
+          console.log('[ProgressDashboard] Periodic check');
           const updates = await forceCheckAllEvaluationCompletions();
           if (updates > 0) {
-            console.log(`[ProgressDashboard] Real-time check updated ${updates} evaluation(s)`);
+            console.log(`[ProgressDashboard] Periodic check updated ${updates} evaluation(s)`);
           }
         }
       } catch (error) {
-        console.error('[ProgressDashboard] Error in real-time check:', error);
+        console.error('[ProgressDashboard] Error in periodic check:', error);
       }
-    }, 1000); // Check every 1 second for real-time updates
+    }, 5000); // Check every 5 seconds for balance of real-time updates and performance
 
     // Cleanup listeners
     return () => {
@@ -196,13 +207,48 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     }
   }, [evaluationId])
 
+  // Results dataset state
+  const [resultsDataset, setResultsDataset] = useState<any>(null)
+
+  // Load results dataset when evaluationId changes
+  useEffect(() => {
+    if (!evaluationId) {
+      setResultsDataset(null)
+      return
+    }
+
+    const loadResultsDataset = async () => {
+      try {
+        const dataset = await getResultsDataset(evaluationId)
+        setResultsDataset(dataset)
+      } catch (error) {
+        console.error('Error loading results dataset:', error)
+        setResultsDataset(null)
+      }
+    }
+
+    loadResultsDataset()
+  }, [evaluationId])
+
   // Get results dataset for this evaluation
-  const resultsDataset = evaluationId ? getResultsDataset(evaluationId) : null
+  // const resultsDataset = evaluationId ? getResultsDataset(evaluationId) : null
+
+  // Function to calculate actual completed count from results dataset
+  const getActualCompletedCount = useCallback((reviewerId: string | number) => {
+    if (!resultsDataset || !resultsDataset.results) return 0
+    
+    return resultsDataset.results.filter((result: any) => 
+      result.reviewerId === reviewerId || result.reviewerId === String(reviewerId)
+    ).length
+  }, [resultsDataset])
 
   // Function to determine accurate reviewer status
   const getReviewerStatus = useCallback((reviewer: Reviewer) => {
-    // Check if reviewer has completed all their tasks
-    if (reviewer.completed === reviewer.total && reviewer.total > 0) {
+    // Get actual completed count from results dataset
+    const actualCompleted = getActualCompletedCount(reviewer.id)
+    
+    // Check if reviewer has completed all their tasks (using actual count)
+    if (actualCompleted === reviewer.total && reviewer.total > 0) {
       return "completed"
     }
     // Check if reviewer status is explicitly completed (most reliable)
@@ -215,7 +261,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     }
     // Default to active if they have tasks to complete or are in progress
     return "active"
-  }, [])
+  }, [getActualCompletedCount])
 
   // Memoized calculations that update when reviewers change
   const { completionRate, totalCompleted, totalTasks, avgTimeToCompleteEvaluation } = useMemo(() => {
@@ -223,8 +269,10 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     const completedReviewers = reviewers.filter(r => getReviewerStatus(r) === "completed").length;
     const rate = reviewers.length > 0 ? Math.round((completedReviewers / reviewers.length) * 100) : 0;
     
-    // Calculate total questions completed across all reviewers
-    const completed = reviewers.reduce((sum: number, r: Reviewer) => sum + r.completed, 0);
+    // Calculate total questions completed across all reviewers (using actual counts from results dataset)
+    const completed = reviewers.reduce((sum: number, r: Reviewer) => {
+      return sum + getActualCompletedCount(r.id)
+    }, 0);
     const tasks = reviewers.reduce((sum: number, r: Reviewer) => sum + r.total, 0);
     
     // Calculate average time to complete entire evaluation (in minutes)
@@ -249,7 +297,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       totalTasks: tasks,
       avgTimeToCompleteEvaluation: avgTimeToCompleteEvaluation
     };
-  }, [reviewers]);
+  }, [reviewers, getReviewerStatus, getActualCompletedCount]);
 
   // Function to get status color
   const getStatusColor = (status: string) => {
@@ -427,10 +475,11 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                   
                   // Log each reviewer's current status for debugging
                   filteredReviewers.forEach(reviewer => {
-                    const actualStatus = reviewer.completed === reviewer.total && reviewer.total > 0 ? 'completed' : 
+                    const actualCompleted = getActualCompletedCount(reviewer.id)
+                    const actualStatus = actualCompleted === reviewer.total && reviewer.total > 0 ? 'completed' : 
                                        reviewer.status === 'completed' ? 'completed' :
                                        reviewer.status === 'incomplete' ? 'incomplete' : 'active';
-                    console.log(`[ProgressDashboard] Reviewer ${reviewer.name}: ${reviewer.completed}/${reviewer.total} - Status: ${reviewer.status} -> Display: ${actualStatus}`);
+                    console.log(`[ProgressDashboard] Reviewer ${reviewer.name}: ${actualCompleted}/${reviewer.total} (localStorage: ${reviewer.completed}) - Status: ${reviewer.status} -> Display: ${actualStatus}`);
                   });
                   
                   // Provide user feedback
@@ -487,13 +536,13 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                       <td className="pl-4 pr-8 py-4 whitespace-nowrap text-center w-1/6">
                         <div className="flex items-center justify-center space-x-3">
                           <span className="text-sm text-gray-900 min-w-[2rem]">
-                            {reviewer.completed}/{reviewer.total}
+                            {getActualCompletedCount(reviewer.id)}/{reviewer.total}
                           </span>
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div 
                               className="bg-blue-500 h-2 rounded-full transition-all duration-500 ease-in-out" 
                               style={{ 
-                                width: `${reviewer.total > 0 ? Math.round((reviewer.completed / reviewer.total) * 100) : 0}%` 
+                                width: `${reviewer.total > 0 ? Math.round((getActualCompletedCount(reviewer.id) / reviewer.total) * 100) : 0}%` 
                               }}
                             ></div>
                           </div>
