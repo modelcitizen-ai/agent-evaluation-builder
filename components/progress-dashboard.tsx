@@ -235,12 +235,69 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
 
   // Function to calculate actual completed count from results dataset
   const getActualCompletedCount = useCallback((reviewerId: string | number) => {
-    if (!resultsDataset || !resultsDataset.results) return 0
+    if (!resultsDataset || !resultsDataset.results) {
+      // Fallback to reviewer.completed field for localStorage parity
+      const reviewer = reviewers.find(r => String(r.id) === String(reviewerId))
+      return reviewer?.completed || 0
+    }
     
-    return resultsDataset.results.filter((result: any) => 
+    // Count unique items from results dataset
+    const reviewerResults = resultsDataset.results.filter((result: any) => 
       result.reviewerId === reviewerId || result.reviewerId === String(reviewerId)
-    ).length
-  }, [resultsDataset])
+    )
+    
+    const uniqueItemIds = new Set()
+    reviewerResults.forEach((result: any) => {
+      uniqueItemIds.add(result.itemId)
+    })
+    
+    return uniqueItemIds.size
+  }, [resultsDataset, reviewers])
+
+  // Function to calculate average response time from results dataset
+  const getActualAverageResponseTime = useCallback((reviewerId: string | number) => {
+    if (!resultsDataset || !resultsDataset.results) {
+      // Fallback to reviewer.avgTime field for localStorage parity
+      const reviewer = reviewers.find(r => String(r.id) === String(reviewerId))
+      return reviewer?.avgTime || 0
+    }
+    
+    const reviewerResults = resultsDataset.results.filter((result: any) => 
+      result.reviewerId === reviewerId || result.reviewerId === String(reviewerId)
+    )
+    
+    if (reviewerResults.length === 0) return 0
+    
+    // Simply average all response times without complex deduplication
+    const totalTime = reviewerResults.reduce((sum: number, result: any) => {
+      return sum + (result.timeSpent || 0)  // Changed from responseTime to timeSpent
+    }, 0)
+    
+    return Math.round(totalTime / reviewerResults.length)
+  }, [resultsDataset, reviewers])
+
+  // Function to calculate total time spent by a reviewer from results dataset
+  const getTotalTimeSpent = useCallback((reviewerId: string | number) => {
+    if (!resultsDataset || !resultsDataset.results) {
+      // Fallback to simple calculation for localStorage parity
+      const reviewer = reviewers.find(r => String(r.id) === String(reviewerId))
+      if (!reviewer) return 0
+      const avgTime = typeof reviewer.avgTime === 'string' ? parseFloat(reviewer.avgTime) : (reviewer.avgTime || 0)
+      const completed = reviewer.completed || 0
+      return avgTime * completed
+    }
+    
+    const reviewerResults = resultsDataset.results.filter((result: any) => 
+      result.reviewerId === reviewerId || result.reviewerId === String(reviewerId)
+    )
+    
+    // Simply sum all time spent without complex deduplication
+    const totalTime = reviewerResults.reduce((sum: number, result: any) => {
+      return sum + (result.timeSpent || 0)
+    }, 0)
+    
+    return totalTime // Returns total time in seconds
+  }, [resultsDataset, reviewers])
 
   // Function to determine accurate reviewer status
   const getReviewerStatus = useCallback((reviewer: Reviewer) => {
@@ -275,20 +332,20 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     }, 0);
     const tasks = reviewers.reduce((sum: number, r: Reviewer) => sum + r.total, 0);
     
-    // Calculate average time to complete entire evaluation (in minutes)
-    const completedReviewersWithTime = reviewers.filter(r => {
+    // Calculate average time to complete entire evaluation (in minutes) using results dataset
+    const completedReviewersWithData = reviewers.filter(r => {
       const isCompleted = getReviewerStatus(r) === "completed";
-      const hasTimeData = parseFloat(r.avgTime) > 0;
-      return isCompleted && hasTimeData;
+      const hasResults = getActualCompletedCount(r.id) > 0;
+      return isCompleted && hasResults;
     });
     
-    // Calculate average time to complete entire evaluation (in minutes) across all completed reviewers
-    const avgTimeToCompleteEvaluation = completedReviewersWithTime.length > 0
-      ? completedReviewersWithTime.reduce((sum, r) => {
-          const avgTimePerQuestion = parseFloat(r.avgTime) || 0; // seconds per question
-          const totalTimeForEvaluation = avgTimePerQuestion * r.total; // total seconds for evaluation
-          return sum + (totalTimeForEvaluation / 60); // convert to minutes
-        }, 0) / completedReviewersWithTime.length
+    // Calculate average time to complete entire evaluation using actual results data
+    const avgTimeToCompleteEvaluation = completedReviewersWithData.length > 0
+      ? completedReviewersWithData.reduce((sum, r) => {
+          const totalTimeInSeconds = getTotalTimeSpent(r.id); // Total time spent by this reviewer
+          const totalTimeInMinutes = totalTimeInSeconds / 60; // Convert to minutes
+          return sum + totalTimeInMinutes;
+        }, 0) / completedReviewersWithData.length
       : 0;
     
     return {
@@ -297,7 +354,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       totalTasks: tasks,
       avgTimeToCompleteEvaluation: avgTimeToCompleteEvaluation
     };
-  }, [reviewers, getReviewerStatus, getActualCompletedCount]);
+  }, [reviewers, getReviewerStatus, getActualCompletedCount, getTotalTimeSpent]);
 
   // Function to get status color
   const getStatusColor = (status: string) => {
@@ -549,7 +606,21 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                         </div>
                       </td>
                       <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-gray-900 w-1/6">
-                        {reviewer.avgTime ? formatTime(parseFloat(reviewer.avgTime) / 60) : "---"}
+                        {(() => {
+                          // First try to get actual average response time from results dataset
+                          const actualAvgTime = getActualAverageResponseTime(reviewer.id)
+                          const avgTimeNum = typeof actualAvgTime === 'string' ? parseFloat(actualAvgTime) : actualAvgTime
+                          if (avgTimeNum > 0) {
+                            return formatTime(avgTimeNum / 60) // Convert seconds to minutes for formatTime
+                          }
+                          
+                          // Fallback to reviewer.avgTime if available (this is already in seconds)
+                          if (reviewer.avgTime && parseFloat(reviewer.avgTime) > 0) {
+                            return formatTime(parseFloat(reviewer.avgTime) / 60) // Convert seconds to minutes for formatTime
+                          }
+                          
+                          return "---"
+                        })()}
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right w-1/6">
                         <span
