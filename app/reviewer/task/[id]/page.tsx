@@ -166,7 +166,7 @@ export default function ReviewTaskPage() {
     isSubmitting,
     submittedItems,
     isCurrentFormModified,
-    questionStartTime,
+    currentQuestionStartTime,
     isFormValid,
     handleSubmit,
     handleInputChange,

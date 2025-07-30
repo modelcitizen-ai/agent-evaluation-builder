@@ -48,7 +48,7 @@ interface UseReviewerFormNavigationReturn {
   isSubmitting: boolean
   submittedItems: Set<number>
   isCurrentFormModified: boolean
-  questionStartTime: number
+  currentQuestionStartTime: number | undefined
   
   // Validation
   isFormValid: boolean
@@ -85,7 +85,9 @@ export function useReviewerFormNavigation({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedItems, setSubmittedItems] = useState<Set<number>>(new Set())
   const [isCurrentFormModified, setIsCurrentFormModified] = useState(false)
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
+  
+  // Per-question timing: tracks start time for each question until submission
+  const [questionTimers, setQuestionTimers] = useState<Record<number, number>>({})
   const [hasInitialized, setHasInitialized] = useState(false)
 
   // Initialize submitted items based on existing responses (for resume functionality)
@@ -275,8 +277,14 @@ export function useReviewerFormNavigation({
     // Reset modification flag when loading a new item
     setIsCurrentFormModified(false)
 
-    // Reset question start time when moving to a new question
-    setQuestionStartTime(Date.now())
+    // Start timing for this question if not already started and not yet submitted
+    if (!questionTimers[currentItem] && !submittedItems.has(currentItem)) {
+      setQuestionTimers(prev => ({
+        ...prev,
+        [currentItem]: Date.now()
+      }))
+      console.log(`[Timer] Started timing for question ${currentItem}`)
+    }
 
     // Update furthest item reached if current item is further
     if (currentItem > furthestItemReached) {
@@ -397,9 +405,22 @@ export function useReviewerFormNavigation({
 
     // Calculate actual time spent on this question (in seconds)
     const currentTime = Date.now()
-    const timeSpent = Math.round((currentTime - questionStartTime) / 1000)
+    const questionStartTime = questionTimers[currentItem]
+    let timeSpent = 0
     
-    console.log(`[handleSubmit] Question completed in ${timeSpent} seconds`)
+    if (questionStartTime) {
+      timeSpent = Math.round((currentTime - questionStartTime) / 1000)
+      console.log(`[handleSubmit] Question ${currentItem} completed in ${timeSpent} seconds (total thinking time including navigation)`)
+      
+      // Remove the timer for this question since it's now submitted
+      setQuestionTimers(prev => {
+        const updated = { ...prev }
+        delete updated[currentItem]
+        return updated
+      })
+    } else {
+      console.warn(`[handleSubmit] No timer found for question ${currentItem}, using 0 seconds`)
+    }
 
     // Get current data item
     const currentRowIndex = (currentItem - 1) % evaluation.data.length
@@ -521,7 +542,7 @@ export function useReviewerFormNavigation({
     isSubmitting,
     submittedItems,
     isCurrentFormModified,
-    questionStartTime,
+    currentQuestionStartTime: questionTimers[currentItem],
     
     // Validation
     isFormValid,

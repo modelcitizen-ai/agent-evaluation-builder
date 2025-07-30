@@ -4,6 +4,29 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import ResultsModal from "./results-modal"
 import { getResultsDataset } from "@/lib/results-dataset"
 
+// Helper function to format time in a human-readable way
+const formatTime = (minutes: number): string => {
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)}s`
+  } else if (minutes < 60) {
+    const wholeMins = Math.floor(minutes)
+    const remainingSeconds = Math.round((minutes - wholeMins) * 60)
+    if (remainingSeconds === 0) {
+      return `${wholeMins}m`
+    } else {
+      return `${wholeMins}m ${remainingSeconds}s`
+    }
+  } else {
+    const hours = Math.floor(minutes / 60)
+    const remainingMins = Math.round(minutes % 60)
+    if (remainingMins === 0) {
+      return `${hours}h`
+    } else {
+      return `${hours}h ${remainingMins}m`
+    }
+  }
+}
+
 interface Reviewer {
   id: number
   name: string
@@ -223,7 +246,8 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       return isCompleted && hasTimeData;
     });
     
-    const avgEvaluationTime = completedReviewersWithTime.length > 0
+    // Calculate average time to complete entire evaluation (in minutes) across all completed reviewers
+    const avgTimeToCompleteEvaluation = completedReviewersWithTime.length > 0
       ? completedReviewersWithTime.reduce((sum, r) => {
           const avgTimePerQuestion = parseFloat(r.avgTime) || 0; // seconds per question
           const totalTimeForEvaluation = avgTimePerQuestion * r.total; // total seconds for evaluation
@@ -235,7 +259,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       completionRate: rate,
       totalCompleted: completed,
       totalTasks: tasks,
-      avgTimeToCompleteEvaluation: avgEvaluationTime
+      avgTimeToCompleteEvaluation: avgTimeToCompleteEvaluation
     };
   }, [reviewers]);
 
@@ -352,15 +376,15 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
-                    {avgTimeToCompleteEvaluation > 0 ? avgTimeToCompleteEvaluation.toFixed(1) : "---"}
+                    {avgTimeToCompleteEvaluation > 0 ? avgTimeToCompleteEvaluation.toFixed(0) : "---"}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Time to Complete</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Completion Time</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {avgTimeToCompleteEvaluation > 0 ? `${avgTimeToCompleteEvaluation.toFixed(1)} minutes` : "---"}
+                    {avgTimeToCompleteEvaluation > 0 ? formatTime(avgTimeToCompleteEvaluation) : "---"}
                   </dd>
                 </dl>
               </div>
@@ -455,9 +479,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                   <th className="pl-4 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Progress
                   </th>
-                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                    Average Time
-                  </th>
+                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6 whitespace-nowrap">Avg Response Time</th>
                   <th className="px-8 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Status
                   </th>
@@ -490,7 +512,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                         </div>
                       </td>
                       <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-gray-900 w-1/6">
-                        {reviewer.avgTime}s
+                        {reviewer.avgTime ? formatTime(parseFloat(reviewer.avgTime) / 60) : "---"}
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right w-1/6">
                         <span
