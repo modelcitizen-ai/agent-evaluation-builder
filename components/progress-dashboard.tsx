@@ -180,21 +180,11 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
 
-    // Set up periodic checking for completion status (every 5 seconds for balance of real-time and performance)
-    const intervalId = setInterval(async () => {
-      try {
-        // Only check if page is visible
-        if (document.visibilityState === "visible") {
-          console.log('[ProgressDashboard] Periodic check');
-          const updates = await forceCheckAllEvaluationCompletions();
-          if (updates > 0) {
-            console.log(`[ProgressDashboard] Periodic check updated ${updates} evaluation(s)`);
-          }
-        }
-      } catch (error) {
-        console.error('[ProgressDashboard] Error in periodic check:', error);
-      }
-    }, 5000); // Check every 5 seconds for balance of real-time updates and performance
+    // Note: No periodic auto-refresh needed with PostgreSQL backend since:
+    // - Real-time updates happen immediately via custom events
+    // - Focus/visibility events handle tab switching scenarios  
+    // - Manual refresh button provides on-demand updates
+    // This reduces server load while maintaining real-time accuracy
 
     // Cleanup listeners
     return () => {
@@ -203,7 +193,6 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       window.removeEventListener("reviewerProgressUpdated", handleCustomUpdate)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", handleFocus)
-      clearInterval(intervalId)
     }
   }, [evaluationId])
 
@@ -516,31 +505,19 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                 onClick={async () => {
                   console.log('[ProgressDashboard] 🔄 Manual refresh triggered');
                   
-                  // Run force completion check
+                  // Run force completion check which already refreshes data properly
                   const updates = await forceCheckAllEvaluationCompletions();
                   console.log(`[ProgressDashboard] Manual refresh completed - ${updates} evaluation(s) updated`);
                   
-                  // Force reload reviewers data from localStorage
-                  const storedReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-                  const filteredReviewers: Reviewer[] = storedReviewers.filter(
-                    (reviewer: any) => !evaluationId || reviewer.evaluationId === evaluationId.toString(),
-                  )
-                  
-                  // Update React state to trigger re-render
-                  setReviewers(filteredReviewers)
-                  console.log(`[ProgressDashboard] ✅ Forced reload of ${filteredReviewers.length} reviewer(s) from localStorage`);
-                  
-                  // Log each reviewer's current status for debugging
-                  filteredReviewers.forEach(reviewer => {
+                  // Log current reviewer status for debugging (without clearing the table)
+                  reviewers.forEach(reviewer => {
                     const actualCompleted = getActualCompletedCount(reviewer.id)
-                    const actualStatus = actualCompleted === reviewer.total && reviewer.total > 0 ? 'completed' : 
-                                       reviewer.status === 'completed' ? 'completed' :
-                                       reviewer.status === 'incomplete' ? 'incomplete' : 'active';
-                    console.log(`[ProgressDashboard] Reviewer ${reviewer.name}: ${actualCompleted}/${reviewer.total} (localStorage: ${reviewer.completed}) - Status: ${reviewer.status} -> Display: ${actualStatus}`);
+                    const actualStatus = getReviewerStatus(reviewer);
+                    console.log(`[ProgressDashboard] Reviewer ${reviewer.name}: ${actualCompleted}/${reviewer.total} (stored: ${reviewer.completed}) - Status: ${reviewer.status} -> Display: ${actualStatus}`);
                   });
                   
                   // Provide user feedback
-                  console.log(`[ProgressDashboard] ✅ Refresh complete - check the status column for any updates`);
+                  console.log(`[ProgressDashboard] ✅ Refresh complete - progress data updated`);
                 }}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
