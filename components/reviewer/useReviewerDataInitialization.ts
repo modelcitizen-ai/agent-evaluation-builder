@@ -3,7 +3,7 @@
  * Extracts data loading logic from the main ReviewTaskPage component
  * 
  * This hook handles:
- * - Loading evaluation data from localStorage by task ID
+ * - Loading evaluation data from API by task ID
  * - Recovery of saved responses with participant-specific keys
  * - Progress restoration (furthest item reached and completion status)
  * - Reviewer identification from URL parameters or fallback logic
@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import { getEvaluation, getReviewers } from '@/lib/client-db'
 
 interface Evaluation {
   id: number
@@ -134,58 +135,73 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
       }
     }, [taskId, participantId])
 
-  // Load evaluation data
+  // Load evaluation data by task ID from API
   useEffect(() => {
     if (!taskId) return
 
-    const rawEvaluations = localStorage.getItem("evaluations")
-    const storedEvaluations = JSON.parse(rawEvaluations || "[]")
-    const taskIdNum = Number(taskId)
-    const foundEvaluation = storedEvaluations.find((evaluationItem: any) => Number(evaluationItem.id) === taskIdNum)
-
-    if (foundEvaluation) {
-      setEvaluation(foundEvaluation)
-      console.log(`[useReviewerDataInitialization] Loaded evaluation:`, foundEvaluation.name)
-    } else {
-      console.error(`[useReviewerDataInitialization] Evaluation with ID ${taskId} not found`)
+    const loadEvaluation = async () => {
+      try {
+        const taskIdNum = Number(taskId)
+        console.log(`[useReviewerDataInitialization] Loading evaluation ${taskIdNum} via API`)
+        
+        const foundEvaluation = await getEvaluation(taskIdNum)
+        
+        if (foundEvaluation) {
+          setEvaluation(foundEvaluation)
+          console.log(`[useReviewerDataInitialization] Loaded evaluation:`, foundEvaluation.name)
+        } else {
+          console.error(`[useReviewerDataInitialization] Evaluation with ID ${taskId} not found`)
+        }
+      } catch (error) {
+        console.error(`[useReviewerDataInitialization] Error loading evaluation ${taskId}:`, error)
+      }
     }
+
+    loadEvaluation()
   }, [taskId])
 
   // Load reviewer identification and saved responses
   useEffect(() => {
     if (!taskId) return
 
-    try {
-      // Identify current reviewer
-      const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      const reviewer = identifyCurrentReviewer(evaluationReviewers)
-      setCurrentReviewer(reviewer)
+    const loadReviewerData = async () => {
+      try {
+        // Get reviewers for this evaluation from API
+        const taskIdNum = Number(taskId)
+        console.log(`[useReviewerDataInitialization] Loading reviewers for evaluation ${taskIdNum} via API`)
+        
+        const evaluationReviewers = await getReviewers(taskIdNum)
+        console.log(`[useReviewerDataInitialization] Found ${evaluationReviewers.length} reviewers for evaluation ${taskIdNum}`)
+        
+        // Identify current reviewer
+        const reviewer = identifyCurrentReviewer(evaluationReviewers)
+        setCurrentReviewer(reviewer)
 
-      // Load saved responses using memoized key
-      console.log(`[useReviewerDataInitialization] Looking for saved responses with key: ${storageKey}`)
-      
-      const savedResponsesString = localStorage.getItem(storageKey)
-      if (savedResponsesString) {
-        console.log(`[useReviewerDataInitialization] Found saved responses:`, savedResponsesString)
-        try {
-          const savedResponses = JSON.parse(savedResponsesString)
-          console.log(`[useReviewerDataInitialization] Parsed saved responses:`, savedResponses)
-          setAllResponses(savedResponses)
+        // Load saved responses using memoized key
+        console.log(`[useReviewerDataInitialization] Looking for saved responses with key: ${storageKey}`)
+        
+        const savedResponsesString = localStorage.getItem(storageKey)
+        if (savedResponsesString) {
+          console.log(`[useReviewerDataInitialization] Found saved responses:`, savedResponsesString)
+          try {
+            const savedResponses = JSON.parse(savedResponsesString)
+            console.log(`[useReviewerDataInitialization] Parsed saved responses:`, savedResponses)
+            setAllResponses(savedResponses)
 
-          // Check if this evaluation is completed for the current reviewer
-          let currentReviewerRecord
-          
-          if (participantId) {
-            // Look for the specific reviewer by ID from URL parameter
-            currentReviewerRecord = evaluationReviewers.find(
-              (r: any) => r.id === participantId && 
-              (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-            )
-          }
-          
-          // If no specific reviewer found, fall back to first matching reviewer
-          if (!currentReviewerRecord) {
-            const matchingReviewers = evaluationReviewers.filter(
+            // Check if this evaluation is completed for the current reviewer
+            let currentReviewerRecord
+            
+            if (participantId) {
+              // Look for the specific reviewer by ID from URL parameter
+              currentReviewerRecord = evaluationReviewers.find(
+                (r: any) => r.id === participantId && 
+                (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+              )
+            }
+            
+            // If no specific reviewer found, fall back to first matching reviewer
+            if (!currentReviewerRecord) {
+              const matchingReviewers = evaluationReviewers.filter(
               (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
             )
             if (matchingReviewers.length > 0) {
@@ -224,15 +240,18 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
         } catch (parseError) {
           console.error('[useReviewerDataInitialization] Error parsing saved responses:', parseError)
         }
-      } else {
-        // Initialize empty response
-        console.log(`[useReviewerDataInitialization] No existing responses found. Creating initial state.`)
+        } else {
+          // Initialize empty response
+          console.log(`[useReviewerDataInitialization] No existing responses found. Creating initial state.`)
+        }
+      } catch (error) {
+        console.error('[useReviewerDataInitialization] Error loading reviewer data:', error)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error('[useReviewerDataInitialization] Error loading saved data:', error)
-    } finally {
-      setIsLoading(false)
     }
+
+    loadReviewerData()
   }, [taskId, storageKey, progressKey, participantId, identifyCurrentReviewer])
 
   return {

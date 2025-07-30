@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { useState, useLayoutEffect } from "react"
 import { ClockIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
+import { getEvaluations } from "@/lib/client-db"
+import { getReviewers } from "@/lib/client-db"
 
 interface Evaluation {
   id: number
@@ -22,129 +24,135 @@ export default function ReviewerPage() {
   const [reviewerFirstName, setReviewerFirstName] = useState<string>("My")
 
   useLayoutEffect(() => {
-    // Load evaluations from localStorage
-    const storedEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]")
+    const initializeReviewerData = async () => {
+      try {
+        // Load evaluations from database
+        const storedEvaluations = await getEvaluations()
 
-    // Load assigned reviewers/participants
-    const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-    
-    // Get current reviewer info (in a real app, this would come from auth/URL params)
-    // For now, we'll use URL params or default to the first available reviewer
-    const urlParams = new URLSearchParams(window.location.search)
-    const participantId = urlParams.get('participant')
-    
-    let currentReviewerId = participantId
-    
-    // If no participant ID in URL, check if there are any assigned reviewers and use the first one
-    // This allows reviewers to access their assignments even without the direct link
-    if (!currentReviewerId && evaluationReviewers.length > 0) {
-      currentReviewerId = evaluationReviewers[0].id
-    }
-    
-    // Fallback for testing - if no reviewers exist, create a default one
-    if (!currentReviewerId) {
-      currentReviewerId = "reviewer-1"
-    }
-    
-    // Get current reviewer information and extract first name
-    const currentReviewer = evaluationReviewers.find((reviewer: any) => reviewer.id === currentReviewerId)
-    let firstName = "My" // Default fallback
-    
-    if (currentReviewer && currentReviewer.name) {
-      // Extract first name from full name (split by space and take first part)
-      const nameParts = currentReviewer.name.trim().split(/\s+/)
-      firstName = nameParts[0]
-      
-      // Clean up any emojis or special characters from the beginning if needed
-      firstName = firstName.replace(/^[^\w]+/, '') || "My"
-    }
-    
-    setReviewerFirstName(firstName)
-    
-    // Filter evaluations to only show those assigned to the current reviewer
-    const assignedEvaluationIds = evaluationReviewers
-      .filter((reviewer: any) => 
-        reviewer.id === currentReviewerId || 
-        reviewer.name === "Anonymous Reviewer" ||
-        (!participantId && evaluationReviewers.length > 0) // Show all if no specific participant and assignments exist
-      )
-      .map((reviewer: any) => reviewer.evaluationId)
+        // Load assigned reviewers/participants
+        const evaluationReviewers = await getReviewers()
+        
+        // Get current reviewer info (in a real app, this would come from auth/URL params)
+        // For now, we'll use URL params or default to the first available reviewer
+        const urlParams = new URLSearchParams(window.location.search)
+        const participantId = urlParams.get('participant')
+        
+        let currentReviewerId = participantId
+        
+        // If no participant ID in URL, check if there are any assigned reviewers and use the first one
+        // This allows reviewers to access their assignments even without the direct link
+        if (!currentReviewerId && evaluationReviewers.length > 0) {
+          currentReviewerId = evaluationReviewers[0].id
+        }
+        
+        // Fallback for testing - if no reviewers exist, create a default one
+        if (!currentReviewerId) {
+          currentReviewerId = "reviewer-1"
+        }
+        
+        // Get current reviewer information and extract first name
+        const currentReviewer = evaluationReviewers.find((reviewer: any) => reviewer.id === currentReviewerId)
+        let firstName = "My" // Default fallback
+        
+        if (currentReviewer && currentReviewer.name) {
+          // Extract first name from full name (split by space and take first part)
+          const nameParts = currentReviewer.name.trim().split(/\s+/)
+          firstName = nameParts[0]
+          
+          // Clean up any emojis or special characters from the beginning if needed
+          firstName = firstName.replace(/^[^\w]+/, '') || "My"
+        }
+        
+        setReviewerFirstName(firstName)
+        
+        // Filter evaluations to only show those assigned to the current reviewer
+        const assignedEvaluationIds = evaluationReviewers
+          .filter((reviewer: any) => 
+            reviewer.id === currentReviewerId || 
+            reviewer.name === "Anonymous Reviewer" ||
+            (!participantId && evaluationReviewers.length > 0) // Show all if no specific participant and assignments exist
+          )
+          .map((reviewer: any) => reviewer.evaluationId)
 
-    // Filter stored evaluations to only include assigned ones
-    const assignedEvaluations = storedEvaluations.filter((evaluation: Evaluation) => 
-      assignedEvaluationIds.includes(evaluation.id.toString()) || 
-      assignedEvaluationIds.includes(evaluation.id)
-    )
-
-    // Create a default sample entry if no evaluations exist and no assignments exist
-    let evaluationsToUse = assignedEvaluations;
-    
-    // If no assigned evaluations but there are evaluations with participants, show them for testing
-    if (evaluationsToUse.length === 0 && evaluationReviewers.length > 0) {
-      // Show evaluations that have any assignments for testing purposes
-      const evaluationsWithAssignments = storedEvaluations.filter((evaluation: Evaluation) => 
-        evaluationReviewers.some((reviewer: any) => 
-          reviewer.evaluationId === evaluation.id.toString() || 
-          reviewer.evaluationId === evaluation.id
+        // Filter stored evaluations to only include assigned ones
+        const assignedEvaluations = storedEvaluations.filter((evaluation: Evaluation) => 
+          assignedEvaluationIds.includes(evaluation.id.toString()) || 
+          assignedEvaluationIds.includes(evaluation.id)
         )
-      )
-      evaluationsToUse = evaluationsWithAssignments
-    }
-    
-    // For development/testing: if no assignments but evaluations exist, show all evaluations
-    if (evaluationsToUse.length === 0 && storedEvaluations.length > 0) {
-      evaluationsToUse = storedEvaluations
-    }
-    
-    // Only create sample evaluation if absolutely no evaluations exist
-    if (evaluationsToUse.length === 0 && storedEvaluations.length === 0) {
-      // Create a sample evaluation for testing (only if no real evaluations exist)
-      const sampleEvaluation = {
-        id: 9876543210,
-        name: "Product Feature Comparison",
-        status: "draft",
-        totalItems: 5,
-        createdAt: new Date().toISOString(),
-        criteria: [
-          { id: 1, name: "Usability", description: "How easy is the feature to use?" },
-          { id: 2, name: "Value", description: "Does the feature provide good value?" },
-          { id: 3, name: "Innovation", description: "How innovative is this feature?" },
-          { id: 4, name: "Reliability", description: "How reliable is the feature?" },
-          { id: 5, name: "Performance", description: "How well does the feature perform?" }
-        ]
-      };
-      evaluationsToUse = [sampleEvaluation];
-      
-      // Store it in localStorage to persist it
-      localStorage.setItem("evaluations", JSON.stringify([sampleEvaluation]));
-    }
 
-    // Convert assigned evaluations to active status for reviewers
-    const activeEvaluations = evaluationsToUse.map((evaluation: Evaluation) => ({
-      ...evaluation,
-      status: "active", // Assigned evaluations are active for reviewers
-    }))
+        // Create a default sample entry if no evaluations exist and no assignments exist
+        let evaluationsToUse = assignedEvaluations;
+        
+        // If no assigned evaluations but there are evaluations with participants, show them for testing
+        if (evaluationsToUse.length === 0 && evaluationReviewers.length > 0) {
+          // Show evaluations that have any assignments for testing purposes
+          const evaluationsWithAssignments = storedEvaluations.filter((evaluation: Evaluation) => 
+            evaluationReviewers.some((reviewer: any) => 
+              reviewer.evaluationId === evaluation.id.toString() || 
+              reviewer.evaluationId === evaluation.id
+            )
+          )
+          evaluationsToUse = evaluationsWithAssignments
+        }
+        
+        // For development/testing: if no assignments but evaluations exist, show all evaluations
+        if (evaluationsToUse.length === 0 && storedEvaluations.length > 0) {
+          evaluationsToUse = storedEvaluations
+        }
+        
+        // Only create sample evaluation if absolutely no evaluations exist
+        if (evaluationsToUse.length === 0 && storedEvaluations.length === 0) {
+          // Create a sample evaluation for testing (only if no real evaluations exist)
+          const sampleEvaluation = {
+            id: 9876543210,
+            name: "Product Feature Comparison",
+            status: "draft",
+            totalItems: 5,
+            createdAt: new Date().toISOString(),
+            criteria: [
+              { id: 1, name: "Usability", description: "How easy is the feature to use?" },
+              { id: 2, name: "Value", description: "Does the feature provide good value?" },
+              { id: 3, name: "Innovation", description: "How innovative is this feature?" },
+              { id: 4, name: "Reliability", description: "How reliable is the feature?" },
+              { id: 5, name: "Performance", description: "How well does the feature perform?" }
+            ]
+          };
+          evaluationsToUse = [sampleEvaluation];
+        }
 
-    setEvaluations(activeEvaluations)
-    setIsLoading(false)
-    
-    // Determine completed evaluations for this specific reviewer based on their individual status
-    const currentReviewerCompletions = assignedEvaluationIds.filter((evaluationId: string) => {
-      const reviewerRecord = evaluationReviewers.find((reviewer: any) => 
-        reviewer.id === currentReviewerId && 
-        (reviewer.evaluationId === evaluationId || reviewer.evaluationId === Number(evaluationId))
-      )
-      
-      if (reviewerRecord) {
-        // Reviewer is completed if their status is "completed" OR they've completed all items
-        return reviewerRecord.status === "completed" || 
-               (reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0)
+        // Convert assigned evaluations to active status for reviewers
+        const activeEvaluations = evaluationsToUse.map((evaluation: Evaluation) => ({
+          ...evaluation,
+          status: "active", // Assigned evaluations are active for reviewers
+        }))
+
+        setEvaluations(activeEvaluations)
+        setIsLoading(false)
+        
+        // Determine completed evaluations for this specific reviewer based on their individual status
+        const currentReviewerCompletions = assignedEvaluationIds.filter((evaluationId: string) => {
+          const reviewerRecord = evaluationReviewers.find((reviewer: any) => 
+            reviewer.id === currentReviewerId && 
+            (reviewer.evaluationId === evaluationId || reviewer.evaluationId === Number(evaluationId))
+          )
+          
+          if (reviewerRecord) {
+            // Reviewer is completed if their status is "completed" OR they've completed all items
+            return reviewerRecord.status === "completed" || 
+                   (reviewerRecord.completed === reviewerRecord.total && reviewerRecord.total > 0)
+          }
+          
+          return false
+        }).map((evaluationId: string) => Number(evaluationId))
+        
+        setCompletedEvaluations(currentReviewerCompletions)
+      } catch (error) {
+        console.error("Error loading reviewer data:", error)
+        setIsLoading(false)
       }
-      
-      return false
-    }).map((evaluationId: string) => Number(evaluationId))
-    
-    setCompletedEvaluations(currentReviewerCompletions)
+    }
+
+    initializeReviewerData()
   }, [])
 
   const handleStartTask = (evaluationId: number) => {

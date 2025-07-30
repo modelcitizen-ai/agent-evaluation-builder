@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import ResultsModal from "./results-modal"
 import { getResultsDataset } from "@/lib/results-dataset"
+import { getEvaluations, updateEvaluation } from "@/lib/client-db"
+import { getReviewers, updateReviewer } from "@/lib/client-db"
 
 // Helper function to format time in a human-readable way
 const formatTime = (minutes: number): string => {
@@ -54,8 +56,8 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     try {
       setIsUpdating(true);
       console.log('[ProgressDashboard] Starting force completion check');
-      const allEvaluations = JSON.parse(localStorage.getItem("evaluations") || "[]");
-      const allReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]");
+      const allEvaluations = await getEvaluations();
+      const allReviewers = await getReviewers();
       
       let updatedCount = 0;
       let hasReviewerUpdates = false;
@@ -69,6 +71,16 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
         );
         
         if (assignedReviewers.length > 0) {
+          // Update reviewer status if they completed all tasks but status hasn't been updated
+          for (const reviewer of assignedReviewers) {
+            const completedByCount = reviewer.completed === reviewer.total && reviewer.total > 0;
+            if (completedByCount && reviewer.status !== "completed") {
+              await updateReviewer(reviewer.id, { status: "completed" });
+              hasReviewerUpdates = true;
+              console.log(`[ProgressDashboard] Updated reviewer ${reviewer.name} to completed status`);
+            }
+          }
+          
           // Check and update individual reviewer statuses based on their individual completion
           const allCompleted = assignedReviewers.every((reviewer: any) => {
             const completedByStatus = reviewer.status === "completed";
@@ -77,39 +89,23 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
             // Individual reviewer is completed if they have completed all tasks OR are explicitly marked completed
             const isComplete = completedByStatus || completedByCount;
             
-            // Update reviewer status if they completed all tasks but status hasn't been updated
-            if (completedByCount && reviewer.status !== "completed") {
-              reviewer.status = "completed";
-              hasReviewerUpdates = true;
-              console.log(`[ProgressDashboard] Updated reviewer ${reviewer.name} to completed status (completed all tasks)`);
-            }
-            
             return isComplete;
           });
           
           // Only update evaluation status if it's not already completed and all reviewers are done
           if (allCompleted && evaluation.status !== "completed") {
-            evaluation.status = "completed";
-            evaluation.completedAt = new Date().toISOString();
+            await updateEvaluation(evaluation.id, { 
+              status: "completed",
+              completedAt: new Date().toISOString()
+            });
             updatedCount++;
             console.log(`[ProgressDashboard] Marked evaluation ${evaluation.name} as completed`);
           }
         }
       }
       
-      // Save updates if any were made
-      if (updatedCount > 0) {
-        localStorage.setItem("evaluations", JSON.stringify(allEvaluations));
-      }
-      if (hasReviewerUpdates) {
-        localStorage.setItem("evaluationReviewers", JSON.stringify(allReviewers));
-      }
-      
       // Always reload reviewers data to ensure latest state
-      const storedReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      const filteredReviewers: Reviewer[] = storedReviewers.filter(
-        (reviewer: any) => !evaluationId || reviewer.evaluationId === evaluationId.toString(),
-      )
+      const filteredReviewers: Reviewer[] = await getReviewers(evaluationId ? parseInt(evaluationId.toString()) : undefined);
       setReviewers(filteredReviewers)
       
       if (updatedCount > 0 || hasReviewerUpdates) {
@@ -127,15 +123,16 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     }
   }
 
-  // Load reviewers from localStorage and setup update listener
+  // Load reviewers from database and setup update listener
   useEffect(() => {
-    const loadReviewers = () => {
-      const storedReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-      const filteredReviewers: Reviewer[] = storedReviewers.filter(
-        (reviewer: any) => !evaluationId || reviewer.evaluationId === evaluationId.toString(),
-      )
-      // No need to recalculate completed count since it's now accurately tracked
-      setReviewers(filteredReviewers)
+    const loadReviewers = async () => {
+      try {
+        const filteredReviewers: Reviewer[] = await getReviewers(evaluationId ? parseInt(evaluationId.toString()) : undefined);
+        // No need to recalculate completed count since it's now accurately tracked
+        setReviewers(filteredReviewers)
+      } catch (error) {
+        console.error("Error loading reviewers:", error)
+      }
     }
 
     // Initial load
@@ -144,21 +141,13 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
     // Run force completion check on initial load
     forceCheckAllEvaluationCompletions()
 
-    // Listen for localStorage changes (from other tabs/windows)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "evaluationReviewers") {
-        loadReviewers()
-      }
-    }
-
-    // Listen for custom events (from same tab)
+    // Listen for custom events (from same tab) - keeping these for real-time updates
     const handleCustomUpdate = () => {
       loadReviewers()
       // Also run force completion check when events are received
       forceCheckAllEvaluationCompletions()
     }
 
-    window.addEventListener("storage", handleStorageChange)
     window.addEventListener("evaluationCompleted", handleCustomUpdate)
     window.addEventListener("reviewerStatusUpdated", handleCustomUpdate)
     window.addEventListener("reviewerProgressUpdated", handleCustomUpdate)
@@ -198,7 +187,6 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
 
     // Cleanup listeners
     return () => {
-      window.removeEventListener("storage", handleStorageChange)
       window.removeEventListener("evaluationCompleted", handleCustomUpdate)
       window.removeEventListener("reviewerStatusUpdated", handleCustomUpdate)
       window.removeEventListener("reviewerProgressUpdated", handleCustomUpdate)
