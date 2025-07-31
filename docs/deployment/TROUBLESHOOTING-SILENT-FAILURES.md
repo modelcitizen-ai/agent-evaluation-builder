@@ -1,6 +1,14 @@
 # Troubleshooting Silent Azure Deployment Failures
 
-> **For working configuration:** See [Azure Deployment Success Guide](AZURE_DEPLOYMENT_SUCCESS_GUIDE.md)
+> **For working configuration:** See [Azure Deployment Success Guide](AZURE_DEPLOYMENT_SUCCESS_GUIDE.md)  
+> **For PostgreSQL deployment:** See [PostgreSQL Deployment Success](POSTGRESQL_DEPLOYMENT_SUCCESS.md)
+
+## ✅ RECENT SUCCESS: PostgreSQL Deployment Fixed (July 31, 2025)
+
+**Issue**: "Cannot find module 'next'" error in PostgreSQL backend deployment  
+**Solution**: Use complete original package.json instead of minimal production version  
+**Result**: ✅ Production deployment successful with full PostgreSQL functionality  
+**Details**: See [PostgreSQL Fix Technical Summary](POSTGRESQL_FIX_TECHNICAL_SUMMARY.md)
 
 ## 🔍 SILENT FAILURE PATTERNS
 
