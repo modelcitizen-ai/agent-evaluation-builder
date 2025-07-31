@@ -16,7 +16,7 @@ function getPool(): Pool {
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 20000, // Increased to 20 seconds for cross-region connections
     });
   }
   return pool;
