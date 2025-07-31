@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createEvaluation } from "@/lib/client-db"
+import { createEvaluation, updateEvaluation } from "@/lib/client-db"
 import { initializeEmptyResultsDataset, saveResultsDataset } from "@/lib/results-dataset"
 
 interface Metric {
@@ -227,21 +227,45 @@ export function usePreviewMetricManagement({
 
       if (isEditMode && editId) {
         // Update existing evaluation
-        const updatedEvaluations = existingEvaluations.map((evaluation: any) =>
-          evaluation.id === editId
-            ? {
-                ...evaluation,
-                name: evaluationName,
-                instructions,
-                criteria,
-                columnRoles,
-                originalData: dataToUse,  // Changed from 'data' to 'originalData' for PostgreSQL compatibility
-                totalItems: getTotalItems(),
-                randomizationEnabled,
-              }
-            : evaluation,
-        )
-        localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
+        const updatedEvaluationData = {
+          name: evaluationName,
+          instructions,
+          criteria,
+          columnRoles,
+          originalData: dataToUse,  // Changed from 'data' to 'originalData' for PostgreSQL compatibility
+          totalItems: getTotalItems(),
+          randomizationEnabled,
+        }
+
+        try {
+          // First try to update in database via API
+          const result = await updateEvaluation(editId, updatedEvaluationData)
+          console.log("Evaluation updated successfully in database:", result)
+          
+          // Also update localStorage for immediate UI reflection
+          const updatedEvaluations = existingEvaluations.map((evaluation: any) =>
+            evaluation.id === editId
+              ? {
+                  ...evaluation,
+                  ...updatedEvaluationData,
+                }
+              : evaluation,
+          )
+          localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
+        } catch (error) {
+          console.error("Error updating evaluation in database:", error)
+          // Fall back to localStorage if database update fails
+          console.log("Falling back to localStorage for update")
+          const updatedEvaluations = existingEvaluations.map((evaluation: any) =>
+            evaluation.id === editId
+              ? {
+                  ...evaluation,
+                  ...updatedEvaluationData,
+                }
+              : evaluation,
+          )
+          localStorage.setItem("evaluations", JSON.stringify(updatedEvaluations))
+        }
       } else {
         // Create new evaluation
         const evaluationId = Date.now()
