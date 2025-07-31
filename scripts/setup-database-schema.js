@@ -23,8 +23,23 @@ async function setupDatabase() {
       total_items INTEGER DEFAULT 0,
       original_data JSONB DEFAULT '[]',
       criteria JSONB DEFAULT '[]',
+      column_roles JSONB DEFAULT '[]',
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );
+    `,
+    
+    // Add column_roles column if it doesn't exist (for existing databases)
+    `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'evaluations' 
+        AND column_name = 'column_roles'
+      ) THEN
+        ALTER TABLE evaluations ADD COLUMN column_roles JSONB DEFAULT '[]';
+      END IF;
+    END $$;
     `,
     
     // Create reviewers table
