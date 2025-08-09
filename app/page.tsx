@@ -60,13 +60,21 @@ export default function HomePage() {
           </div>
         </div>
         
-        <div className="flex justify-center">
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
           <button
             onClick={() => router.push("/data-scientist")}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-8"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Get Started
           </button>
+          <a
+            href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fhumanelevaldeploy.blob.core.windows.net%2Fdeploy%2Fazuredeploy.bicep%3Fse%3D2026-08-09T14%253A16%253A02Z%26sp%3Dr%26sv%3D2022-11-02%26sr%3Db%26sig%3DP%252BYN89d%252BAWdnSFzfpLXrYNfakbjzd2dObgywppAaGVo%253D"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-6 py-3 border border-blue-500 text-base font-medium rounded-md shadow-sm text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Deploy to Azure
+          </a>
         </div>
         
         {/* Disclaimer link at the bottom - COMMENTED OUT */}
