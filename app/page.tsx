@@ -68,7 +68,7 @@ export default function HomePage() {
             Get Started
           </button>
           <a
-            href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fhumanelevaldeploy.blob.core.windows.net%2Fdeploy%2Fazuredeploy.json%3Fse%3D2026-08-09T14%253A30%253A00Z%26sp%3Dr%26spr%3Dhttps%26sv%3D2022-11-02%26sr%3Db%26sig%3DxoYO8Q0EkxjpaWEepPcBDCQ9PCKEB9BN%252BMmITkt%252BvPY%253D"
+            href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fhumanelevaldeploy.blob.core.windows.net%2Fdeploy%2Fazuredeploy.json%3Fse%3D2026-08-09T23%253A59%253A59Z%26sp%3Dr%26sv%3D2022-11-02%26sr%3Db%26sig%3DONurmk95cK%252B3PFBafG%252FkGKmYmuSoexLcxYs3B3YCe44%253D"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 py-3 border border-blue-500 text-base font-medium rounded-md shadow-sm text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
