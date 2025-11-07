@@ -15,13 +15,13 @@ export default function PageLayout({ title, subtitle, children, actions }: PageL
   const router = useRouter()
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50 pt-9">
+    <div className="min-h-[calc(100vh-4rem)] bg-background pt-9">
       {/* Header */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between mb-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-            {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
+            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
           {actions && <div className="flex-shrink-0 ml-4">{actions}</div>}
         </div>

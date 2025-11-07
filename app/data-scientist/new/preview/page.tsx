@@ -320,9 +320,9 @@ function PreviewPageContent() {
               setEvaluationName(e.target.value)
               setEvaluationNameEdited(true)
             }}
-            className="bg-transparent border-none text-2xl font-semibold text-gray-900 focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-2xl font-semibold text-foreground focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
           />
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 flex-shrink-0">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground flex-shrink-0">
             Draft
           </span>
         </div>
@@ -330,9 +330,9 @@ function PreviewPageContent() {
       actions={
         <div className="flex space-x-3">
           {/* Configure Dataset Button */}
-          <button
+                    <button
             onClick={() => setShowDatasetConfig(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-muted-foreground bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
           >
             <CogIcon className="h-4 w-4 mr-2" />
             Configure Dataset
@@ -442,8 +442,8 @@ function PreviewPageContent() {
             </div>
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Interpreting your Data...</h3>
-            <p className="text-sm text-gray-600">This may take a few moments</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">Interpreting your Data...</h3>
+            <p className="text-sm text-muted-foreground">This may take a few moments</p>
             <div className="flex justify-center mt-4 space-x-1">
               <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
               <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce animate-delay-100"></div>
@@ -460,7 +460,7 @@ function PreviewPageContent() {
           {/* Left Column - Instructions and Review */}
           <div className="space-y-6 pr-4 pb-6" style={{ width: `${leftColumnWidth}%` }}>
             {/* Content for Evaluation */}
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 {(() => {
                   const content = getInputColumnContent()
@@ -492,7 +492,7 @@ function PreviewPageContent() {
 
             {/* Metadata Card */}
             {columnRoles.filter((role) => role.userRole === "Metadata").length > 0 && (
-              <div className="bg-white shadow sm:rounded-lg">
+              <div className="bg-card shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="space-y-2 text-xs">
                     {columnRoles
@@ -509,14 +509,14 @@ function PreviewPageContent() {
                           <div key={metadataCol.name}>
                             {columnTitle && (
                               <>
-                                <span className="font-medium text-gray-600">{columnTitle}: </span>
-                                <span className="text-gray-900">
+                                <span className="font-medium text-muted-foreground">{columnTitle}: </span>
+                                <span className="text-foreground">
                                   {renderInlineContent(String(currentValue))}
                                 </span>
                               </>
                             )}
                             {!columnTitle && (
-                              <span className="text-gray-900">
+                              <span className="text-foreground">
                                 {renderInlineContent(String(currentValue))}
                               </span>
                             )}
@@ -560,11 +560,11 @@ function PreviewPageContent() {
                 </div>
               </div>
             )}
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6 relative">
                 {/* Heading and navigation on the same line */}
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-900">Evaluation</h3>
+                  <h3 className="text-lg font-medium text-foreground">Evaluation</h3>
                   
                   {/* Navigation unit */}
                   <div className="flex items-center space-x-3 flex-shrink-0 -mr-3">
@@ -652,7 +652,7 @@ function PreviewPageContent() {
                     <div key={criterion.id} className="border border-gray-200 rounded-lg p-4 group">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
-                          <label className="block text-sm font-semibold text-gray-700">
+                          <label className="block text-sm font-semibold text-foreground">
                             {criterion.name}
                             {criterion.required && <span className="text-red-500 ml-1">*</span>}
                           </label>
@@ -734,8 +734,8 @@ function PreviewPageContent() {
                       {criterion.type === "likert-scale" && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">{criterion.likertLabels?.low || "Low"}</span>
-                            <span className="text-xs text-gray-500">{criterion.likertLabels?.high || "High"}</span>
+                            <span className="text-xs text-muted-foreground">{criterion.likertLabels?.low || "Low"}</span>
+                            <span className="text-xs text-muted-foreground">{criterion.likertLabels?.high || "High"}</span>
                           </div>
                           <div className="grid grid-cols-5 gap-2">
                             {[1, 2, 3, 4, 5].map((number) => (

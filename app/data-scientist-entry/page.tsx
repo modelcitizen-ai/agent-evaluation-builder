@@ -18,13 +18,13 @@ export default function DataScientistEntryPage() {
             height={80} 
             className="mx-auto mb-6" 
           />
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Human Evaluation Builder</h1>
-          <p className="mt-2 text-sm text-gray-600">Data Science Portal</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Human Evaluation Builder</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Data Science Portal</p>
         </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-card py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="space-y-4">
             <button
               onClick={() => router.push("/data-scientist")}
