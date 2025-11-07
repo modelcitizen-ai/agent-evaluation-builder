@@ -148,24 +148,11 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2.5">
-                  {resultsDataset ? `${resultsDataset.evaluationName} Results` : "Evaluation Results"}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {resultsDataset?.results.length
-                    ? `${resultsDataset.results.length} results collected`
-                    : "No results collected yet"}
-                </p>
-              </div>
-
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-
-            {/* Filters and Export */}
+            <div className="sm:flex sm:items-start">
+              <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                  Evaluation Results
+                </h3>            {/* Filters and Export */}
             <div className="flex justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <FunnelIcon className="h-5 w-5 text-gray-400" />

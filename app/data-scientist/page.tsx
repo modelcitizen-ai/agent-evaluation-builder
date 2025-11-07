@@ -194,14 +194,14 @@ export default function DataScientistPage() {
                               <EllipsisVerticalIcon className="h-5 w-5" />
                             </button>
                             {isDropdownOpen(evaluation.id) && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[99999] border border-gray-200 dropdown-menu">
+                              <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg z-[99999] border border-border dropdown-menu">
                                 <div className="py-1">
                                   <button
                                     onClick={() => {
                                       handleEditEvaluation(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Edit
                                   </button>
