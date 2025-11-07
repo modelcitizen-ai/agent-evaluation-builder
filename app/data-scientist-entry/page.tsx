@@ -18,7 +18,7 @@ export default function DataScientistEntryPage() {
             height={80} 
             className="mx-auto mb-6" 
           />
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Human Evaluation Builder</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Agent Evaluation Builder</h1>
           <p className="mt-2 text-sm text-muted-foreground">Data Science Portal</p>
         </div>
       </div>

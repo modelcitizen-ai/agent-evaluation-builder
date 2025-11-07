@@ -20,7 +20,7 @@ export default function HomePage() {
       
       <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-6">
-          Human Evaluation Builder
+          Agent Evaluation Builder
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-12">
           Get started with human evaluation in three simple steps.
