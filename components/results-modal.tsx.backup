@@ -144,23 +144,23 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full border">
-          <div className="bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 className="text-lg leading-6 font-medium text-foreground mb-4" id="modal-title">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
                   Evaluation Results
                 </h3>
                 {/* Filters and Export */}
                 <div className="flex justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <FunnelIcon className="h-5 w-5 text-muted-foreground" />
+                <FunnelIcon className="h-5 w-5 text-gray-400" />
                 <select
                   value={filterReviewer}
                   onChange={(e) => setFilterReviewer(e.target.value)}
-                  className="border-border rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground"
+                  className="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="all">All Reviewers</option>
                   {reviewers.map((reviewer) => (
@@ -171,13 +171,13 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
                 </select>
               </div>
 
-                            <button
+              <button
                 onClick={handleExport}
                 disabled={!resultsDataset?.results.length}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${
+                className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md ${
                   resultsDataset?.results.length
-                    ? "text-foreground bg-background hover:bg-muted border"
-                    : "text-muted-foreground bg-muted cursor-not-allowed border"
+                    ? "text-gray-700 bg-white hover:bg-gray-50"
+                    : "text-gray-400 bg-gray-100 cursor-not-allowed"
                 }`}
               >
                 <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
@@ -187,20 +187,20 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
 
             {/* Results Table */}
             <div className="mb-6">
-              <div className="border border-border rounded-lg overflow-auto max-h-[32rem]">
+              <div className="border border-gray-200 rounded-lg overflow-auto max-h-[32rem]">
                 {resultsDataset?.results.length ? (
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-muted/50">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
   <tr>
     <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 min-w-[12rem]"
       onClick={() => handleSort("itemId")}
     >
       Item ID
       {sortColumn === "itemId" && <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>}
     </th>
     <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 min-w-[12rem]"
       onClick={() => handleSort("reviewerName")}
     >
       Reviewer
@@ -209,7 +209,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
       )}
     </th>
     <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 min-w-[12rem]"
       onClick={() => handleSort("submittedAt")}
     >
       Submitted
@@ -218,7 +218,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
       )}
     </th>
     <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 min-w-[12rem]"
       onClick={() => handleSort("timeSpent")}
     >
       Time (s)
@@ -242,7 +242,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
             return (
               <th
                 key={column}
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem] break-words"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 min-w-[12rem] break-words"
                 onClick={() => handleSort(column)}
               >
                 {displayName}
@@ -261,7 +261,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
             return (
               <th
                 key={column}
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 bg-primary/10 min-w-[12rem] break-words"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-bottom cursor-pointer hover:bg-gray-100 bg-indigo-50 min-w-[12rem] break-words"
                 onClick={() => handleSort(column)}
               >
                 {displayName}
@@ -278,19 +278,19 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
     })()}
                     </tr>
                   </thead>
-                  <tbody className="bg-card divide-y divide-border">
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {filteredResults.map((result, index) => (
-                      <tr key={`${result.reviewerId}-${result.itemId}-${index}`} className="hover:bg-muted/50">
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
+                      <tr key={`${result.reviewerId}-${result.itemId}-${index}`} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900 align-top">
                           <TableCellRenderer content={result.itemId} preserveFormatting={false} />
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
+                        <td className="px-6 py-4 text-sm text-gray-900 align-top">
                           <TableCellRenderer content={result.reviewerName} preserveFormatting={false} />
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
+                        <td className="px-6 py-4 text-sm text-gray-900 align-top">
                           <TableCellRenderer content={new Date(result.submittedAt).toLocaleString()} preserveFormatting={false} />
                         </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
+                        <td className="px-6 py-4 text-sm text-gray-900 align-top">
                           <TableCellRenderer content={result.timeSpent.toFixed(1)} preserveFormatting={false} />
                         </td>
 
@@ -301,7 +301,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
                           return (
                             <td
                               key={column}
-                              className={`px-6 py-4 text-sm text-foreground align-top whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
+                              className={`px-6 py-4 text-sm text-gray-900 align-top whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
                             >
                               <TableCellRenderer content={value} preserveFormatting={false} />
                             </td>
@@ -315,7 +315,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
                           return (
                             <td
                               key={column}
-                              className={`px-6 py-4 text-sm text-foreground align-top bg-primary/10 whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
+                              className={`px-6 py-4 text-sm text-gray-900 align-top bg-indigo-50 whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
                             >
                               <TableCellRenderer content={value} preserveFormatting={false} />
                             </td>
@@ -327,7 +327,7 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
                   </table>
                 ) : (
                   <div className="py-12 text-center">
-                    <p className="text-muted-foreground">
+                    <p className="text-gray-500">
                       No results collected yet. Results will appear here as reviewers complete evaluations.
                     </p>
                   </div>
@@ -335,10 +335,10 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
               </div>
             </div>
           </div>
-          <div className="bg-muted/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t">
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               onClick={onClose}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
             >
               Close
             </button>

@@ -165,7 +165,7 @@ export default function DataScientistPage() {
                 
                 return (
                   <li key={evaluation.id} className={isDropdownOpen(evaluation.id) ? "relative z-50" : ""}>
-                    <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <div className="px-4 py-4 sm:px-6 hover:bg-muted/50">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1 min-w-0">
                           <div>
