@@ -28,7 +28,7 @@ export default function ReviewerEntryPage() {
           <div className="space-y-4">
             <button
               onClick={() => router.push("/reviewer")}
-              className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
             >
               <UserCircleIcon className="h-5 w-5 mr-2" />
               Continue to Tasks

@@ -370,10 +370,10 @@ function PreviewPageContent() {
           <button
             onClick={handleSaveEvaluation}
             disabled={isSaving}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
               isSaving
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
             }`}
           >
             {isSaving ? (
@@ -806,10 +806,10 @@ function PreviewPageContent() {
                         <button
                           type="submit"
                           disabled={!canSubmit || isSubmitting}
-                          className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                          className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                             canSubmit && !isSubmitting
-                              ? "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              : "bg-gray-400 cursor-not-allowed"
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
+                              : "bg-muted text-muted-foreground cursor-not-allowed"
                           }`}
                         >
                           {isSubmitting ? (
