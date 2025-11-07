@@ -657,10 +657,10 @@ function PreviewPageContent() {
                             type="button"
                             onClick={() => moveMetric(criterion.id, "up")}
                             disabled={criteria.findIndex((m) => m.id === criterion.id) === 0}
-                            className={`p-1 rounded-md hover:bg-gray-100 ${
+                            className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 ${
                               criteria.findIndex((m) => m.id === criterion.id) === 0
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-600 hover:text-gray-800"
+                                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                             }`}
                             aria-label="Move question up"
                           >
@@ -670,10 +670,10 @@ function PreviewPageContent() {
                             type="button"
                             onClick={() => moveMetric(criterion.id, "down")}
                             disabled={criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1}
-                            className={`p-1 rounded-md hover:bg-gray-100 ${
+                            className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 ${
                               criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-600 hover:text-gray-800"
+                                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                             }`}
                             aria-label="Move question down"
                           >
@@ -682,7 +682,7 @@ function PreviewPageContent() {
                           <button
                             type="button"
                             onClick={() => handleEditMetric(criterion.id)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                             aria-label="Edit question"
                           >
                             <PencilIcon className="h-4 w-4" />
@@ -691,7 +691,7 @@ function PreviewPageContent() {
                             <button
                               type="button"
                               onClick={() => handleDeleteMetric(criterion.id)}
-                              className="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                               aria-label="Delete question"
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -804,7 +804,7 @@ function PreviewPageContent() {
                           className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                             canSubmit && !isSubmitting
                               ? "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                              : "bg-gray-400 dark:bg-gray-300 text-gray-200 dark:text-gray-600 cursor-not-allowed"
+                              : "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed"
                           }`}
                         >
                           {isSubmitting ? (
