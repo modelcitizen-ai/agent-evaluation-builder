@@ -455,7 +455,7 @@ function PreviewPageContent() {
           {/* Left Column - Instructions and Review */}
           <div className="space-y-6 pr-4 pb-6" style={{ width: `${leftColumnWidth}%` }}>
             {/* Content for Evaluation */}
-            <div className="bg-card shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6">
                 {(() => {
                   const content = getInputColumnContent()
@@ -487,7 +487,7 @@ function PreviewPageContent() {
 
             {/* Metadata Card */}
             {columnRoles.filter((role) => role.userRole === "Metadata").length > 0 && (
-              <div className="bg-card shadow sm:rounded-lg">
+              <div className="bg-card shadow sm:rounded-lg border border-border">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="space-y-2 text-xs">
                     {columnRoles
@@ -555,7 +555,7 @@ function PreviewPageContent() {
                 </div>
               </div>
             )}
-            <div className="bg-card shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6 relative">
                 {/* Heading and navigation on the same line */}
                 <div className="flex items-center justify-between mb-6">
@@ -644,7 +644,7 @@ function PreviewPageContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {criteria.map((criterion) => (
-                    <div key={criterion.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 group bg-white dark:bg-gray-800">
+                    <div key={criterion.id} className="border border-border rounded-lg p-4 group">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
                           <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -717,7 +717,7 @@ function PreviewPageContent() {
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
                                   ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                               }`}
                             >
                               {option}
@@ -741,7 +741,7 @@ function PreviewPageContent() {
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                   formData[`criterion-${criterion.id}`] === number.toString()
                                     ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                                 }`}
                               >
                                 {number}
@@ -761,7 +761,7 @@ function PreviewPageContent() {
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
                                   ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                  : "bg-white dark:bg-gray-50 text-gray-700 dark:text-gray-900 border-gray-300 dark:border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-100"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                               }`}
                             >
                               {option}
@@ -775,7 +775,7 @@ function PreviewPageContent() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+                          className="block w-full border border-gray-500 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}

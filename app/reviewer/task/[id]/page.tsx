@@ -352,7 +352,7 @@ export default function ReviewTaskPage() {
         size="sm"
         className={`flex items-center gap-2 ${
           showInstructions 
-            ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" 
+            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700/50 hover:bg-blue-100 dark:hover:bg-blue-900/30" 
             : "hover:bg-muted/50"
         }`}
         aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
@@ -542,8 +542,8 @@ export default function ReviewTaskPage() {
                     disabled={currentItem <= 1}
                     className={`p-1 rounded-md ${
                       currentItem <= 1
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -552,12 +552,12 @@ export default function ReviewTaskPage() {
                   </button>
 
                   <div className="flex items-center space-x-3 min-w-0">
-                    <div className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">
+                    <div className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap flex-shrink-0">
                       {currentItem} of {evaluation.totalItems}
                     </div>
-                    <div className="flex-1 min-w-16 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 min-w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
                         style={{
                           width: `${progressWidth}%`,
                         }}
@@ -580,8 +580,8 @@ export default function ReviewTaskPage() {
                     disabled={currentItem >= evaluation.totalItems || currentItem >= furthestItemReached}
                     className={`p-1 rounded-md ${
                       currentItem >= evaluation.totalItems || currentItem >= furthestItemReached
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -615,7 +615,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -644,7 +644,7 @@ export default function ReviewTaskPage() {
                                     : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                   : isReviewComplete
                                     ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                               }`}
                               disabled={isReviewComplete}
                             >
@@ -669,7 +669,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -684,7 +684,7 @@ export default function ReviewTaskPage() {
                         rows={3}
                         value={formData[`criterion-${criterion.id}`] || ""}
                         onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 ${
                           isReviewComplete
                             ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                             : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
@@ -704,7 +704,7 @@ export default function ReviewTaskPage() {
                   className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                     canSubmit && !isSubmitting
                       ? "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                      : "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-300 cursor-not-allowed"
+                      : "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed"
                   }`}
                   onClick={handleSubmit}
                 >
