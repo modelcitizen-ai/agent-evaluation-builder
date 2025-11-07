@@ -17,6 +17,7 @@ import PageLayout from "@/components/layout/page-layout"
 import EditMetricModal from "@/components/edit-metric-modal"
 import ConfigureDatasetModal from "@/components/configure-dataset-modal"
 import ContentRenderer from "@/components/content-renderer"
+import { Button } from "@/components/ui/button"
 import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
 import { usePreviewFormNavigation } from "@/components/data-scientist/preview/usePreviewFormNavigation"
 import { usePreviewColumnManagement } from "@/components/data-scientist/preview/usePreviewColumnManagement"
@@ -330,51 +331,50 @@ function PreviewPageContent() {
       actions={
         <div className="flex space-x-3">
           {/* Configure Dataset Button */}
-                    <button
-            onClick={() => setShowDatasetConfig(true)}
-            className="inline-flex items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-muted-foreground bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
-          >
-            <CogIcon className="h-4 w-4 mr-2" />
-            Configure Dataset
-          </button>
-
-          {/* Instructions Toggle Button */}
-          <button
-            onClick={() => setShowInstructions(!showInstructions)}
-            className={`inline-flex items-center px-4 py-2 border ${
-              showInstructions ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700"
-            } shadow-sm text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none transition-colors`}
-            aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
-            title="Toggle instructions"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Instructions
-          </button>
-
-          {/* Cancel Button */}
-          <button
+                  <Button
+                    onClick={() => setShowDatasetConfig(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <CogIcon className="h-4 w-4 mr-2" />
+                    Configure Dataset
+                  </Button>          {/* Instructions Toggle Button */}
+                  <Button
+                    onClick={() => setShowInstructions(!showInstructions)}
+                    variant="outline"
+                    size="sm"
+                    className={`flex items-center gap-2 ${
+                      showInstructions 
+                        ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" 
+                        : "hover:bg-muted/50"
+                    }`}
+                    aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
+                    title="Toggle instructions"
+                  >
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Instructions
+                  </Button>          {/* Cancel Button */}
+          <Button
             onClick={() => router.push("/data-scientist")}
-            className="inline-flex items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="outline"
+            size="sm"
           >
             Cancel
-          </button>
+          </Button>
 
           {/* Save Button */}
-          <button
+          <Button
             onClick={handleSaveEvaluation}
             disabled={isSaving}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
-              isSaving
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
-            }`}
+            variant="default"
+            size="sm"
           >
             {isSaving ? (
               <>
@@ -403,18 +403,18 @@ function PreviewPageContent() {
             ) : (
               "Save"
             )}
-          </button>
+          </Button>
         </div>
       }
     >
       {/* Error Banner */}
       {analysisError && (
-        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg p-4">
           <div className="flex items-center">
-            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-3" />
+            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-3" />
             <div>
-              <h3 className="text-sm font-medium text-yellow-900">Azure OpenAI Analysis Issue</h3>
-              <p className="text-sm text-yellow-700">{analysisError} Using fallback analysis instead.</p>
+              <h3 className="text-sm font-medium text-yellow-900 dark:text-yellow-100">Azure OpenAI Analysis Issue</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-200">{analysisError} Using fallback analysis instead.</p>
             </div>
           </div>
         </div>
@@ -422,7 +422,7 @@ function PreviewPageContent() {
 
       {/* Only show main content after analysis is ready; render a full-viewport loader while analyzing */}
       {columnRoles.length === 0 || criteria.length === 0 ? (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center min-h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center min-h-screen">
           {/* Animated Logo (copied from upload page for consistency) */}
           <div className="mb-8">
             <div className="relative">
@@ -541,15 +541,15 @@ function PreviewPageContent() {
           <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
             {/* Instructions Panel - conditionally rendered */}
             {showInstructions && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg leading-6 font-medium text-blue-900">Instructions</h3>
+                    <h3 className="text-lg leading-6 font-medium text-blue-900 dark:text-blue-100">Instructions</h3>
                   </div>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="w-full text-sm text-blue-800 bg-transparent border border-blue-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full text-sm text-blue-800 dark:text-blue-200 bg-transparent border border-blue-300 dark:border-blue-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 resize-none"
                     rows={5}
                   />
                 </div>
@@ -644,12 +644,12 @@ function PreviewPageContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {criteria.map((criterion) => (
-                    <div key={criterion.id} className="border border-gray-200 rounded-lg p-4 group">
+                    <div key={criterion.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 group bg-white dark:bg-gray-800">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
-                          <label className="block text-sm font-semibold text-foreground">
+                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {criterion.name}
-                            {criterion.required && <span className="text-red-500 ml-1">*</span>}
+                            {criterion.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                           </label>
                         </div>
                         <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -716,8 +716,8 @@ function PreviewPageContent() {
                               onClick={() => handleInputChange(criterion.id, option)}
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                  ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                               }`}
                             >
                               {option}
@@ -729,8 +729,8 @@ function PreviewPageContent() {
                       {criterion.type === "likert-scale" && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-muted-foreground">{criterion.likertLabels?.low || "Low"}</span>
-                            <span className="text-xs text-muted-foreground">{criterion.likertLabels?.high || "High"}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-600">{criterion.likertLabels?.low || "Low"}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-600">{criterion.likertLabels?.high || "High"}</span>
                           </div>
                           <div className="grid grid-cols-5 gap-2">
                             {[1, 2, 3, 4, 5].map((number) => (
@@ -740,8 +740,8 @@ function PreviewPageContent() {
                                 onClick={() => handleInputChange(criterion.id, number.toString())}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                   formData[`criterion-${criterion.id}`] === number.toString()
-                                    ? "bg-blue-500 text-white border-blue-500"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                                 }`}
                               >
                                 {number}
@@ -760,8 +760,8 @@ function PreviewPageContent() {
                               onClick={() => handleInputChange(criterion.id, option)}
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                  ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                  : "bg-white dark:bg-gray-50 text-gray-700 dark:text-gray-900 border-gray-300 dark:border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-100"
                               }`}
                             >
                               {option}
@@ -775,7 +775,7 @@ function PreviewPageContent() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-1.5"
+                          className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}
@@ -786,10 +786,10 @@ function PreviewPageContent() {
                   <button
                     type="button"
                     onClick={handleAddMetric}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors"
+                    className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
-                    <PlusIcon className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-600">Add a Question</span>
+                    <PlusIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Add a Question</span>
                   </button>
 
                   <div className="pt-4">
@@ -803,8 +803,8 @@ function PreviewPageContent() {
                           disabled={!canSubmit || isSubmitting}
                           className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                             canSubmit && !isSubmitting
-                              ? "bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
-                              : "bg-muted text-muted-foreground cursor-not-allowed"
+                              ? "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                              : "bg-gray-400 dark:bg-gray-300 text-gray-200 dark:text-gray-600 cursor-not-allowed"
                           }`}
                         >
                           {isSubmitting ? (

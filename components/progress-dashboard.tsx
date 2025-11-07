@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import ResultsModal from "./results-modal"
 import { getResultsDataset } from "@/lib/results-dataset"
+import { Button } from "@/components/ui/button"
 
 // Helper function to format time in a human-readable way
 const formatTime = (minutes: number): string => {
@@ -290,9 +291,10 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       {/* Back Button */}
       {onBack && (
         <div className="mb-6">
-          <button
+          <Button
             onClick={onBack}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            variant="outline"
+            size="sm"
           >
             <svg className="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -302,7 +304,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               />
             </svg>
             My Projects
-          </button>
+          </Button>
         </div>
       )}
 
