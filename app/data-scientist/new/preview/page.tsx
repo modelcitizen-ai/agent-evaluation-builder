@@ -345,7 +345,7 @@ function PreviewPageContent() {
                     size="sm"
                     className={`flex items-center gap-2 ${
                       showInstructions 
-                        ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" 
+                        ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" 
                         : "hover:bg-muted/50"
                     }`}
                     aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
