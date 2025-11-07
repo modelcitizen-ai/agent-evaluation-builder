@@ -232,21 +232,22 @@ export default function ReviewerPage() {
   return (
     <PageLayout title={`${reviewerFirstName}'s Evaluations`}>
       {/* Stats */}
+            {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {availableTasks.length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Available</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Available</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {availableTasks.length} total
                   </dd>
                 </dl>
@@ -255,20 +256,20 @@ export default function ReviewerPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {activeTasks.length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Active</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {activeTasks.length} total
                   </dd>
                 </dl>
@@ -277,20 +278,20 @@ export default function ReviewerPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {completedTasks.length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Completed</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {completedTasks.length} total
                   </dd>
                 </dl>
@@ -302,21 +303,21 @@ export default function ReviewerPage() {
 
       {/* Available Tasks */}
       {evaluations.length > 0 ? (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md mb-8">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">All Evaluations</h3>
+        <div className="bg-card shadow overflow-hidden sm:rounded-md mb-8 border border-border">
+          <div className="px-4 py-5 sm:px-6 border-b border-border">
+            <h3 className="text-lg leading-6 font-medium text-foreground">All Evaluations</h3>
           </div>
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-border">
             {evaluations.map((task) => {
               const isCompleted = completedEvaluations.includes(task.id)
               return (
                 <li key={task.id}>
-                  <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                  <div className="px-4 py-4 sm:px-6 hover:bg-muted/50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 truncate">{task.name}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm font-medium text-foreground truncate">{task.name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {task.totalItems || 0} Questions • Due: {new Date(task.createdAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -351,11 +352,11 @@ export default function ReviewerPage() {
           </ul>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-card shadow overflow-hidden sm:rounded-md border border-border">
           <div className="px-4 py-8 text-center">
-            <ClockIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No evaluations available</h3>
-            <p className="text-gray-500">Check back later for new evaluation tasks.</p>
+            <ClockIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No evaluations available</h3>
+            <p className="text-muted-foreground">Check back later for new evaluation tasks.</p>
           </div>
         </div>
       )}

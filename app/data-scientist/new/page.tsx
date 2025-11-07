@@ -249,28 +249,28 @@ export default function NewEvaluationPage() {
           {activeTab === "excel" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Upload your dataset</h3>
-                <p className="text-sm text-gray-600 mb-6">
+                <h3 className="text-lg font-medium text-foreground mb-2">Upload your dataset</h3>
+                <p className="text-sm text-muted-foreground mb-6">
                   Use this mode to assess the quality of model- or human-written completions that have already been generated. It is suitable for comparing outputs from different models, versions, or subject matter experts using pre-collected data.
                 </p>
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors bg-white ${
-                  dragActive ? "border-indigo-400 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors bg-card ${
+                  dragActive ? "border-primary bg-primary/5" : "border-border hover:border-border/80"
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <div>
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <span className="text-lg font-medium text-gray-900 block mb-2">
+                    <span className="text-lg font-medium text-foreground block mb-2">
                       Click to upload or drag and drop
                     </span>
-                    <span className="text-sm text-gray-500 block">Excel (.xlsx) or CSV files up to 10MB</span>
+                    <span className="text-sm text-muted-foreground block">Excel (.xlsx) or CSV files up to 10MB</span>
                   </label>
                   <input
                     id="file-upload"
@@ -285,13 +285,13 @@ export default function NewEvaluationPage() {
 
               {/* File Confirmation */}
               {selectedFile && (
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <DocumentArrowUpIcon className="h-6 w-6 text-gray-500 mr-3" />
+                      <DocumentArrowUpIcon className="h-6 w-6 text-muted-foreground mr-3" />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {formatFileSize(selectedFile.size)} • Ready to upload
                         </p>
                       </div>
@@ -337,9 +337,9 @@ export default function NewEvaluationPage() {
 
               {/* AI Analysis Information Card */}
               {selectedFile && useAIAnalysis && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
                   <div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       The system analyzes your data to suggest optimal evaluation settings. Do not include sensitive or
                       confidential information.
                     </p>
@@ -353,28 +353,28 @@ export default function NewEvaluationPage() {
           {activeTab === "api" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Upload your dataset and API endpoint</h3>
-                <p className="text-sm text-gray-600 mb-6">
+                <h3 className="text-lg font-medium text-foreground mb-2">Upload your dataset and API endpoint</h3>
+                <p className="text-sm text-muted-foreground mb-6">
                   Use this mode for rapid model testing, prompt engineering, and evaluation of new or fine-tuned models. Upload your input dataset. Enter the model name and endpoint to generate completions in real time.
                 </p>
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors bg-white ${
-                  dragActive ? "border-indigo-400 bg-indigo-50" : "border-gray-300 hover:border-gray-400"
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors bg-card ${
+                  dragActive ? "border-primary bg-primary/5" : "border-border hover:border-border/80"
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <div>
                   <label htmlFor="file-upload-api" className="cursor-pointer">
-                    <span className="text-lg font-medium text-gray-900 block mb-2">
+                    <span className="text-lg font-medium text-foreground block mb-2">
                       Click to upload or drag and drop
                     </span>
-                    <span className="text-sm text-gray-500 block">Excel (.xlsx) or CSV files up to 10MB</span>
+                    <span className="text-sm text-muted-foreground block">Excel (.xlsx) or CSV files up to 10MB</span>
                   </label>
                   <input
                     id="file-upload-api"
@@ -389,13 +389,13 @@ export default function NewEvaluationPage() {
 
               {/* File Confirmation */}
               {selectedFile && (
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <DocumentArrowUpIcon className="h-6 w-6 text-gray-500 mr-3" />
+                      <DocumentArrowUpIcon className="h-6 w-6 text-muted-foreground mr-3" />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {formatFileSize(selectedFile.size)} • Ready to upload
                         </p>
                       </div>
@@ -441,9 +441,9 @@ export default function NewEvaluationPage() {
 
               {/* AI Analysis Information Card */}
               {selectedFile && useAIAnalysis && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
                   <div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       The system analyzes your data to suggest optimal evaluation settings. Do not include sensitive or
                       confidential information.
                     </p>
@@ -451,27 +451,27 @@ export default function NewEvaluationPage() {
                 </div>
               )}
 
-              {/* API Configuration Section */}
+              {/* Model Configuration */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="api-endpoint" className="block text-sm font-medium text-gray-700 mb-2">
-                    API Endpoint (Coming Soon)
+                  <label htmlFor="model-name" className="block text-sm font-medium text-foreground mb-2">
+                    Model Name
                   </label>
                   <input
                     type="url"
                     id="api-endpoint"
                     value={apiEndpoint}
                     onChange={(e) => setApiEndpoint(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+                    className="block w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:border-primary transition-colors text-sm bg-background text-foreground"
                     placeholder="https://api.example.com/v1/generate"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Enter the full URL for the model's API endpoint. This will be used to generate completions during evaluation.
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="model-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="model-name" className="block text-sm font-medium text-foreground mb-2">
                     Model Name (Coming Soon)
                   </label>
                   <input
@@ -479,7 +479,7 @@ export default function NewEvaluationPage() {
                     id="model-name"
                     value={modelName}
                     onChange={(e) => setModelName(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+                    className="block w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:border-primary transition-colors text-sm bg-background text-foreground"
                     placeholder="e.g., gpt4-finetuned-v1"
                   />
                 </div>

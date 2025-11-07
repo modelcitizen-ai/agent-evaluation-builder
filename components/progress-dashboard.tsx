@@ -308,40 +308,40 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
 
       {/* Overview Metrics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {reviewers.length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Reviewers</dt>
-                  <dd className="text-lg font-medium text-gray-900">{reviewers.length} total</dd>
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Active Reviewers</dt>
+                  <dd className="text-lg font-medium text-foreground">{reviewers.length} total</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {reviewers.filter((r: Reviewer) => getReviewerStatus(r) !== "completed").length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Incomplete Reviewers</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Incomplete Reviewers</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {reviewers.filter((r: Reviewer) => getReviewerStatus(r) !== "completed").length} of {reviewers.length}
                   </dd>
                 </dl>
@@ -350,18 +350,18 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">{completionRate}%</span>
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">{completionRate}%</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Completion Rate</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Completion Rate</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {completionRate}%
                   </dd>
                 </dl>
@@ -370,20 +370,20 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {avgTimeToCompleteEvaluation > 0 ? avgTimeToCompleteEvaluation.toFixed(0) : "---"}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Completion Time</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Avg Completion Time</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {avgTimeToCompleteEvaluation > 0 ? formatTime(avgTimeToCompleteEvaluation) : "---"}
                   </dd>
                 </dl>
@@ -394,11 +394,11 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       </div>
 
       {/* Reviewers Table */}
-      <div className="bg-white shadow overflow-visible sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+      <div className="bg-card shadow overflow-visible sm:rounded-md border border-border">
+        <div className="px-4 py-5 sm:px-6 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Reviewer Progress</h3>
+              <h3 className="text-lg leading-6 font-medium text-foreground">Reviewer Progress</h3>
               {isUpdating && (
                 <div className="flex items-center space-x-1">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -485,15 +485,15 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {filteredReviewers.map((reviewer: Reviewer) => {
                   const actualStatus = getReviewerStatus(reviewer)
                   return (
-                    <tr key={reviewer.id} className="hover:bg-gray-50">
+                    <tr key={reviewer.id} className="hover:bg-muted/50">
                       <td className="px-6 py-4 whitespace-nowrap w-1/2">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{reviewer.name}</div>
-                          <div className="text-sm text-gray-500">{reviewer.email}</div>
+                          <div className="text-sm font-medium text-foreground">{reviewer.name}</div>
+                          <div className="text-sm text-muted-foreground">{reviewer.email}</div>
                         </div>
                       </td>
                       <td className="pl-4 pr-8 py-4 whitespace-nowrap text-center w-1/6">

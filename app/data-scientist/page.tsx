@@ -82,20 +82,20 @@ export default function DataScientistPage() {
     <PageLayout title="My Projects" actions={actions}>
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.draft}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Draft</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Draft</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.draft} total
                   </dd>
                 </dl>
@@ -104,20 +104,20 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.active}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Active</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.active} total
                   </dd>
                 </dl>
@@ -126,20 +126,20 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.completed}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Completed</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.completed} total
                   </dd>
                 </dl>
@@ -150,14 +150,14 @@ export default function DataScientistPage() {
       </div>
 
       {/* Evaluations Table */}
-      <div className="bg-white shadow overflow-visible sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Projects</h3>
+      <div className="bg-card shadow overflow-visible sm:rounded-md border border-border">
+        <div className="px-4 py-5 sm:px-6 border-b border-border">
+          <h3 className="text-lg leading-6 font-medium text-foreground">Recent Projects</h3>
         </div>
-        <div className="bg-white shadow overflow-visible sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
+        <div className="bg-card shadow overflow-visible sm:rounded-md">
+          <ul className="divide-y divide-border">
             {evaluations.length === 0 ? (
-              <li className="py-4 px-6 text-center text-gray-500">No evaluations found. Create your first evaluation.</li>
+              <li className="py-4 px-6 text-center text-muted-foreground">No evaluations found. Create your first evaluation.</li>
             ) : (
               evaluations.map((evaluation) => {
                 const uniqueSamples = calculateUniqueSamples(evaluation)
