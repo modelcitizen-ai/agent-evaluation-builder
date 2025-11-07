@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { Button } from "@/components/ui/button"
 
 interface Metric {
   id: number
@@ -112,38 +113,38 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity" onClick={onClose}></div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="bg-white px-6 pt-6 pb-4">
+        <div className="inline-block align-bottom bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-border">
+          <div className="bg-card px-6 pt-6 pb-4">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+              <h3 className="text-lg leading-6 font-medium text-foreground">
                 {metric && metrics?.some((m) => m.id === metric.id) ? "Edit Question" : "Add a Question"}
               </h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-3">Question</label>
+                <label className="block text-sm font-medium text-foreground mb-3">Question</label>
                 <input
                   type="text"
                   value={editedMetric.name}
                   onChange={handleNameChange}
-                  className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Add a Question"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-3">Response Type</label>
+                <label className="block text-sm font-medium text-foreground mb-3">Response Type</label>
                 <div className="relative">
                   <select
                     value={editedMetric.type}
                     onChange={handleTypeChange}
-                    className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                   >
                     <option value="yes-no">Yes/No</option>
                     <option value="likert-scale">Likert Scale</option>
@@ -151,7 +152,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                     <option value="text-input">Text Input</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor">
                       <path
                         fillRule="evenodd"
                         d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -165,25 +166,25 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
               {/* Likert Scale Labels */}
               {editedMetric.type === "likert-scale" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-3">Scale Labels</label>
+                  <label className="block text-sm font-medium text-foreground mb-3">Scale Labels</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Low End</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Low End</label>
                       <input
                         type="text"
                         value={editedMetric.likertLabels?.low || ""}
                         onChange={(e) => handleLikertLabelChange("low", e.target.value)}
-                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="Low"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">High End</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">High End</label>
                       <input
                         type="text"
                         value={editedMetric.likertLabels?.high || ""}
                         onChange={(e) => handleLikertLabelChange("high", e.target.value)}
-                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="High"
                       />
                     </div>
@@ -194,7 +195,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
               {/* Options for custom list types */}
               {editedMetric.type === "custom-list" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-3">Options</label>
+                  <label className="block text-sm font-medium text-foreground mb-3">Options</label>
                   <div className="space-y-3">
                     {editedMetric.options.map((option, index) => (
                       <div key={index} className="flex items-center space-x-3">
@@ -202,7 +203,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                           type="text"
                           value={option}
                           onChange={(e) => handleOptionChange(index, e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="flex-1 border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           placeholder={`Option ${index + 1}`}
                         />
                         <button
@@ -229,30 +230,32 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   id="metric-required"
                   checked={editedMetric.required}
                   onChange={handleRequiredChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-border rounded bg-background"
                 />
-                <label htmlFor="metric-required" className="ml-3 block text-sm text-gray-900">
+                <label htmlFor="metric-required" className="ml-3 block text-sm text-foreground">
                   Required
                 </label>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse">
-            <button
+          <div className="bg-muted/30 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-border">
+            <Button
               type="button"
               onClick={handleSave}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm transition-colors bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500"
+              variant="default"
+              className="w-full sm:ml-3 sm:w-auto"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              variant="outline"
+              className="mt-3 w-full sm:mt-0 sm:ml-3 sm:w-auto"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       </div>
