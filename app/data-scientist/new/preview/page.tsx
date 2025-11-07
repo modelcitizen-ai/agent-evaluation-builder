@@ -345,7 +345,7 @@ function PreviewPageContent() {
                     size="sm"
                     className={`flex items-center gap-2 ${
                       showInstructions 
-                        ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" 
+                        ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
                         : "hover:bg-muted/50"
                     }`}
                     aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
@@ -541,15 +541,15 @@ function PreviewPageContent() {
           <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
             {/* Instructions Panel - conditionally rendered */}
             {showInstructions && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg leading-6 font-medium text-blue-900 dark:text-blue-100">Instructions</h3>
+                    <h3 className="text-lg leading-6 font-medium text-primary dark:text-primary">Instructions</h3>
                   </div>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="w-full text-sm bg-card text-card-foreground border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full text-sm bg-card text-card-foreground border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                     rows={5}
                   />
                 </div>
@@ -716,7 +716,7 @@ function PreviewPageContent() {
                               onClick={() => handleInputChange(criterion.id, option)}
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                  ? "bg-primary text-primary-foreground border-primary"
                                   : "bg-card text-card-foreground border-border hover:bg-muted/50"
                               }`}
                             >
@@ -740,7 +740,7 @@ function PreviewPageContent() {
                                 onClick={() => handleInputChange(criterion.id, number.toString())}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                   formData[`criterion-${criterion.id}`] === number.toString()
-                                    ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                    ? "bg-primary text-primary-foreground border-primary"
                                     : "bg-card text-card-foreground border-border hover:bg-muted/50"
                                 }`}
                               >
