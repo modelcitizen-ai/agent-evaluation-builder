@@ -431,7 +431,7 @@ export default function ReviewTaskPage() {
         {/* Left Column - Instructions and Review */}
         <div className="space-y-6 pr-4 pb-6" style={{ width: `${leftColumnWidth}%` }}>
           {/* Content for Review */}
-          <div className="bg-white shadow sm:rounded-lg">
+          <div className="bg-card shadow sm:rounded-lg border border-border">
             <div className="px-4 py-5 sm:p-6">
               {Array.isArray(currentContent) && currentContent.length > 0 ? (
                 <div 
@@ -462,7 +462,7 @@ export default function ReviewTaskPage() {
             console.log('[MetadataCard] currentMetadata.length:', currentMetadata.length)
             return currentMetadata.length > 0
           })() && (
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-2 text-xs">
                   {currentMetadata.map((item, index) => {
@@ -507,17 +507,17 @@ export default function ReviewTaskPage() {
         <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
           {/* Instructions Panel - conditionally rendered */}
           {showInstructions && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg leading-6 font-medium text-blue-900">Instructions</h3>
+                  <h3 className="text-lg leading-6 font-medium text-blue-900 dark:text-blue-100">Instructions</h3>
                 </div>
-                <p className="text-sm text-blue-800">{evaluation.instructions}</p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">{evaluation.instructions}</p>
               </div>
             </div>
           )}
 
-          <div className="bg-white shadow sm:rounded-lg">
+          <div className="bg-card shadow sm:rounded-lg border border-border">
             <div className="px-4 py-5 sm:p-6 relative">
               {/* Heading and navigation on the same line */}
               <div className="flex items-center justify-between mb-6">
@@ -615,7 +615,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -644,7 +644,7 @@ export default function ReviewTaskPage() {
                                     : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                   : isReviewComplete
                                     ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                               }`}
                               disabled={isReviewComplete}
                             >
@@ -669,7 +669,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -684,10 +684,10 @@ export default function ReviewTaskPage() {
                         rows={3}
                         value={formData[`criterion-${criterion.id}`] || ""}
                         onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 ${
+                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 text-gray-900 dark:text-gray-200 ${
                           isReviewComplete
                             ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                            : "border-gray-500 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                         }`}
                         placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         disabled={isReviewComplete}
