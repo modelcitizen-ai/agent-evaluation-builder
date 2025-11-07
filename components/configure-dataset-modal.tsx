@@ -68,7 +68,7 @@ export default function ConfigureDatasetModal({
                   The system has preselected columns for evaluation. You may adjust selections and their UI-visible labels as needed.
                 </p>
               </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>

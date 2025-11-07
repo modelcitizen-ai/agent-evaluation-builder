@@ -207,7 +207,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                         />
                         <button
                           onClick={() => handleRemoveOption(index)}
-                          className="flex-shrink-0 w-8 h-8 border border-gray-300 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-colors"
+                          className="flex-shrink-0 w-8 h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                         >
                           <XMarkIcon className="h-5 w-5" />
                         </button>
@@ -215,7 +215,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                     ))}
                     <button
                       onClick={handleAddOption}
-                      className="w-8 h-8 border border-gray-300 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-colors"
+                      className="w-8 h-8 border border-border rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                     >
                       <PlusIcon className="h-6 w-6" />
                     </button>

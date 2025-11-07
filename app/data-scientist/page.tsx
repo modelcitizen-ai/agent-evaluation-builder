@@ -175,7 +175,7 @@ export default function DataScientistPage() {
                             >
                               {evaluation.name}
                             </button>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               {evaluationDescription}
                             </p>
                           </div>
@@ -189,7 +189,7 @@ export default function DataScientistPage() {
                           <div className="relative z-10">
                             <button
                               onClick={() => toggleDropdown(evaluation.id)}
-                              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 relative z-10"
+                              className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 relative z-10"
                             >
                               <EllipsisVerticalIcon className="h-5 w-5" />
                             </button>
@@ -210,7 +210,7 @@ export default function DataScientistPage() {
                                       router.push(`/reviewer/task/${evaluation.id}?from=data-scientist`)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Preview
                                   </button>
@@ -219,7 +219,7 @@ export default function DataScientistPage() {
                                       handleViewProgress(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     View Progress
                                   </button>
@@ -228,7 +228,7 @@ export default function DataScientistPage() {
                                       handleAssignReviewers(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Add Reviewers
                                   </button>
@@ -237,7 +237,7 @@ export default function DataScientistPage() {
                                       handleDeleteEvaluation(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-muted/50"
                                   >
                                     Delete
                                   </button>
