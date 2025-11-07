@@ -775,7 +775,7 @@ function PreviewPageContent() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-1.5 bg-card text-card-foreground"
+                          className="block w-full border border-border rounded-md shadow-sm focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] sm:text-sm px-3 py-1.5 bg-card text-card-foreground transition-colors"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}

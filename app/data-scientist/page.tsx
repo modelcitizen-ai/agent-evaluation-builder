@@ -171,7 +171,7 @@ export default function DataScientistPage() {
                           <div>
                             <button
                               onClick={() => handleEditEvaluation(evaluation.id)}
-                              className="text-sm font-medium text-foreground truncate hover:text-indigo-600 hover:bg-muted/50 transition-all duration-200 ease-in-out cursor-pointer text-left px-2 py-1 rounded-md -mx-2 -my-1"
+                              className="text-sm font-medium text-foreground truncate hover:text-blue-600 hover:bg-muted/50 transition-all duration-200 ease-in-out cursor-pointer text-left px-2 py-1 rounded-md -mx-2 -my-1"
                             >
                               {evaluation.name}
                             </button>

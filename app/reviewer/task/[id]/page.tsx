@@ -684,10 +684,10 @@ export default function ReviewTaskPage() {
                         rows={3}
                         value={formData[`criterion-${criterion.id}`] || ""}
                         onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 ${
+                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 transition-colors ${
                           isReviewComplete
                             ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "bg-card text-card-foreground border-border focus:ring-blue-500 focus:border-blue-500"
+                            : "bg-card text-card-foreground border-border focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px]"
                         }`}
                         placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         disabled={isReviewComplete}

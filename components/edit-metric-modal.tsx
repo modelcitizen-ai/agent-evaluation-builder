@@ -133,7 +133,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   type="text"
                   value={editedMetric.name}
                   onChange={handleNameChange}
-                  className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] transition-colors"
                   placeholder="Add a Question"
                 />
               </div>
@@ -144,7 +144,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                   <select
                     value={editedMetric.type}
                     onChange={handleTypeChange}
-                    className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                    className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] appearance-none"
                   >
                     <option value="yes-no">Yes/No</option>
                     <option value="likert-scale">Likert Scale</option>
@@ -174,7 +174,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                         type="text"
                         value={editedMetric.likertLabels?.low || ""}
                         onChange={(e) => handleLikertLabelChange("low", e.target.value)}
-                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] transition-colors"
                         placeholder="Low"
                       />
                     </div>
@@ -184,7 +184,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                         type="text"
                         value={editedMetric.likertLabels?.high || ""}
                         onChange={(e) => handleLikertLabelChange("high", e.target.value)}
-                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="block w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] transition-colors"
                         placeholder="High"
                       />
                     </div>
@@ -203,7 +203,7 @@ export default function EditMetricModal({ metric, metrics, isOpen, onClose, onSa
                           type="text"
                           value={option}
                           onChange={(e) => handleOptionChange(index, e.target.value)}
-                          className="flex-1 border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          className="flex-1 border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground placeholder-muted-foreground focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] transition-colors"
                           placeholder={`Option ${index + 1}`}
                         />
                         <button
