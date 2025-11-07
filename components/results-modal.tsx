@@ -19,12 +19,11 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
   // Extract unique reviewers for filter dropdown
   const reviewers = useMemo(() => {
     if (!resultsDataset?.results) return []
-
+    
     const reviewerSet = new Set<string>()
     resultsDataset.results.forEach((result) => {
       reviewerSet.add(result.reviewerName)
     })
-
     return Array.from(reviewerSet)
   }, [resultsDataset?.results])
 
@@ -94,44 +93,42 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
     const escapeCSVField = (field: any): string => {
       if (field == null) return ""
       const str = String(field)
-      // If field contains comma, quote, newline, or carriage return, wrap in quotes and escape quotes
       if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-        return '"' + str.replace(/"/g, '""') + '"'
+        return `"${str.replace(/"/g, '""')}"`
       }
       return str
     }
 
-    // Create headers
+    // Prepare headers
     const headers = [
       "Item ID",
-      "Reviewer",
+      "Reviewer", 
       "Submitted At",
-      "Time Spent (s)",
+      "Time (s)",
       ...resultsDataset.columns.original,
-      ...resultsDataset.columns.responses,
+      ...resultsDataset.columns.responses
     ]
 
-    // Create rows with proper CSV escaping
-    const rows = filteredResults.map((result) => [
-      escapeCSVField(result.itemId),
-      escapeCSVField(result.reviewerName),
-      escapeCSVField(result.submittedAt),
-      escapeCSVField(result.timeSpent.toString()),
-      ...resultsDataset.columns.original.map((col) => escapeCSVField(result.originalData[col] || "")),
-      ...resultsDataset.columns.responses.map((col) => escapeCSVField(result.responses[col] || "")),
+    // Prepare data rows
+    const rows = filteredResults.map(result => [
+      result.itemId,
+      result.reviewerName,
+      new Date(result.submittedAt).toLocaleString(),
+      result.timeSpent.toFixed(1),
+      ...resultsDataset.columns.original.map(col => result.originalData[col] ?? ""),
+      ...resultsDataset.columns.responses.map(col => result.responses[col] ?? "")
     ])
 
-    // Combine headers and rows with proper CSV formatting
+    // Generate CSV content
     const csvContent = [
       headers.map(escapeCSVField).join(","),
-      ...rows.map((row) => row.join(","))
+      ...rows.map(row => row.map(escapeCSVField).join(","))
     ].join("\n")
 
-    // Create download link
+    // Download CSV
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
-    link.setAttribute("href", url)
+    link.href = URL.createObjectURL(blob)
     link.setAttribute("download", `${resultsDataset.evaluationName}_results.csv`)
     link.style.visibility = "hidden"
     document.body.appendChild(link)
@@ -155,183 +152,184 @@ export default function ResultsModal({ isOpen, onClose, resultsDataset }: Result
                 </h3>
                 {/* Filters and Export */}
                 <div className="flex justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <FunnelIcon className="h-5 w-5 text-muted-foreground" />
-                <select
-                  value={filterReviewer}
-                  onChange={(e) => setFilterReviewer(e.target.value)}
-                  className="border-border rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground"
-                >
-                  <option value="all">All Reviewers</option>
-                  {reviewers.map((reviewer) => (
-                    <option key={reviewer} value={reviewer}>
-                      {reviewer}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-                            <button
-                onClick={handleExport}
-                disabled={!resultsDataset?.results.length}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${
-                  resultsDataset?.results.length
-                    ? "text-foreground bg-background hover:bg-muted border"
-                    : "text-muted-foreground bg-muted cursor-not-allowed border"
-                }`}
-              >
-                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-                Export CSV
-              </button>
-            </div>
-
-            {/* Results Table */}
-            <div className="mb-6">
-              <div className="border border-border rounded-lg overflow-auto max-h-[32rem]">
-                {resultsDataset?.results.length ? (
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-muted/50">
-  <tr>
-    <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
-      onClick={() => handleSort("itemId")}
-    >
-      Item ID
-      {sortColumn === "itemId" && <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>}
-    </th>
-    <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
-      onClick={() => handleSort("reviewerName")}
-    >
-      Reviewer
-      {sortColumn === "reviewerName" && (
-        <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
-      )}
-    </th>
-    <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
-      onClick={() => handleSort("submittedAt")}
-    >
-      Submitted
-      {sortColumn === "submittedAt" && (
-        <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
-      )}
-    </th>
-    <th
-      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
-      onClick={() => handleSort("timeSpent")}
-    >
-      Time (s)
-      {sortColumn === "timeSpent" && (
-        <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
-      )}
-    </th>
-
-    {/* Get columnRoles from the best available source */}
-    {(() => {
-      const columnRoles =
-        (resultsDataset as any).columnRoles ||
-        (resultsDataset as any).evaluation?.columnRoles ||
-        {};
-
-      return (
-        <>
-          {/* Original Data Columns */}
-          {resultsDataset.columns.original.map((column) => {
-            const displayName = columnRoles[column]?.displayName || column;
-            return (
-              <th
-                key={column}
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem] break-words"
-                onClick={() => handleSort(column)}
-              >
-                {displayName}
-                {sortColumn === column && (
-                  <span className="ml-1">
-                    {sortDirection === "asc" ? "↑" : "↓"}
-                  </span>
-                )}
-              </th>
-            );
-          })}
-
-          {/* Response Columns */}
-          {resultsDataset.columns.responses.map((column) => {
-            const displayName = columnRoles[column]?.displayName || column;
-            return (
-              <th
-                key={column}
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 bg-primary/10 min-w-[12rem] break-words"
-                onClick={() => handleSort(column)}
-              >
-                {displayName}
-                {sortColumn === column && (
-                  <span className="ml-1">
-                    {sortDirection === "asc" ? "↑" : "↓"}
-                  </span>
-                )}
-              </th>
-            );
-          })}
-        </>
-      );
-    })()}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-card divide-y divide-border">
-                    {filteredResults.map((result, index) => (
-                      <tr key={`${result.reviewerId}-${result.itemId}-${index}`} className="hover:bg-muted/50">
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
-                          <TableCellRenderer content={result.itemId} preserveFormatting={false} />
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
-                          <TableCellRenderer content={result.reviewerName} preserveFormatting={false} />
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
-                          <TableCellRenderer content={new Date(result.submittedAt).toLocaleString()} preserveFormatting={false} />
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground align-top">
-                          <TableCellRenderer content={result.timeSpent.toFixed(1)} preserveFormatting={false} />
-                        </td>
-
-                        {/* Original Data Values */}
-                        {resultsDataset.columns.original.map((column) => {
-                          const value = result.originalData[column];
-                          const isParagraph = typeof value === "string" && value.length > 120;
-                          return (
-                            <td
-                              key={column}
-                              className={`px-6 py-4 text-sm text-foreground align-top whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
-                            >
-                              <TableCellRenderer content={value} preserveFormatting={false} />
-                            </td>
-                          );
-                        })}
-
-                        {/* Response Values */}
-                        {resultsDataset.columns.responses.map((column) => {
-                          const value = result.responses[column] || null;
-                          const isParagraph = typeof value === "string" && value.length > 120;
-                          return (
-                            <td
-                              key={column}
-                              className={`px-6 py-4 text-sm text-foreground align-top bg-primary/10 whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
-                            >
-                              <TableCellRenderer content={value} preserveFormatting={false} />
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                  </table>
-                ) : (
-                  <div className="py-12 text-center">
-                    <p className="text-muted-foreground">
-                      No results collected yet. Results will appear here as reviewers complete evaluations.
-                    </p>
+                  <div className="flex items-center space-x-2">
+                    <FunnelIcon className="h-5 w-5 text-muted-foreground" />
+                    <select
+                      value={filterReviewer}
+                      onChange={(e) => setFilterReviewer(e.target.value)}
+                      className="border-border rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground"
+                    >
+                      <option value="all">All Reviewers</option>
+                      {reviewers.map((reviewer) => (
+                        <option key={reviewer} value={reviewer}>
+                          {reviewer}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+                  <button
+                    onClick={handleExport}
+                    disabled={!resultsDataset?.results.length}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center ${
+                      resultsDataset?.results.length
+                        ? "text-foreground bg-background hover:bg-muted border"
+                        : "text-muted-foreground bg-muted cursor-not-allowed border"
+                    }`}
+                  >
+                    <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                    Export CSV
+                  </button>
+                </div>
+
+                {/* Results Table */}
+                <div className="mb-6">
+                  <div className="border border-border rounded-lg overflow-auto max-h-[32rem]">
+                    {resultsDataset?.results.length ? (
+                      <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th
+                              className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+                              onClick={() => handleSort("itemId")}
+                            >
+                              Item ID
+                              {sortColumn === "itemId" && <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>}
+                            </th>
+                            <th
+                              className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+                              onClick={() => handleSort("reviewerName")}
+                            >
+                              Reviewer
+                              {sortColumn === "reviewerName" && (
+                                <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                              )}
+                            </th>
+                            <th
+                              className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+                              onClick={() => handleSort("submittedAt")}
+                            >
+                              Submitted
+                              {sortColumn === "submittedAt" && (
+                                <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                              )}
+                            </th>
+                            <th
+                              className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem]"
+                              onClick={() => handleSort("timeSpent")}
+                            >
+                              Time (s)
+                              {sortColumn === "timeSpent" && (
+                                <span className="ml-1">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                              )}
+                            </th>
+
+                            {/* Dynamic columns */}
+                            {resultsDataset && (() => {
+                              const columnRoles =
+                                (resultsDataset as any).columnRoles ||
+                                (resultsDataset as any).evaluation?.columnRoles ||
+                                {}
+
+                              return (
+                                <>
+                                  {/* Original Data Columns */}
+                                  {resultsDataset.columns.original.map((column) => {
+                                    const displayName = columnRoles[column]?.displayName || column
+                                    return (
+                                      <th
+                                        key={column}
+                                        className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 min-w-[12rem] break-words"
+                                        onClick={() => handleSort(column)}
+                                      >
+                                        {displayName}
+                                        {sortColumn === column && (
+                                          <span className="ml-1">
+                                            {sortDirection === "asc" ? "↑" : "↓"}
+                                          </span>
+                                        )}
+                                      </th>
+                                    )
+                                  })}
+
+                                  {/* Response Columns */}
+                                  {resultsDataset.columns.responses.map((column) => {
+                                    const displayName = columnRoles[column]?.displayName || column
+                                    return (
+                                      <th
+                                        key={column}
+                                        className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider align-bottom cursor-pointer hover:bg-muted/30 bg-primary/10 min-w-[12rem] break-words"
+                                        onClick={() => handleSort(column)}
+                                      >
+                                        {displayName}
+                                        {sortColumn === column && (
+                                          <span className="ml-1">
+                                            {sortDirection === "asc" ? "↑" : "↓"}
+                                          </span>
+                                        )}
+                                      </th>
+                                    )
+                                  })}
+                                </>
+                              )
+                            })()}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-card divide-y divide-border">
+                          {filteredResults.map((result, index) => (
+                            <tr key={`${result.reviewerId}-${result.itemId}-${index}`} className="hover:bg-muted/50">
+                              <td className="px-6 py-4 text-sm text-foreground align-top">
+                                <TableCellRenderer content={result.itemId} preserveFormatting={false} />
+                              </td>
+                              <td className="px-6 py-4 text-sm text-foreground align-top">
+                                <TableCellRenderer content={result.reviewerName} preserveFormatting={false} />
+                              </td>
+                              <td className="px-6 py-4 text-sm text-foreground align-top">
+                                <TableCellRenderer content={new Date(result.submittedAt).toLocaleString()} preserveFormatting={false} />
+                              </td>
+                              <td className="px-6 py-4 text-sm text-foreground align-top">
+                                <TableCellRenderer content={result.timeSpent.toFixed(1)} preserveFormatting={false} />
+                              </td>
+
+                              {/* Original Data Values */}
+                              {resultsDataset.columns.original.map((column) => {
+                                const value = result.originalData[column]
+                                const isParagraph = typeof value === "string" && value.length > 120
+                                return (
+                                  <td
+                                    key={column}
+                                    className={`px-6 py-4 text-sm text-foreground align-top whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
+                                  >
+                                    <TableCellRenderer content={value} preserveFormatting={false} />
+                                  </td>
+                                )
+                              })}
+
+                              {/* Response Values */}
+                              {resultsDataset.columns.responses.map((column) => {
+                                const value = result.responses[column] || null
+                                const isParagraph = typeof value === "string" && value.length > 120
+                                return (
+                                  <td
+                                    key={column}
+                                    className={`px-6 py-4 text-sm text-foreground align-top bg-primary/10 whitespace-normal break-words${isParagraph ? " min-w-[24rem]" : ""}`}
+                                  >
+                                    <TableCellRenderer content={value} preserveFormatting={false} />
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="py-12 text-center">
+                        <p className="text-muted-foreground">
+                          No results collected yet. Results will appear here as reviewers complete evaluations.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
