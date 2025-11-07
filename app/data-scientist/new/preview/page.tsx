@@ -549,7 +549,7 @@ function PreviewPageContent() {
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="w-full text-sm text-blue-800 dark:text-blue-200 bg-transparent border border-blue-300 dark:border-blue-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 resize-none"
+                    className="w-full text-sm bg-card text-card-foreground border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     rows={5}
                   />
                 </div>
@@ -717,7 +717,7 @@ function PreviewPageContent() {
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
                                   ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                               }`}
                             >
                               {option}
@@ -741,7 +741,7 @@ function PreviewPageContent() {
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                   formData[`criterion-${criterion.id}`] === number.toString()
                                     ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
                                 }`}
                               >
                                 {number}
@@ -752,17 +752,17 @@ function PreviewPageContent() {
                       )}
 
                       {criterion.type === "custom-list" && (
-                        <div className="flex flex-wrap gap-2">
-                          {criterion.options.map((option, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => handleInputChange(criterion.id, option)}
-                              className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                                formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
-                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
-                              }`}
+                          <div className="flex flex-wrap gap-2">
+                            {criterion.options.map((option, optionIndex) => (
+                              <button
+                                key={optionIndex}
+                                type="button"
+                                onClick={() => handleInputChange(criterion.id, option)}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                                  formData[`criterion-${criterion.id}`] === option
+                                    ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
+                                }`}
                             >
                               {option}
                             </button>
@@ -775,7 +775,7 @@ function PreviewPageContent() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-gray-500 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 sm:text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+                          className="block w-full border border-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-1.5 bg-card text-card-foreground"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}

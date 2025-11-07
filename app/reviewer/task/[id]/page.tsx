@@ -615,7 +615,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -644,7 +644,7 @@ export default function ReviewTaskPage() {
                                     : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                   : isReviewComplete
                                     ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
                               }`}
                               disabled={isReviewComplete}
                             >
@@ -669,7 +669,7 @@ export default function ReviewTaskPage() {
                                   : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
                                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-500 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -684,10 +684,10 @@ export default function ReviewTaskPage() {
                         rows={3}
                         value={formData[`criterion-${criterion.id}`] || ""}
                         onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 text-gray-900 dark:text-gray-200 ${
+                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 ${
                           isReviewComplete
                             ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                            : "border-gray-500 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                            : "bg-card text-card-foreground border-border focus:ring-blue-500 focus:border-blue-500"
                         }`}
                         placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         disabled={isReviewComplete}
