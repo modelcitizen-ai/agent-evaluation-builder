@@ -165,17 +165,17 @@ export default function DataScientistPage() {
                 
                 return (
                   <li key={evaluation.id} className={isDropdownOpen(evaluation.id) ? "relative z-50" : ""}>
-                    <div className="px-4 py-4 sm:px-6 hover:bg-muted/50">
+                    <div className="px-4 py-4 sm:px-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1 min-w-0">
                           <div>
                             <button
                               onClick={() => handleEditEvaluation(evaluation.id)}
-                              className="text-sm font-medium text-gray-900 truncate hover:text-indigo-600 transition-colors duration-200 ease-in-out cursor-pointer text-left"
+                              className="text-sm font-medium text-foreground truncate hover:text-indigo-600 hover:bg-muted/50 transition-all duration-200 ease-in-out cursor-pointer text-left px-2 py-1 rounded-md -mx-2 -my-1"
                             >
                               {evaluation.name}
                             </button>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground mt-1">
                               {evaluationDescription}
                             </p>
                           </div>

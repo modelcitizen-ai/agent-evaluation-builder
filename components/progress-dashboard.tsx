@@ -292,7 +292,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
         <div className="mb-6">
           <button
             onClick={onBack}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             <svg className="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -410,7 +410,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               <select
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-1.5 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <option value="all">All Reviewers</option>
                 <option value="active">Active</option>
@@ -448,7 +448,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                   // Provide user feedback
                   console.log(`[ProgressDashboard] ✅ Refresh complete - check the status column for any updates`);
                 }}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 🔄 Refresh Status
               </button>
@@ -456,7 +456,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               {/* View Results Button */}
               <button
                 onClick={() => setIsResultsModalOpen(true)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 View Results
               </button>
@@ -466,21 +466,21 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
 
         <div className="overflow-visible">
           {reviewers.length === 0 ? (
-            <div className="py-4 px-6 text-center text-gray-500">
+            <div className="py-4 px-6 text-center text-muted-foreground">
               No reviewers assigned to this evaluation. Add reviewers to track progress.
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/20">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/2">
                     Reviewer
                   </th>
-                  <th className="pl-4 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  <th className="pl-4 pr-8 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6">
                     Progress
                   </th>
-                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6 whitespace-nowrap">Avg Response Time</th>
-                  <th className="px-8 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6 whitespace-nowrap">Avg Response Time</th>
+                  <th className="px-8 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6">
                     Status
                   </th>
                 </tr>
@@ -489,7 +489,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                 {filteredReviewers.map((reviewer: Reviewer) => {
                   const actualStatus = getReviewerStatus(reviewer)
                   return (
-                    <tr key={reviewer.id} className="hover:bg-muted/50">
+                    <tr key={reviewer.id}>
                       <td className="px-6 py-4 whitespace-nowrap w-1/2">
                         <div>
                           <div className="text-sm font-medium text-foreground">{reviewer.name}</div>
@@ -498,7 +498,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                       </td>
                       <td className="pl-4 pr-8 py-4 whitespace-nowrap text-center w-1/6">
                         <div className="flex items-center justify-center space-x-3">
-                          <span className="text-sm text-gray-900 min-w-[2rem]">
+                          <span className="text-sm text-foreground min-w-[2rem]">
                             {reviewer.completed}/{reviewer.total}
                           </span>
                           <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -511,7 +511,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                           </div>
                         </div>
                       </td>
-                      <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-gray-900 w-1/6">
+                      <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-foreground w-1/6">
                         {reviewer.avgTime ? formatTime(parseFloat(reviewer.avgTime) / 60) : "---"}
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right w-1/6">
