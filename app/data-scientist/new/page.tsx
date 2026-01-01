@@ -299,13 +299,13 @@ export default function NewEvaluationPage() {
                     <div className="flex items-center space-x-4">
                       {/* AI Analysis Toggle */}
                       <div className="flex items-center">
-                        <label className="flex items-center space-x-2 text-sm font-medium text-foreground mr-3">
+                        <label className="flex items-center space-x-2 text-sm font-medium text-muted-foreground mr-3">
                           <span>Enable AI Analysis</span>
                           <button
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
                             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                              useAIAnalysis ? 'bg-primary' : 'bg-muted dark:bg-gray-700'
+                              useAIAnalysis ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
@@ -402,13 +402,13 @@ export default function NewEvaluationPage() {
                     <div className="flex items-center space-x-4">
                       {/* AI Analysis Toggle */}
                       <div className="flex items-center">
-                        <label className="flex items-center space-x-2 text-sm font-medium text-foreground mr-3">
+                        <label className="flex items-center space-x-2 text-sm font-medium text-muted-foreground mr-3">
                           <span>Enable AI Analysis</span>
                           <button
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
                             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                              useAIAnalysis ? 'bg-primary' : 'bg-muted dark:bg-gray-700'
+                              useAIAnalysis ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
