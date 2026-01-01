@@ -299,21 +299,20 @@ export default function NewEvaluationPage() {
                     <div className="flex items-center space-x-4">
                       {/* AI Analysis Toggle */}
                       <div className="flex items-center">
-                        <label className="flex items-center cursor-pointer">
-                          <span className="text-sm text-gray-700 mr-3">Enable AI Analysis</span>
+                        <label className="flex items-center space-x-2 text-sm font-medium text-foreground mr-3">
+                          <span>Enable AI Analysis</span>
                           <button
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
-                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              useAIAnalysis ? "bg-blue-500" : "bg-muted dark:bg-gray-700"
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                              useAIAnalysis ? 'bg-primary' : 'bg-muted dark:bg-gray-700'
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
                           >
                             <span
-                              aria-hidden="true"
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                useAIAnalysis ? "translate-x-4" : "translate-x-0"
+                              className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${
+                                useAIAnalysis ? 'translate-x-5' : 'translate-x-1'
                               }`}
                             />
                           </button>
@@ -403,21 +402,20 @@ export default function NewEvaluationPage() {
                     <div className="flex items-center space-x-4">
                       {/* AI Analysis Toggle */}
                       <div className="flex items-center">
-                        <label className="flex items-center cursor-pointer">
-                          <span className="text-sm text-gray-700 mr-3">Enable AI Analysis</span>
+                        <label className="flex items-center space-x-2 text-sm font-medium text-foreground mr-3">
+                          <span>Enable AI Analysis</span>
                           <button
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
-                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              useAIAnalysis ? "bg-blue-500" : "bg-muted dark:bg-gray-700"
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                              useAIAnalysis ? 'bg-primary' : 'bg-muted dark:bg-gray-700'
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
                           >
                             <span
-                              aria-hidden="true"
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                useAIAnalysis ? "translate-x-4" : "translate-x-0"
+                              className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${
+                                useAIAnalysis ? 'translate-x-5' : 'translate-x-1'
                               }`}
                             />
                           </button>
