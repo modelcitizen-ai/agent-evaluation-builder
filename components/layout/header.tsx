@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { UserCircleIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export default function Header() {
   const router = useRouter()
@@ -41,6 +42,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
             <div className="h-8 w-8 bg-muted dark:bg-gray-700 rounded-full flex items-center justify-center">
               <UserCircleIcon className="h-5 w-5 text-muted-foreground dark:text-gray-300" />
             </div>

@@ -119,11 +119,11 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
   if (isParsedTableData(displayContent)) {
     const { data, columns } = displayContent;
     if (data.length === 0 || columns.length === 0) {
-      return <div className={className}>{title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}<div className="text-gray-500 italic text-sm">No data</div></div>;
+      return <div className={className}>{title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}<div className="text-muted-foreground italic text-sm">No data</div></div>;
     }
     return (
       <div className={className}>
-        {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+        {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
         <div className="overflow-x-auto">
           <table className="min-w-full border text-xs text-left">
             <thead>
@@ -153,7 +153,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
     const columns = Object.keys(displayContent[0]);
     return (
       <div className={className}>
-        {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+        {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
         <div className="overflow-x-auto">
           <table className="min-w-full border text-xs text-left">
             <thead>
@@ -234,7 +234,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       if (isVideoUrl(trimmedContent)) {
         return (
           <div className={className}>
-            {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+            {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
             <VideoPlayer url={trimmedContent} title={title} />
           </div>
         )
@@ -244,7 +244,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       if (isImageUrl(trimmedContent)) {
         return (
           <div className={className}>
-            {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+            {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
             <ImageRenderer url={trimmedContent} title={title} />
           </div>
         )
@@ -253,7 +253,7 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
       // If it's a URL but not video or image, render as a link
       return (
         <div className={className}>
-          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+          {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
           <a
             href={trimmedContent}
             target="_blank"
@@ -284,9 +284,9 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
     
     return (
       <div className={className}>
-        {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
+        {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
         <div 
-          className="prose prose-sm max-w-none text-gray-900 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-a:text-blue-600 prose-a:no-underline"
+          className="prose prose-sm max-w-none text-foreground prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1 prose-a:text-blue-600 prose-a:no-underline dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       </div>
@@ -297,8 +297,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
   if (typeof content === "object" && content !== null && !Array.isArray(content)) {
     return (
       <div className={className}>
-        {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-        <pre className="text-xs bg-gray-50 rounded p-2 overflow-x-auto text-gray-800 border border-gray-100">
+        {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
+        <pre className="text-xs bg-muted rounded p-2 overflow-x-auto text-foreground border border-border">
           {JSON.stringify(content, null, 2)}
         </pre>
       </div>
@@ -311,8 +311,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
     if (arr.length === 0 || typeof arr[0] !== "object") {
       return (
         <div className={className}>
-          {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-          <pre className="text-xs bg-gray-50 rounded p-2 overflow-x-auto text-gray-800 border border-gray-100">
+          {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
+          <pre className="text-xs bg-muted rounded p-2 overflow-x-auto text-foreground border border-border">
             {JSON.stringify(arr, null, 2)}
           </pre>
         </div>
@@ -324,8 +324,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
   if (typeof content === "number") {
     return (
       <div className={className}>
-        {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-        <div className="text-sm text-gray-900">{content}</div>
+        {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
+        <div className="text-sm text-foreground">{content}</div>
       </div>
     )
   }
@@ -333,8 +333,8 @@ export default function ContentRenderer({ content, title, className = "" }: Cont
   // Fallback for unknown types
   return (
     <div className={className}>
-      {title && <div className="text-sm font-semibold text-gray-700 mb-2">{title}</div>}
-      <div className="text-gray-500 italic text-sm">Unsupported content type</div>
+      {title && <div className="text-sm font-semibold text-muted-foreground mb-2">{title}</div>}
+      <div className="text-muted-foreground italic text-sm">Unsupported content type</div>
     </div>
   )
 }
