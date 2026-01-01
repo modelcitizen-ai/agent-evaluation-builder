@@ -45,7 +45,7 @@ export default function ReviewTaskPage() {
       
       return (
         <span 
-          className="inline [&_a]:text-blue-600 [&_a]:hover:text-blue-800"
+          className="inline [&_a]:text-primary [&_a]:hover:text-primary/80"
           dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       )
@@ -77,7 +77,7 @@ export default function ReviewTaskPage() {
             href={linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 no-underline"
+            className="text-primary hover:text-primary/80 no-underline"
           >
             {linkText}
           </a>
@@ -471,13 +471,13 @@ export default function ReviewTaskPage() {
                       <div key={index}>
                         {item.name ? (
                           <>
-                            <span className="font-medium text-gray-600">{item.name}: </span>
-                            <span className="text-gray-900">
+                            <span className="font-medium text-muted-foreground">{item.name}: </span>
+                            <span className="text-foreground">
                               {renderInlineContent(item.value)}
                             </span>
                           </>
                         ) : (
-                          <span className="text-gray-900">
+                          <span className="text-foreground">
                             {renderInlineContent(item.value)}
                           </span>
                         )}
@@ -521,7 +521,7 @@ export default function ReviewTaskPage() {
             <div className="px-4 py-5 sm:p-6 relative">
               {/* Heading and navigation on the same line */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Evaluation</h3>
+                <h3 className="text-lg font-medium text-foreground">Evaluation</h3>
                 
                 {/* Navigation unit */}
                 <div className="flex items-center space-x-3 flex-shrink-0 -mr-3">
