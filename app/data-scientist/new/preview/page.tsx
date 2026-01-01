@@ -607,7 +607,7 @@ function PreviewPageContent() {
                         const progressWidth = getProgressWidth()
 
                         return (
-                          <div className="flex-1 min-w-16 bg-gray-200 rounded-full h-2">
+                          <div className="flex-1 min-w-16 bg-muted dark:bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                               style={{

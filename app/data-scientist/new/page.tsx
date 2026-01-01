@@ -305,7 +305,7 @@ export default function NewEvaluationPage() {
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
                             className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              useAIAnalysis ? "bg-blue-500" : "bg-gray-200"
+                              useAIAnalysis ? "bg-blue-500" : "bg-muted dark:bg-gray-700"
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
@@ -409,7 +409,7 @@ export default function NewEvaluationPage() {
                             type="button"
                             onClick={() => setUseAIAnalysis(!useAIAnalysis)}
                             className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              useAIAnalysis ? "bg-blue-500" : "bg-gray-200"
+                              useAIAnalysis ? "bg-blue-500" : "bg-muted dark:bg-gray-700"
                             }`}
                             role="switch"
                             aria-checked={useAIAnalysis}
