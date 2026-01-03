@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Evaluation Builder | Structured Human Review for LLM Outputs</title>
+    <meta name="description"
+        content="Turn model outputs into defensible decisions with structured human review. Upload datasets, invite reviewers, score with rubrics, and export results.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #64748b;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --bg-main: #ffffff;
+            --bg-subtle: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #f1f5f9;
+            --success: #10b981;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --nav-bg: rgba(255, 255, 255, 0.8);
+            --hero-gradient: radial-gradient(circle at top right, #f0f7ff 0%, #ffffff 50%);
+            --card-bg: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --bg-main: #020617;
+                --bg-subtle: #0f172a;
+                --border: #1e293b;
+                --accent: #1e293b;
+                --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+                --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+                --nav-bg: rgba(2, 6, 23, 0.8);
+                --hero-gradient: radial-gradient(circle at top right, #1e293b 0%, #020617 50%);
+                --card-bg: #0f172a;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-main);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text-main);
+        }
+
+        a {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 6rem 0;
+        }
+
+        /* Typography */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-subtle);
+            border-color: var(--secondary);
+        }
+
+        /* Navigation */
+        nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--nav-bg);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 6rem;
+            background: var(--hero-gradient);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .subtitle {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: block;
+            font-weight: 600;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-stack {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .hero-stack svg {
+            width: 16px;
+            height: 16px;
+            color: var(--success);
+        }
+
+        /* Social Proof */
+        .social-proof {
+            padding: 4rem 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-subtle);
+        }
+
+        .quotes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .quote-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .quote-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .quote-author {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* How it Works */
+        .how-it-works {
+            background-color: var(--bg-main);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .step-card {
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--primary);
+        }
+
+        .step-card h3 {
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        /* Features */
+        .features {
+            background-color: var(--bg-subtle);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .badge-optional {
+            font-size: 0.7rem;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* What we don't do */
+        .anti-features {
+            background-color: #0f172a;
+            color: white;
+        }
+
+        .anti-features h2,
+        .anti-features p {
+            color: white;
+        }
+
+        .anti-features .section-subtitle {
+            color: #94a3b8;
+        }
+
+        .anti-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .anti-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .anti-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .anti-item svg {
+            flex-shrink: 0;
+            color: #ef4444;
+            margin-top: 4px;
+        }
+
+        .anti-item h4 {
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .anti-item p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        /* Use Cases */
+        .use-cases {
+            background-color: var(--bg-main);
+        }
+
+        .use-case-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .use-case-item {
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary);
+            background: var(--bg-subtle);
+            margin-bottom: 1rem;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+
+        .use-case-item h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Pricing Teaser */
+        .pricing-teaser {
+            background-color: var(--accent);
+            text-align: center;
+        }
+
+        .pricing-box {
+            background: var(--card-bg);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Final CTA & Form */
+        .final-cta {
+            background-color: var(--bg-main);
+        }
+
+        .cta-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: start;
+        }
+
+        .contact-form {
+            background: var(--bg-subtle);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 1rem;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0;
+            background-color: var(--bg-subtle);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 4rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-logo {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links h4 {
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-links ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .trust-line {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trust-line svg {
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+
+            .features-grid,
+            .quotes-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .steps-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .anti-grid,
+            .cta-container {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .features-grid,
+            .quotes-grid,
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero-ctas {
+                flex-direction: column;
+            }
+
+            section {
+                padding: 4rem 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Human<span>Eval</span>
+            </a>
+            <div class="nav-links">
+                <a href="#how-it-works" style="margin-right: 2rem; color: var(--text-muted); font-weight: 500;">How it
+                    works</a>
+                <a href="#contact" class="btn btn-primary">Request a demo</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="subtitle">LLM Evaluation Builder</span>
+                <h1>Turn model outputs into defensible decisions with structured human review.</h1>
+                <p>Upload your outputs, invite reviewers, score with rubrics, and export results. The missing layer for
+                    professional AI evaluation cycles.</p>
+                <div class="hero-ctas">
+                    <a href="#contact" class="btn btn-primary">Start an evaluation</a>
+                    <a href="#contact" class="btn btn-secondary">Request a demo</a>
+                </div>
+                <div class="hero-stack">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Works with your stack: Bring outputs from any model, vendor, or pipeline—no integration
+                        required.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="social-proof">
+        <div class="container">
+            <div class="quotes-grid">
+                <div class="quote-card">
+                    <p class="quote-text">"We finally have a consistent way to measure model performance across our
+                        different product teams. The audit trail is essential for our compliance needs."</p>
+                    <p class="quote-author">Applied ML Lead, Enterprise Fintech</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"The side-by-side comparison feature cut our prompt iteration cycles in half.
+                        We stopped guessing and started measuring."</p>
+                    <p class="quote-author">Data Scientist, E-commerce Giant</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"Setting up a human-in-the-loop workflow used to take weeks of custom
+                        engineering. Now we can launch a new evaluation in minutes."</p>
+                    <p class="quote-author">AI Platform Engineer, HealthTech</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title text-center">How it works</h2>
+            <p class="section-subtitle text-center">A streamlined workflow designed for technical teams who need
+                reliable data, not more infrastructure.</p>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <h3>1. Upload dataset</h3>
+                    <p>Import your model outputs as CSV or XLSX. Support for single outputs or multi-column comparisons.
+                    </p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </div>
+                    <h3>2. Configure rubric</h3>
+                    <p>Define custom criteria: Likert scales, binary checks, or free-text justification fields.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                    </div>
+                    <h3>3. Invite reviewers</h3>
+                    <p>Onboard internal SMEs or external contractors. Track progress and completion in real-time.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </div>
+                    <h3>4. Export results</h3>
+                    <p>Download structured judgments as CSV for downstream analysis and model fine-tuning.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title text-center">What you get</h2>
+            <p class="section-subtitle text-center">Everything you need to manage the human evaluation layer at scale.
+            </p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        Reviewer Tracking
+                    </h3>
+                    <p>Manage multiple reviewers, assign specific data slices, and monitor individual progress through
+                        completion dashboards.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Blind Comparison
+                    </h3>
+                    <p>Support for side-by-side (A/B) testing with randomized positioning to eliminate reviewer bias in
+                        model bake-offs.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Custom Rubrics
+                    </h3>
+                    <p>Build complex evaluation forms with ratings, multi-select, and required text justifications for
+                        every judgment.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Audit Trail
+                    </h3>
+                    <p>Full accountability with timestamps and reviewer IDs for every single judgment, ensuring data
+                        integrity for enterprise use.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        RBAC
+                    </h3>
+                    <p>Role-based access control for Admins, Owners, and Reviewers to keep your evaluation projects
+                        secure and organized.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        AI Drafting <span class="badge-optional">Optional</span>
+                    </h3>
+                    <p>Optionally use AI to help draft initial rubrics based on your dataset, which you can then refine
+                        and lock for reviewers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="anti-features">
+        <div class="container">
+            <div class="anti-grid">
+                <div>
+                    <h2 class="section-title">What we don't do (by design)</h2>
+                    <p class="section-subtitle">We focus exclusively on the human evaluation layer. We don't compete
+                        with your model hosting or monitoring stack.</p>
+                </div>
+                <div class="anti-list">
+                    <div class="anti-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <div>
+                            <h4>No Model Execution</h4>
+                            <p>We don't run your models, manage endpoints, or select model versions. You bring the
+                                outputs; we provide the review environment.</p>
+                        </div>
+                    </div>
+                    <div class="anti-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <div>
+                            <h4>No Automated Regression</h4>
+                            <p>We don't claim to automatically detect regressions. We provide the structured human data
+                                you need to verify them yourself.</p>
+                        </div>
+                    </div>
+                    <div class="anti-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <div>
+                            <h4>No Black Boxes</h4>
+                            <p>We don't use proprietary "evaluator models" to grade your data. The judgments come from
+                                your experts, on your terms.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="use-cases">
+        <div class="container">
+            <h2 class="section-title text-center">Tailored for Data Science Teams</h2>
+            <p class="section-subtitle text-center">Common scenarios where structured human evaluation is the only path
+                to a confident release.</p>
+
+            <div class="use-case-list">
+                <div class="use-case-item">
+                    <h4>Model & Vendor Bake-offs</h4>
+                    <p>Compare outputs from GPT-4, Claude, and your fine-tuned Llama models side-by-side to choose the
+                        best engine for your use case.</p>
+                </div>
+                <div class="use-case-item">
+                    <h4>Prompt Iteration Reviews</h4>
+                    <p>Quantify the impact of prompt changes by having SMEs review old vs. new outputs across a
+                        representative dataset.</p>
+                </div>
+                <div class="use-case-item">
+                    <h4>SME vs Model Comparison</h4>
+                    <p>Establish a "Gold Standard" by having experts provide reference answers and then grading model
+                        outputs against them.</p>
+                </div>
+                <div class="use-case-item">
+                    <h4>Safety & Appropriateness Checks</h4>
+                    <p>Run rigorous human red-teaming cycles to ensure model outputs meet your brand's safety and tone
+                        guidelines.</p>
+                </div>
+                <div class="use-case-item">
+                    <h4>Release Readiness Reviews</h4>
+                    <p>Create a defensible "Go/No-Go" report based on structured human feedback before deploying a new
+                        model to production.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing-teaser">
+        <div class="container">
+            <div class="pricing-box">
+                <h2 style="margin-bottom: 1rem;">Simple team-based pricing</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">No per-reviewer seats. No hidden fees. Just
+                    clear, predictable pricing for your whole team.</p>
+                <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 2.5rem;">Start with a pilot project
+                    today.</div>
+                <a href="#contact" class="btn btn-primary" style="padding: 1rem 2.5rem;">Talk to sales</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="final-cta">
+        <div class="container">
+            <div class="cta-container">
+                <div>
+                    <h2 class="section-title">Ready to build better models?</h2>
+                    <p class="section-subtitle" style="margin-left: 0;">Join the leading AI teams using HumanEval to
+                        bring rigor to their development process.</p>
+                    <div style="margin-top: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div
+                                style="width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <span>Setup in under 5 minutes</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div
+                                style="width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <span>No complex integrations required</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <span>Export-ready data from day one</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="demo-form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" placeholder="Jane Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Work Email</label>
+                            <input type="email" id="email" name="email" placeholder="jane@company.ai" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="team-size">Team Size</label>
+                            <select id="team-size" name="team-size">
+                                <option value="1-10">1-10 people</option>
+                                <option value="11-50">11-50 people</option>
+                                <option value="51-200">51-200 people</option>
+                                <option value="201+">201+ people</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">How can we help?</label>
+                            <textarea id="message" name="message" rows="4"
+                                placeholder="Tell us about your evaluation needs..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Request a demo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="logo footer-logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        Human<span>Eval</span>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.9rem;">The standard for structured human evaluation of LLM
+                        outputs.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">How it works</a></li>
+                        <li><a href="#">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Security</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Terms</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Human Evaluation Builder. All rights reserved.</p>
+                <div class="trust-line">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Data stays yours. We do not use your data to train models.</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('demo-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = this.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Sending...';
+            btn.disabled = true;
+
+            // Simulate form submission
+            setTimeout(() => {
+                alert('Thank you! We will be in touch shortly.');
+                btn.innerText = originalText;
+                btn.disabled = false;
+                this.reset();
+            }, 1000);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
