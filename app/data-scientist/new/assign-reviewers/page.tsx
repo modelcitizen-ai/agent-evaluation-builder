@@ -84,18 +84,18 @@ export default function AssignTeamPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Add Participant Form */}
         <div className="space-y-6">
-          <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
+          <div className="bg-card shadow-sm border border-border rounded-lg">
             <div className="px-6 py-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Add a Reviewer</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Add a Reviewer</h3>
+                <p className="text-sm text-muted-foreground">
                   Generate a unique evaluation link for each reviewer.
                 </p>
               </div>
 
               <form onSubmit={handleGenerateLink} className="space-y-5">
                 <div>
-                  <label htmlFor="participant-name" className="block text-sm font-medium text-gray-900 mb-2">
+                  <label htmlFor="participant-name" className="block text-sm font-medium text-foreground mb-2">
                     Reviewer Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -103,22 +103,22 @@ export default function AssignTeamPage() {
                     type="text"
                     value={reviewerName}
                     onChange={(e) => setReviewerName(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+                    className="block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm bg-background text-foreground"
                     placeholder="Reviewer Name"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="participant-email" className="block text-sm font-medium text-gray-900 mb-2">
-                    Email Address <span className="text-gray-500 font-normal">(optional)</span>
+                  <label htmlFor="participant-email" className="block text-sm font-medium text-foreground mb-2">
+                    Email Address <span className="text-muted-foreground font-normal">(optional)</span>
                   </label>
                   <input
                     id="participant-email"
                     type="email"
                     value={reviewerEmail}
                     onChange={(e) => setReviewerEmail(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+                    className="block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm bg-background text-foreground"
                     placeholder="name@company.com"
                   />
                 </div>
@@ -167,28 +167,28 @@ export default function AssignTeamPage() {
           </div>
 
           {/* File Upload Section */}
-          <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
+          <div className="bg-card shadow-sm border border-border rounded-lg">
             <div className="px-6 py-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Bulk Upload Reviewers</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Bulk Upload Reviewers</h3>
+                <p className="text-sm text-muted-foreground">
                   To add multiple reviewers at once, upload a CSV file that includes the headers: Name and Email.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Upload File <span className="text-gray-500 font-normal">(CSV or Excel)</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Upload File <span className="text-muted-foreground font-normal">(CSV or Excel)</span>
                 </label>
                 <div className="flex items-center space-x-3">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-4 py-2 border border-input text-sm font-medium rounded-md text-foreground bg-background hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Choose File
                   </button>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     {selectedFileName || 'No file selected'}
                   </span>
                 </div>
@@ -244,9 +244,9 @@ export default function AssignTeamPage() {
           </div>
 
           {/* How It Works Instructions - moved under left column */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
-            <h4 className="text-sm font-semibold text-blue-900 mb-3">How it works:</h4>
-            <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
+            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-3">How it works:</h4>
+            <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-2 list-decimal list-inside">
               <li>Enter the reviewer's name and optional contact information</li>
               <li>Click "Add Reviewer" to create a unique URL</li>
               <li>Share the generated link with the reviewer via email or Teams</li>
@@ -257,18 +257,18 @@ export default function AssignTeamPage() {
 
         {/* Right Column - Generated Reviewers */}
         <div className="space-y-6">
-          <div className="bg-white shadow-sm border border-gray-200 rounded-lg">
+          <div className="bg-card shadow-sm border border-border rounded-lg">
             <div className="px-6 py-6">
               <div className="mb-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Evaluation Link</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Evaluation Link</h3>
                   <button
                     onClick={handleExportCSV}
                     disabled={reviewers.length === 0}
                     className={`inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md transition-colors ${
                       reviewers.length > 0
-                        ? "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        : "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                        ? "border-input text-foreground bg-background hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        : "border-border text-muted-foreground bg-muted cursor-not-allowed"
                     }`}
                   >
                     <DocumentArrowUpIcon className="h-4 w-4 mr-2" />
@@ -278,12 +278,12 @@ export default function AssignTeamPage() {
               </div>
 
               {reviewers.length === 0 ? (
-                <div className="border border-gray-200 rounded-lg p-4">
+                <div className="border border-border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center mb-2">
-                        <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                          <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -293,21 +293,21 @@ export default function AssignTeamPage() {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="text-sm font-medium text-gray-500">No reviewers yet</h4>
+                          <h4 className="text-sm font-medium text-muted-foreground">No reviewers yet</h4>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-muted/50 rounded-lg p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Evaluation Link:</p>
-                        <p className="text-xs text-gray-400 font-mono">Your link will appear here</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Evaluation Link:</p>
+                        <p className="text-xs text-muted-foreground font-mono">Your link will appear here</p>
                       </div>
                       <button
                         disabled
-                        className="ml-3 inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md text-gray-400 bg-gray-100 border-gray-200 cursor-not-allowed"
+                        className="ml-3 inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md text-muted-foreground bg-muted border-border cursor-not-allowed"
                       >
                         <ClipboardDocumentIcon className="h-3 w-3 mr-1" />
                         Copy
@@ -320,43 +320,43 @@ export default function AssignTeamPage() {
                   {reviewers.map((reviewer) => (
                     <div
                       key={reviewer.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center mb-2">
                             <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 truncate">{reviewer.name}</h4>
+                              <h4 className="text-sm font-medium text-foreground truncate">{reviewer.name}</h4>
                               {reviewer.email && (
-                                <p className="text-sm text-gray-600 truncate">{reviewer.email}</p>
+                                <p className="text-sm text-muted-foreground truncate">{reviewer.email}</p>
                               )}
                             </div>
                           </div>
                           {reviewer.notes && (
-                            <p className="text-xs text-gray-500 line-clamp-2">{reviewer.notes}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{reviewer.notes}</p>
                           )}
                         </div>
                         <button
                           onClick={() => handleRemoveReviewer(reviewer.id)}
-                          className="ml-2 p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          className="ml-2 p-1 text-muted-foreground hover:text-red-600 transition-colors"
                           title="Remove reviewer"
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-muted/50 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-700 mb-1">Evaluation Link:</p>
-                            <p className="text-xs text-gray-600 truncate font-mono">{reviewer.link}</p>
+                            <p className="text-xs font-medium text-foreground mb-1">Evaluation Link:</p>
+                            <p className="text-xs text-muted-foreground truncate font-mono">{reviewer.link}</p>
                           </div>
                           <button
                             onClick={() => handleCopyLink(reviewer.link, reviewer.id)}
                             className={`ml-3 inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md transition-colors ${
                               copiedLinkId === reviewer.id
-                                ? "text-green-700 bg-green-50 border-green-300"
-                                : "text-gray-700 bg-white border-gray-300 hover:bg-gray-50"
+                                ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-800"
+                                : "text-foreground bg-background border-input hover:bg-muted/50"
                             } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
                           >
                             <ClipboardDocumentIcon className="h-3 w-3 mr-1" />
