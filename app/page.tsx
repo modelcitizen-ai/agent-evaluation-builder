@@ -21,33 +21,36 @@ export default function HomePage() {
   return (
     <PageLayout title="" actions={<ThemeToggle />} fullWidth={true}>
       {/* Hero Section */}
-      <div className="py-20 px-4 text-center bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background">
-        <div className="max-w-6xl mx-auto">
-          <span className="inline-block text-sm font-semibold tracking-wider uppercase text-primary mb-4">
+      <div className="py-24 px-4 text-center bg-[#020617] relative overflow-hidden">
+        {/* Subtle radial glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.12)_0%,transparent_70%)] pointer-events-none"></div>
+        
+        <div className="max-w-6xl mx-auto relative z-10">
+          <span className="inline-block text-sm font-bold tracking-[0.25em] uppercase text-[#3b82f6] mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
             LLM Evaluation Builder
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white leading-[1.1] tracking-tight max-w-5xl mx-auto">
             Turn model outputs into defensible decisions with structured human review.
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed">
             Upload your outputs, invite reviewers, score with rubrics, and export results. The missing layer for professional AI evaluation cycles.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <button
               onClick={() => router.push("/data-scientist")}
-              className="inline-flex items-center px-6 py-3 text-base font-semibold rounded-lg shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
+              className="inline-flex items-center px-8 py-4 text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-all duration-200"
             >
               Start an evaluation
             </button>
             <a
               href="#contact"
-              className="inline-flex items-center px-6 py-3 text-base font-semibold rounded-lg border border-input bg-background hover:bg-muted/50 transition-all"
+              className="inline-flex items-center px-8 py-4 text-lg font-bold rounded-xl border border-slate-800 bg-transparent text-white hover:bg-slate-900 transition-all duration-200"
             >
               Request a demo
             </a>
           </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <svg className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center justify-center gap-3 text-slate-500 font-medium">
+            <svg className="w-5 h-5 text-[#10b981]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
             <span>Works with your stack: Bring outputs from any model, vendor, or pipeline—no integration required.</span>
@@ -184,32 +187,32 @@ export default function HomePage() {
       </div>
 
       {/* Anti-Features */}
-      <div className="py-20 px-4 bg-slate-900 text-white">
+      <div className="py-24 px-4 bg-[#020617] text-white border-y border-slate-900">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-4xl font-bold mb-4">What we don't do (by design)</h2>
-              <p className="text-xl text-slate-400">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">What we don't do <span className="text-slate-500">(by design)</span></h2>
+              <p className="text-xl text-slate-400 leading-relaxed">
                 We focus exclusively on the human evaluation layer. We don't compete with your model hosting or monitoring stack.
               </p>
             </div>
-            <div className="space-y-8">
+            <div className="space-y-10">
               {[
                 { title: "No Model Execution", desc: "We don't run your models, manage endpoints, or select model versions. You bring the outputs; we provide the review environment." },
                 { title: "No Automated Regression", desc: "We don't claim to automatically detect regressions. We provide the structured human data you need to verify them yourself." },
                 { title: "No Black Boxes", desc: "We don't use proprietary \"evaluator models\" to grade your data. The judgments come from your experts, on your terms." },
               ].map((item, idx) => (
-                <div key={idx} className="flex gap-4">
-                  <div className="flex-shrink-0 text-red-500">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div key={idx} className="flex gap-6">
+                  <div className="flex-shrink-0 text-rose-500 mt-1">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <line x1="15" y1="9" x2="9" y2="15" />
                       <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold mb-1">{item.title}</h4>
-                    <p className="text-slate-400 text-sm">{item.desc}</p>
+                    <h4 className="text-xl font-bold mb-2">{item.title}</h4>
+                    <p className="text-slate-400 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -363,7 +366,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <p>&copy; 2026 Human Evaluation Builder. All rights reserved.</p>
+            <p>&copy; 2026 Model Citizen LLC. All rights reserved.</p>
             <div className="flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
