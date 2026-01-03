@@ -127,10 +127,10 @@ export default function AssignTeamPage() {
                   <button
                     type="submit"
                     disabled={!reviewerName.trim() || isGenerating}
-                    className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition-colors ${
+                    className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-colors ${
                       reviewerName.trim() && !isGenerating
-                        ? "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        : "bg-gray-400 cursor-not-allowed"
+                        ? "bg-blue-500 hover:bg-blue-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
                     }`}
                   >
                     {isGenerating ? (
@@ -207,8 +207,8 @@ export default function AssignTeamPage() {
                   disabled={isUploading || uploadedReviewers.length === 0}
                   className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-colors ${
                     isUploading || uploadedReviewers.length === 0
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-white"
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-blue-500 hover:bg-blue-600 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   }`}
                 >
                   {isUploading ? (

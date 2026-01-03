@@ -19,10 +19,10 @@ export default function HomePage() {
   }
   
   return (
-    <PageLayout title="" actions={<ThemeToggle />}>
+    <PageLayout title="" actions={<ThemeToggle />} fullWidth={true}>
       {/* Hero Section */}
       <div className="py-20 px-4 text-center bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <span className="inline-block text-sm font-semibold tracking-wider uppercase text-primary mb-4">
             LLM Evaluation Builder
           </span>
