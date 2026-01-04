@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState, useLayoutEffect, useEffect } from "react"
 import { ClockIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
-import { getEvaluations } from "@/lib/client-db"
-import { getReviewers } from "@/lib/client-db"
+import { getEvaluations, getReviewers, getResultsDataset } from "@/lib/client-db"
 
 interface Evaluation {
   id: number
@@ -20,6 +19,7 @@ export default function ReviewerPage() {
   const router = useRouter()
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [completedEvaluations, setCompletedEvaluations] = useState<number[]>([])
+  const [startedEvaluations, setStartedEvaluations] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [reviewerFirstName, setReviewerFirstName] = useState<string>("My")
 
@@ -186,6 +186,27 @@ export default function ReviewerPage() {
         .filter((reviewer: any) => reviewer.id === currentReviewerId)
         .map((reviewer: any) => reviewer.evaluationId.toString())
 
+      // Check which evaluations have been started (have any responses in PostgreSQL)
+      const startedEvalIds: number[] = []
+      for (const evaluationId of assignedEvaluationIds) {
+        try {
+          const resultsDataset = await getResultsDataset(Number(evaluationId))
+          if (resultsDataset && Array.isArray(resultsDataset.results)) {
+            const reviewerHasResponses = resultsDataset.results.some(
+              (result: any) => result.reviewerId === currentReviewerId
+            )
+            if (reviewerHasResponses) {
+              startedEvalIds.push(Number(evaluationId))
+            }
+          }
+        } catch (error) {
+          console.error(`[ReviewerDashboard] Error checking results for evaluation ${evaluationId}:`, error)
+        }
+      }
+      
+      setStartedEvaluations(startedEvalIds)
+      console.log('[ReviewerDashboard] Started evaluations:', startedEvalIds)
+
       // Determine completed evaluations for this specific reviewer
       const currentReviewerCompletions = assignedEvaluationIds.filter((evaluationId: string) => {
         const reviewerRecord = evaluationReviewers.find((reviewer: any) => 
@@ -267,55 +288,7 @@ export default function ReviewerPage() {
 
   // Helper function to check if an evaluation has been started
   const hasEvaluationBeenStarted = (evaluationId: number) => {
-    try {
-      // Get current reviewer ID from URL params
-      const urlParams = new URLSearchParams(window.location.search)
-      const participantId = urlParams.get('participant')
-      
-      // Try using direct conversion to ensure we're checking the correct format
-      const evalIdStr = evaluationId.toString()
-      
-      // Check reviewer-specific localStorage key first
-      let directKey = `evaluation_${evalIdStr}_responses`
-      if (participantId) {
-        directKey = `evaluation_${evalIdStr}_reviewer_${participantId}_responses`
-      }
-      
-      const directValue = localStorage.getItem(directKey)
-      
-      if (directValue) {
-        try {
-          const responses = JSON.parse(directValue)
-          
-          // Check if there are any item keys in the responses object
-          if (typeof responses === 'object' && responses !== null) {
-            // Look through all items in the responses
-            for (const itemKey in responses) {
-              const item = responses[itemKey]
-              
-              // If any item has at least one response, evaluation has been started
-              if (typeof item === 'object' && item !== null && Object.keys(item).length > 0) {
-                return true
-              }
-            }
-          }
-          
-          // If we reached here, there are no actual responses (just empty objects)
-          return false
-          
-        } catch (parseError) {
-          console.error('[hasEvaluationBeenStarted] Parse error:', parseError)
-          // If we can't parse it but it exists, assume it's started (defensive)
-          return directValue.length > 2 // If it's at least "{}"
-        }
-      }
-      
-      // No data found for this evaluation and reviewer
-      return false
-    } catch (error) {
-      console.error('[hasEvaluationBeenStarted] Error checking evaluation progress:', error)
-      return false
-    }
+    return startedEvaluations.includes(evaluationId)
   }
 
   const availableTasks = evaluations // All evaluations are available (both active and completed)

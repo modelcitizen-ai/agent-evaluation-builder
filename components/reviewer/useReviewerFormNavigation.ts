@@ -96,126 +96,112 @@ export function useReviewerFormNavigation({
   useEffect(() => {
     if (!evaluation || !currentReviewer.id) return
 
-    // Determine which items have been submitted based on existing responses and results dataset
-    const submittedItemNumbers = new Set<number>()
+    // Determine which items have been submitted based on PostgreSQL results dataset
+    const loadSubmittedItems = async () => {
+      const submittedItemNumbers = new Set<number>()
 
-    // Check results dataset for completed submissions
-    try {
-      const resultsDataset = JSON.parse(localStorage.getItem(`results_dataset_${taskId}`) || '{"results": []}')
-      const currentReviewerId = currentReviewer.id
-
-      if (resultsDataset && resultsDataset.results) {
-        resultsDataset.results.forEach((result: any) => {
-          if (result.reviewerId === currentReviewerId) {
-            // Extract item number from result data
-            const itemId = result.itemId
-            if (typeof itemId === 'string' && itemId.startsWith('item-')) {
-              const itemNumber = parseInt(itemId.replace('item-', ''))
-              if (!isNaN(itemNumber)) {
-                submittedItemNumbers.add(itemNumber)
-              }
-            } else if (typeof itemId === 'number') {
-              submittedItemNumbers.add(itemId)
-            }
-          }
-        })
-      }
-    } catch (error) {
-      console.error('[useReviewerFormNavigation] Error loading submitted items from results dataset:', error)
-    }
-
-    // ALSO check if we have response data in localStorage for additional items
-    try {
-      const participantId = searchParams.get('participant')
-      const storageKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-        : `evaluation_${taskId}_responses`
-      
-      const savedResponsesString = localStorage.getItem(storageKey)
-      if (savedResponsesString) {
-        const savedResponses = JSON.parse(savedResponsesString)
-        Object.keys(savedResponses).forEach(itemKey => {
-          const itemNumber = parseInt(itemKey)
-          if (!isNaN(itemNumber) && Object.keys(savedResponses[itemKey]).length > 0) {
-            // Only add if this item has actual response data
-            submittedItemNumbers.add(itemNumber)
-          }
-        })
-      }
-    } catch (error) {
-      console.error('[useReviewerFormNavigation] Error loading items from response storage:', error)
-    }
-
-    if (submittedItemNumbers.size > 0) {
-      console.log(`[useReviewerFormNavigation] Found ${submittedItemNumbers.size} previously submitted items:`, Array.from(submittedItemNumbers).sort((a, b) => a - b))
-      setSubmittedItems(submittedItemNumbers)
-      
-      // Find the first unanswered question for smart resume
-      if (!hasInitialized && currentItem === 1) {
-        let nextUnansweredItem = 1
-        for (let i = 1; i <= evaluation.totalItems; i++) {
-          if (!submittedItemNumbers.has(i)) {
-            nextUnansweredItem = i
-            break
-          }
-        }
-        
-        // If all questions are answered, go to the last question
-        if (nextUnansweredItem === 1 && submittedItemNumbers.has(1)) {
-          nextUnansweredItem = evaluation.totalItems
-        }
-        
-        console.log(`[useReviewerFormNavigation] Smart resume: jumping to first unanswered question ${nextUnansweredItem}`)
-        setCurrentItem(nextUnansweredItem)
-        setFurthestItemReached(Math.max(furthestItemReached, nextUnansweredItem))
-        setHasInitialized(true)
-      }
-      
-      // Synchronize the progress dashboard with the restored submission count
+      // Check PostgreSQL results dataset for completed submissions
       try {
-        const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
-        const reviewerIndex = evaluationReviewers.findIndex(
-          (r: any) => r.id === currentReviewer.id && 
-          (r.evaluationId === taskId || r.evaluationId === Number(taskId))
-        )
-        
-        if (reviewerIndex !== -1) {
-          const currentProgress = evaluationReviewers[reviewerIndex].completed || 0
-          const actualSubmittedCount = submittedItemNumbers.size
+        const resultsDataset = await getResultsDataset(Number(taskId))
+        const currentReviewerId = currentReviewer.id
+
+        if (resultsDataset && Array.isArray(resultsDataset.results)) {
+          const reviewerResults = resultsDataset.results.filter(
+            (result: any) => result.reviewerId === currentReviewerId
+          )
           
-          // Only update if the counts don't match
-          if (currentProgress !== actualSubmittedCount) {
-            evaluationReviewers[reviewerIndex].completed = actualSubmittedCount
-            localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
-            console.log(`[useReviewerFormNavigation] Synchronized progress dashboard: ${actualSubmittedCount} submitted items for reviewer ${currentReviewer.id}`)
+          reviewerResults.forEach((result: any) => {
+            // Extract item number from result data by matching itemId with originalData
+            const evalData = evaluation.originalData || evaluation.data || []
+            const itemIndex = evalData.findIndex(
+              (row: any) => (row.item_id || row.id || `item-${evalData.indexOf(row) + 1}`) === result.itemId
+            )
             
-            // Dispatch event to notify Progress Dashboard of the corrected count
-            try {
-              if (typeof window !== 'undefined') {
-                const progressEvent = new CustomEvent('reviewerProgressUpdated', { 
-                  detail: { 
-                    evaluationId: Number(taskId), 
-                    reviewerId: currentReviewer.id,
-                    completed: actualSubmittedCount,
-                    total: evaluation.totalItems,
-                    avgTime: evaluationReviewers[reviewerIndex].avgTime || "0.0"
-                  } 
-                });
-                window.dispatchEvent(progressEvent);
-                console.log(`[useReviewerFormNavigation] Dispatched reviewerProgressUpdated event to sync progress dashboard`);
-              }
-            } catch (eventError) {
-              console.error('[useReviewerFormNavigation] Error dispatching progress sync event:', eventError);
+            if (itemIndex !== -1) {
+              const itemNumber = itemIndex + 1
+              submittedItemNumbers.add(itemNumber)
             }
-          }
+          })
+          
+          console.log(`[useReviewerFormNavigation] Loaded ${submittedItemNumbers.size} submitted items from PostgreSQL:`, Array.from(submittedItemNumbers).sort((a, b) => a - b))
         }
       } catch (error) {
-        console.error('[useReviewerFormNavigation] Error synchronizing progress dashboard:', error)
+        console.error('[useReviewerFormNavigation] Error loading submitted items from PostgreSQL:', error)
       }
-    } else if (!hasInitialized) {
-      // No submitted items found, initialize normally
-      setHasInitialized(true)
+
+      if (submittedItemNumbers.size > 0) {
+      console.log(`[useReviewerFormNavigation] Found ${submittedItemNumbers.size} previously submitted items:`, Array.from(submittedItemNumbers).sort((a, b) => a - b))
+        setSubmittedItems(submittedItemNumbers)
+        
+        // Find the first unanswered question for smart resume
+        if (!hasInitialized && currentItem === 1) {
+          let nextUnansweredItem = 1
+          for (let i = 1; i <= evaluation.totalItems; i++) {
+            if (!submittedItemNumbers.has(i)) {
+              nextUnansweredItem = i
+              break
+            }
+          }
+          
+          // If all questions are answered, go to the last question
+          if (nextUnansweredItem === 1 && submittedItemNumbers.has(1)) {
+            nextUnansweredItem = evaluation.totalItems
+          }
+          
+          console.log(`[useReviewerFormNavigation] Smart resume: jumping to first unanswered question ${nextUnansweredItem}`)
+          setCurrentItem(nextUnansweredItem)
+          setFurthestItemReached(Math.max(furthestItemReached, nextUnansweredItem))
+          setHasInitialized(true)
+        }
+        
+        // Synchronize the progress dashboard with the restored submission count
+        try {
+          const evaluationReviewers = JSON.parse(localStorage.getItem("evaluationReviewers") || "[]")
+          const reviewerIndex = evaluationReviewers.findIndex(
+            (r: any) => r.id === currentReviewer.id && 
+            (r.evaluationId === taskId || r.evaluationId === Number(taskId))
+          )
+          
+          if (reviewerIndex !== -1) {
+            const currentProgress = evaluationReviewers[reviewerIndex].completed || 0
+            const actualSubmittedCount = submittedItemNumbers.size
+            
+            // Only update if the counts don't match
+            if (currentProgress !== actualSubmittedCount) {
+              evaluationReviewers[reviewerIndex].completed = actualSubmittedCount
+              localStorage.setItem("evaluationReviewers", JSON.stringify(evaluationReviewers))
+              console.log(`[useReviewerFormNavigation] Synchronized progress dashboard: ${actualSubmittedCount} submitted items for reviewer ${currentReviewer.id}`)
+              
+              // Dispatch event to notify Progress Dashboard of the corrected count
+              try {
+                if (typeof window !== 'undefined') {
+                  const progressEvent = new CustomEvent('reviewerProgressUpdated', { 
+                    detail: { 
+                      evaluationId: Number(taskId), 
+                      reviewerId: currentReviewer.id,
+                      completed: actualSubmittedCount,
+                      total: evaluation.totalItems,
+                      avgTime: evaluationReviewers[reviewerIndex].avgTime || "0.0"
+                    } 
+                  });
+                  window.dispatchEvent(progressEvent);
+                  console.log(`[useReviewerFormNavigation] Dispatched reviewerProgressUpdated event to sync progress dashboard`);
+                }
+              } catch (eventError) {
+                console.error('[useReviewerFormNavigation] Error dispatching progress sync event:', eventError);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[useReviewerFormNavigation] Error synchronizing progress dashboard:', error)
+        }
+      } else if (!hasInitialized) {
+        // No submitted items found, initialize normally
+        setHasInitialized(true)
+      }
     }
+    
+    loadSubmittedItems()
   }, [evaluation, taskId, currentReviewer.id, searchParams, hasInitialized, currentItem, furthestItemReached, setFurthestItemReached])
 
   // Memoized storage keys to prevent infinite render loops
