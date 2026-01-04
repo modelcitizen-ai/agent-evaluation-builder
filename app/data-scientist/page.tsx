@@ -86,8 +86,8 @@ export default function DataScientistPage() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm font-medium">
+                <div className="w-8 h-8 bg-gray-700 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
                     {stats.draft}
                   </span>
                 </div>
@@ -108,8 +108,8 @@ export default function DataScientistPage() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm font-medium">
+                <div className="w-8 h-8 bg-gray-700 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
                     {stats.active}
                   </span>
                 </div>
@@ -130,8 +130,8 @@ export default function DataScientistPage() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm font-medium">
+                <div className="w-8 h-8 bg-gray-700 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
                     {stats.completed}
                   </span>
                 </div>
