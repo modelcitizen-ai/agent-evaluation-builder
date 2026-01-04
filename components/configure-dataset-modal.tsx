@@ -55,31 +55,31 @@ export default function ConfigureDatasetModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity"
           onClick={onClose}
         ></div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div className="inline-block align-bottom bg-background dark:bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
+          <div className="bg-background dark:bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2.5">Configure Dataset</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="text-lg leading-6 font-medium text-foreground mb-2.5">Configure Dataset</h3>
+                <p className="text-sm text-muted-foreground">
                   The system has preselected columns for evaluation. You may adjust selections and their UI-visible labels as needed.
                 </p>
               </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
 
             {/* Data Preview Section */}
             <div className="mb-6">
-              <div className="border border-gray-200 rounded-lg overflow-auto max-h-[32rem]">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="border border-border rounded-lg overflow-auto max-h-[32rem]">
+                <table className="min-w-full divide-y divide-border">
                   <thead>
                     {/* Dropdown Row */}
-                    <tr className="bg-gray-50">
+                    <tr className="bg-muted dark:bg-muted/50">
                       {tableHeaders.map((header) => {
                         const columnConfig = columnRoles.find((col) => col.name === header)
                         return (
@@ -98,7 +98,7 @@ export default function ConfigureDatasetModal({
                                       | "Excluded"
                                   )
                                 }
-                                className="block w-48 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="block w-48 px-3 py-1.5 text-sm font-medium rounded-md border border-border shadow-sm text-foreground bg-background dark:bg-card hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
                               >
                                 <option value="Input">Input (Prompt)</option>
                                 <option value="Model Output">Output (Completion)</option>
@@ -109,7 +109,7 @@ export default function ConfigureDatasetModal({
                               <div className="ml-1.5 relative">
                                 <div className="group">
                                   <svg
-                                    className="h-4 w-4 text-gray-400 cursor-help"
+                                    className="h-4 w-4 text-muted-foreground cursor-help"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -124,7 +124,7 @@ export default function ConfigureDatasetModal({
 
                                   {/* Tooltip */}
                                   <div
-                                    className={`absolute top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-[100] ${
+                                    className={`absolute top-full mt-2 w-64 bg-popover border border-border text-popover-foreground text-xs rounded-lg p-3 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-[100] ${
                                       header === tableHeaders[0]
                                         ? "left-0"
                                         : header === tableHeaders[tableHeaders.length - 1]
@@ -140,7 +140,7 @@ export default function ConfigureDatasetModal({
                                         return role;
                                       })()}
                                     </div>
-                                    <div className="text-gray-300 font-normal">
+                                    <div className="text-muted-foreground font-normal">
                                       {columnConfig?.userRole === "Excluded"
                                         ? `${columnConfig?.reason || "No analysis available for this column"}. This data may not be needed for the evaluation.`
                                         : columnConfig?.reason ||
@@ -166,7 +166,7 @@ export default function ConfigureDatasetModal({
                       })}
                     </tr>
                     {/* UI Label Input Row */}
-                    <tr className="bg-blue-50">
+                    <tr className="bg-blue-50 dark:bg-slate-800/30">
                       {tableHeaders.map((header) => {
                         const columnConfig = columnRoles.find((col) => col.name === header)
                         const isLabelVisible = columnConfig?.labelVisible !== false // default to true
@@ -179,14 +179,14 @@ export default function ConfigureDatasetModal({
                                 value={columnConfig?.displayName || ""}
                                 onChange={(e) => onUpdateColumnDisplayName(header, e.target.value)}
                                 disabled={!isLabelVisible}
-                                className={`block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 shadow-sm text-gray-700 bg-white placeholder-gray-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                className={`block w-48 px-3 py-1.5 text-sm font-semibold rounded-md border border-border shadow-sm text-foreground bg-background dark:bg-card placeholder-gray-500 dark:placeholder-gray-500 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring focus:border-ring ${
                                   !isLabelVisible ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
                               />
                               <button
                                 type="button"
                                 onClick={() => onUpdateColumnVisibility(header, !isLabelVisible)}
-                                className="ml-0.5 p-1 text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600"
+                                className="ml-0.5 p-1 text-muted-foreground hover:text-foreground focus:outline-none focus:text-foreground"
                                 title={isLabelVisible ? "Hide label" : "Show label"}
                               >
                                 {isLabelVisible ? (
@@ -201,19 +201,19 @@ export default function ConfigureDatasetModal({
                       })}
                     </tr>
                     {/* Column Name Row */}
-                    <tr className="bg-blue-50">
+                    <tr className="bg-blue-50 dark:bg-slate-800/30">
                       {tableHeaders.map((header) => (
-                        <th key={header} className="px-6 py-2 text-left text-sm font-semibold text-gray-900">
+                        <th key={header} className="px-6 py-2 text-left text-sm font-semibold text-foreground">
                           {header}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-background dark:bg-card divide-y divide-border">
                     {tableData.map((row, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
+                      <tr key={index} className="hover:bg-accent">
                         {Object.entries(row).map(([key, value], cellIndex) => (
-                          <td key={cellIndex} className="px-6 py-4 text-sm text-gray-900 align-top">
+                          <td key={cellIndex} className="px-6 py-4 text-sm text-foreground align-top">
                             <TableCellRenderer content={value as string | number | boolean | null | undefined} preserveFormatting={false} />
                           </td>
                         ))}
@@ -225,23 +225,23 @@ export default function ConfigureDatasetModal({
             </div>
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:items-center">
+          <div className="bg-muted dark:bg-card border-t border-border px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse sm:items-center">
             <div className="flex items-center">
               {/* Randomization Toggle */}
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mr-3">
+              <label className="flex items-center space-x-2 text-sm font-medium text-foreground mr-3">
                 <span>Present samples in random order</span>
                 <button
                   type="button"
                   onClick={() => onUpdateRandomization(!randomizationEnabled)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    randomizationEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                    randomizationEnabled ? 'bg-primary' : 'bg-muted dark:bg-gray-700'
                   }`}
                   role="switch"
                   aria-checked={randomizationEnabled}
                   aria-label="Toggle present samples in random order"
                 >
                   <span
-                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${
                       randomizationEnabled ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
@@ -249,17 +249,17 @@ export default function ConfigureDatasetModal({
               </label>
               
               {/* Vertical Separator */}
-              <div className="h-9 w-px bg-gray-300 mr-4"></div>
+              <div className="h-9 w-px bg-border mr-4"></div>
               
               <button
                 onClick={onClose}
-                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm mr-3"
+                className="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-background text-base font-medium text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring sm:text-sm mr-3"
               >
                 Cancel
               </button>
               <button
                 onClick={onClose}
-                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring sm:text-sm"
               >
                 Save
               </button>

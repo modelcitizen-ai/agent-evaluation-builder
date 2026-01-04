@@ -5,6 +5,7 @@ import ResultsModal from "./results-modal"
 import { getResultsDataset } from "@/lib/client-db"
 import { getEvaluations, updateEvaluation } from "@/lib/client-db"
 import { getReviewers, updateReviewer } from "@/lib/client-db"
+import { Button } from "@/components/ui/button"
 
 // Helper function to format time in a human-readable way
 const formatTime = (minutes: number): string => {
@@ -372,9 +373,10 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       {/* Back Button */}
       {onBack && (
         <div className="mb-6">
-          <button
+          <Button
             onClick={onBack}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            variant="outline"
+            size="sm"
           >
             <svg className="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -384,46 +386,46 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               />
             </svg>
             My Projects
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Overview Metrics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {reviewers.length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Reviewers</dt>
-                  <dd className="text-lg font-medium text-gray-900">{reviewers.length} total</dd>
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Active Reviewers</dt>
+                  <dd className="text-lg font-medium text-foreground">{reviewers.length} total</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {reviewers.filter((r: Reviewer) => getReviewerStatus(r) !== "completed").length}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Incomplete Reviewers</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Incomplete Reviewers</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {reviewers.filter((r: Reviewer) => getReviewerStatus(r) !== "completed").length} of {reviewers.length}
                   </dd>
                 </dl>
@@ -432,18 +434,18 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">{completionRate}%</span>
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">{completionRate}%</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Completion Rate</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Completion Rate</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {completionRate}%
                   </dd>
                 </dl>
@@ -452,20 +454,20 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {avgTimeToCompleteEvaluation > 0 ? avgTimeToCompleteEvaluation.toFixed(0) : "---"}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Completion Time</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Avg Completion Time</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {avgTimeToCompleteEvaluation > 0 ? formatTime(avgTimeToCompleteEvaluation) : "---"}
                   </dd>
                 </dl>
@@ -476,11 +478,11 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
       </div>
 
       {/* Reviewers Table */}
-      <div className="bg-white shadow overflow-visible sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+      <div className="bg-card shadow overflow-visible sm:rounded-md border border-border">
+        <div className="px-4 py-5 sm:px-6 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Reviewer Progress</h3>
+              <h3 className="text-lg leading-6 font-medium text-foreground">Reviewer Progress</h3>
               {isUpdating && (
                 <div className="flex items-center space-x-1">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -492,7 +494,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               <select
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-1.5 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <option value="all">All Reviewers</option>
                 <option value="active">Active</option>
@@ -519,7 +521,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                   // Provide user feedback
                   console.log(`[ProgressDashboard] ✅ Refresh complete - progress data updated`);
                 }}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 🔄 Refresh Status
               </button>
@@ -527,7 +529,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
               {/* View Results Button */}
               <button
                 onClick={() => setIsResultsModalOpen(true)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 View Results
               </button>
@@ -537,39 +539,39 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
 
         <div className="overflow-visible">
           {reviewers.length === 0 ? (
-            <div className="py-4 px-6 text-center text-gray-500">
+            <div className="py-4 px-6 text-center text-muted-foreground">
               No reviewers assigned to this evaluation. Add reviewers to track progress.
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/20">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/2">
                     Reviewer
                   </th>
-                  <th className="pl-4 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  <th className="pl-4 pr-8 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6">
                     Progress
                   </th>
-                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6 whitespace-nowrap">Avg Response Time</th>
-                  <th className="px-8 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                  <th className="pl-12 pr-8 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6 whitespace-nowrap">Avg Response Time</th>
+                  <th className="px-8 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-1/6">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {filteredReviewers.map((reviewer: Reviewer) => {
                   const actualStatus = getReviewerStatus(reviewer)
                   return (
-                    <tr key={reviewer.id} className="hover:bg-gray-50">
+                    <tr key={reviewer.id}>
                       <td className="px-6 py-4 whitespace-nowrap w-1/2">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{reviewer.name}</div>
-                          <div className="text-sm text-gray-500">{reviewer.email}</div>
+                          <div className="text-sm font-medium text-foreground">{reviewer.name}</div>
+                          <div className="text-sm text-muted-foreground">{reviewer.email}</div>
                         </div>
                       </td>
                       <td className="pl-4 pr-8 py-4 whitespace-nowrap text-center w-1/6">
                         <div className="flex items-center justify-center space-x-3">
-                          <span className="text-sm text-gray-900 min-w-[2rem]">
+                          <span className="text-sm text-foreground min-w-[2rem]">
                             {getActualCompletedCount(reviewer.id)}/{reviewer.total}
                           </span>
                           <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -582,7 +584,7 @@ export default function ProgressDashboard({ onBack, evaluationId }: ProgressDash
                           </div>
                         </div>
                       </td>
-                      <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-gray-900 w-1/6">
+                      <td className="pl-12 pr-8 py-4 whitespace-nowrap text-center text-sm text-foreground w-1/6">
                         {(() => {
                           // First try to get actual average response time from results dataset
                           const actualAvgTime = getActualAverageResponseTime(reviewer.id)

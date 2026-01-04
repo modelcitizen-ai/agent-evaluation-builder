@@ -82,20 +82,20 @@ export default function DataScientistPage() {
     <PageLayout title="My Projects" actions={actions}>
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.draft}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Draft</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Draft</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.draft} total
                   </dd>
                 </dl>
@@ -104,20 +104,20 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.active}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Active</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.active} total
                   </dd>
                 </dl>
@@ -126,20 +126,20 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {stats.completed}
                   </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground truncate">Completed</dt>
+                  <dd className="text-lg font-medium text-foreground">
                     {stats.completed} total
                   </dd>
                 </dl>
@@ -150,14 +150,14 @@ export default function DataScientistPage() {
       </div>
 
       {/* Evaluations Table */}
-      <div className="bg-white shadow overflow-visible sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Projects</h3>
+      <div className="bg-card shadow overflow-visible sm:rounded-md border border-border">
+        <div className="px-4 py-5 sm:px-6 border-b border-border">
+          <h3 className="text-lg leading-6 font-medium text-foreground">Recent Projects</h3>
         </div>
-        <div className="bg-white shadow overflow-visible sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
+        <div className="bg-card shadow overflow-visible sm:rounded-md">
+          <ul className="divide-y divide-border">
             {evaluations.length === 0 ? (
-              <li className="py-4 px-6 text-center text-gray-500">No evaluations found. Create your first evaluation.</li>
+              <li className="py-4 px-6 text-center text-muted-foreground">No evaluations found. Create your first evaluation.</li>
             ) : (
               evaluations.map((evaluation) => {
                 const uniqueSamples = calculateUniqueSamples(evaluation)
@@ -165,17 +165,17 @@ export default function DataScientistPage() {
                 
                 return (
                   <li key={evaluation.id} className={isDropdownOpen(evaluation.id) ? "relative z-50" : ""}>
-                    <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <div className="px-4 py-4 sm:px-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1 min-w-0">
                           <div>
                             <button
                               onClick={() => handleEditEvaluation(evaluation.id)}
-                              className="text-sm font-medium text-gray-900 truncate hover:text-indigo-600 transition-colors duration-200 ease-in-out cursor-pointer text-left"
+                              className="text-sm font-medium text-foreground truncate hover:text-blue-600 hover:bg-muted/50 transition-all duration-200 ease-in-out cursor-pointer text-left px-2 py-1 rounded-md -mx-2 -my-1"
                             >
                               {evaluation.name}
                             </button>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground mt-1">
                               {evaluationDescription}
                             </p>
                           </div>
@@ -189,19 +189,19 @@ export default function DataScientistPage() {
                           <div className="relative z-10">
                             <button
                               onClick={() => toggleDropdown(evaluation.id)}
-                              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 relative z-10"
+                              className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 relative z-10"
                             >
                               <EllipsisVerticalIcon className="h-5 w-5" />
                             </button>
                             {isDropdownOpen(evaluation.id) && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[99999] border border-gray-200 dropdown-menu">
+                              <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg z-[99999] border border-border dropdown-menu">
                                 <div className="py-1">
                                   <button
                                     onClick={() => {
                                       handleEditEvaluation(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Edit
                                   </button>
@@ -210,7 +210,7 @@ export default function DataScientistPage() {
                                       router.push(`/reviewer/task/${evaluation.id}?from=data-scientist`)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Preview
                                   </button>
@@ -219,7 +219,7 @@ export default function DataScientistPage() {
                                       handleViewProgress(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     View Progress
                                   </button>
@@ -228,7 +228,7 @@ export default function DataScientistPage() {
                                       handleAssignReviewers(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50"
                                   >
                                     Add Reviewers
                                   </button>
@@ -237,7 +237,7 @@ export default function DataScientistPage() {
                                       handleDeleteEvaluation(evaluation.id)
                                       closeDropdown()
                                     }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-muted/50"
                                   >
                                     Delete
                                   </button>

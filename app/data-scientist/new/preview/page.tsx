@@ -17,6 +17,7 @@ import PageLayout from "@/components/layout/page-layout"
 import EditMetricModal from "@/components/edit-metric-modal"
 import ConfigureDatasetModal from "@/components/configure-dataset-modal"
 import ContentRenderer from "@/components/content-renderer"
+import { Button } from "@/components/ui/button"
 import { usePreviewDataInitialization } from "@/components/data-scientist/preview/usePreviewDataInitialization"
 import { usePreviewFormNavigation } from "@/components/data-scientist/preview/usePreviewFormNavigation"
 import { usePreviewColumnManagement } from "@/components/data-scientist/preview/usePreviewColumnManagement"
@@ -320,9 +321,9 @@ function PreviewPageContent() {
               setEvaluationName(e.target.value)
               setEvaluationNameEdited(true)
             }}
-            className="bg-transparent border-none text-2xl font-semibold text-gray-900 focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-2xl font-semibold text-foreground focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
           />
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 flex-shrink-0">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground flex-shrink-0">
             Draft
           </span>
         </div>
@@ -330,51 +331,50 @@ function PreviewPageContent() {
       actions={
         <div className="flex space-x-3">
           {/* Configure Dataset Button */}
-          <button
-            onClick={() => setShowDatasetConfig(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <CogIcon className="h-4 w-4 mr-2" />
-            Configure Dataset
-          </button>
-
-          {/* Instructions Toggle Button */}
-          <button
-            onClick={() => setShowInstructions(!showInstructions)}
-            className={`inline-flex items-center px-4 py-2 border ${
-              showInstructions ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700"
-            } shadow-sm text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none transition-colors`}
-            aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
-            title="Toggle instructions"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Instructions
-          </button>
-
-          {/* Cancel Button */}
-          <button
+                  <Button
+                    onClick={() => setShowDatasetConfig(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <CogIcon className="h-4 w-4 mr-2" />
+                    Configure Dataset
+                  </Button>          {/* Instructions Toggle Button */}
+                  <Button
+                    onClick={() => setShowInstructions(!showInstructions)}
+                    variant="outline"
+                    size="sm"
+                    className={`flex items-center gap-2 ${
+                      showInstructions 
+                        ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
+                        : "hover:bg-muted/50"
+                    }`}
+                    aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
+                    title="Toggle instructions"
+                  >
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Instructions
+                  </Button>          {/* Cancel Button */}
+          <Button
             onClick={() => router.push("/data-scientist")}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="outline"
+            size="sm"
           >
             Cancel
-          </button>
+          </Button>
 
           {/* Save Button */}
-          <button
+          <Button
             onClick={handleSaveEvaluation}
             disabled={isSaving}
-            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
-              isSaving
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            }`}
+            variant="default"
+            size="sm"
           >
             {isSaving ? (
               <>
@@ -403,18 +403,18 @@ function PreviewPageContent() {
             ) : (
               "Save"
             )}
-          </button>
+          </Button>
         </div>
       }
     >
       {/* Error Banner */}
       {analysisError && (
-        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg p-4">
           <div className="flex items-center">
-            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-3" />
+            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-3" />
             <div>
-              <h3 className="text-sm font-medium text-yellow-900">Azure OpenAI Analysis Issue</h3>
-              <p className="text-sm text-yellow-700">{analysisError} Using fallback analysis instead.</p>
+              <h3 className="text-sm font-medium text-yellow-900 dark:text-yellow-100">Azure OpenAI Analysis Issue</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-200">{analysisError} Using fallback analysis instead.</p>
             </div>
           </div>
         </div>
@@ -422,7 +422,7 @@ function PreviewPageContent() {
 
       {/* Only show main content after analysis is ready; render a full-viewport loader while analyzing */}
       {columnRoles.length === 0 || criteria.length === 0 ? (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center min-h-screen">
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center min-h-screen">
           {/* Animated Logo (copied from upload page for consistency) */}
           <div className="mb-8">
             <div className="relative">
@@ -442,13 +442,8 @@ function PreviewPageContent() {
             </div>
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Interpreting your Data...</h3>
-            <p className="text-sm text-gray-600">This may take a few moments</p>
-            <div className="flex justify-center mt-4 space-x-1">
-              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce animate-delay-100"></div>
-              <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce animate-delay-200"></div>
-            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">Interpreting your Data...</h3>
+            <p className="text-sm text-muted-foreground">This may take a few moments</p>
           </div>
         </div>
       ) : (
@@ -460,7 +455,7 @@ function PreviewPageContent() {
           {/* Left Column - Instructions and Review */}
           <div className="space-y-6 pr-4 pb-6" style={{ width: `${leftColumnWidth}%` }}>
             {/* Content for Evaluation */}
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6">
                 {(() => {
                   const content = getInputColumnContent()
@@ -492,7 +487,7 @@ function PreviewPageContent() {
 
             {/* Metadata Card */}
             {columnRoles.filter((role) => role.userRole === "Metadata").length > 0 && (
-              <div className="bg-white shadow sm:rounded-lg">
+              <div className="bg-card shadow sm:rounded-lg border border-border">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="space-y-2 text-xs">
                     {columnRoles
@@ -509,14 +504,14 @@ function PreviewPageContent() {
                           <div key={metadataCol.name}>
                             {columnTitle && (
                               <>
-                                <span className="font-medium text-gray-600">{columnTitle}: </span>
-                                <span className="text-gray-900">
+                                <span className="font-medium text-muted-foreground">{columnTitle}: </span>
+                                <span className="text-foreground">
                                   {renderInlineContent(String(currentValue))}
                                 </span>
                               </>
                             )}
                             {!columnTitle && (
-                              <span className="text-gray-900">
+                              <span className="text-foreground">
                                 {renderInlineContent(String(currentValue))}
                               </span>
                             )}
@@ -546,25 +541,25 @@ function PreviewPageContent() {
           <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
             {/* Instructions Panel - conditionally rendered */}
             {showInstructions && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg leading-6 font-medium text-blue-900">Instructions</h3>
+                    <h3 className="text-lg leading-6 font-medium text-primary dark:text-primary">Instructions</h3>
                   </div>
                   <textarea
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
-                    className="w-full text-sm text-blue-800 bg-transparent border border-blue-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full text-sm bg-card text-card-foreground border border-border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                     rows={5}
                   />
                 </div>
               </div>
             )}
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6 relative">
                 {/* Heading and navigation on the same line */}
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-900">Evaluation</h3>
+                  <h3 className="text-lg font-medium text-foreground">Evaluation</h3>
                   
                   {/* Navigation unit */}
                   <div className="flex items-center space-x-3 flex-shrink-0 -mr-3">
@@ -612,7 +607,7 @@ function PreviewPageContent() {
                         const progressWidth = getProgressWidth()
 
                         return (
-                          <div className="flex-1 min-w-16 bg-gray-200 rounded-full h-2">
+                          <div className="flex-1 min-w-16 bg-muted dark:bg-gray-700 rounded-full h-2">
                             <div
                               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                               style={{
@@ -649,12 +644,12 @@ function PreviewPageContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {criteria.map((criterion) => (
-                    <div key={criterion.id} className="border border-gray-200 rounded-lg p-4 group">
+                    <div key={criterion.id} className="border border-border rounded-lg p-4 group">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
-                          <label className="block text-sm font-semibold text-gray-700">
+                          <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {criterion.name}
-                            {criterion.required && <span className="text-red-500 ml-1">*</span>}
+                            {criterion.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                           </label>
                         </div>
                         <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -662,10 +657,10 @@ function PreviewPageContent() {
                             type="button"
                             onClick={() => moveMetric(criterion.id, "up")}
                             disabled={criteria.findIndex((m) => m.id === criterion.id) === 0}
-                            className={`p-1 rounded-md hover:bg-gray-100 ${
+                            className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 ${
                               criteria.findIndex((m) => m.id === criterion.id) === 0
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-600 hover:text-gray-800"
+                                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                             }`}
                             aria-label="Move question up"
                           >
@@ -675,10 +670,10 @@ function PreviewPageContent() {
                             type="button"
                             onClick={() => moveMetric(criterion.id, "down")}
                             disabled={criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1}
-                            className={`p-1 rounded-md hover:bg-gray-100 ${
+                            className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 ${
                               criteria.findIndex((m) => m.id === criterion.id) === criteria.length - 1
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-600 hover:text-gray-800"
+                                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                             }`}
                             aria-label="Move question down"
                           >
@@ -687,7 +682,7 @@ function PreviewPageContent() {
                           <button
                             type="button"
                             onClick={() => handleEditMetric(criterion.id)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                             aria-label="Edit question"
                           >
                             <PencilIcon className="h-4 w-4" />
@@ -696,7 +691,7 @@ function PreviewPageContent() {
                             <button
                               type="button"
                               onClick={() => handleDeleteMetric(criterion.id)}
-                              className="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-gray-100 border border-gray-200"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                               aria-label="Delete question"
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -721,8 +716,8 @@ function PreviewPageContent() {
                               onClick={() => handleInputChange(criterion.id, option)}
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                               }`}
                             >
                               {option}
@@ -734,8 +729,8 @@ function PreviewPageContent() {
                       {criterion.type === "likert-scale" && (
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">{criterion.likertLabels?.low || "Low"}</span>
-                            <span className="text-xs text-gray-500">{criterion.likertLabels?.high || "High"}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-600">{criterion.likertLabels?.low || "Low"}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-600">{criterion.likertLabels?.high || "High"}</span>
                           </div>
                           <div className="grid grid-cols-5 gap-2">
                             {[1, 2, 3, 4, 5].map((number) => (
@@ -745,8 +740,8 @@ function PreviewPageContent() {
                                 onClick={() => handleInputChange(criterion.id, number.toString())}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                   formData[`criterion-${criterion.id}`] === number.toString()
-                                    ? "bg-blue-500 text-white border-blue-500"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
                                 }`}
                               >
                                 {number}
@@ -757,17 +752,17 @@ function PreviewPageContent() {
                       )}
 
                       {criterion.type === "custom-list" && (
-                        <div className="flex flex-wrap gap-2">
-                          {criterion.options.map((option, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => handleInputChange(criterion.id, option)}
-                              className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                                formData[`criterion-${criterion.id}`] === option
-                                  ? "bg-blue-500 text-white border-blue-500"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                              }`}
+                          <div className="flex flex-wrap gap-2">
+                            {criterion.options.map((option, optionIndex) => (
+                              <button
+                                key={optionIndex}
+                                type="button"
+                                onClick={() => handleInputChange(criterion.id, option)}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                                  formData[`criterion-${criterion.id}`] === option
+                                    ? "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
+                                }`}
                             >
                               {option}
                             </button>
@@ -780,7 +775,7 @@ function PreviewPageContent() {
                           rows={3}
                           value={formData[`criterion-${criterion.id}`] || ""}
                           onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                          className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-1.5"
+                          className="block w-full border border-border rounded-md shadow-sm focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px] sm:text-sm px-3 py-1.5 bg-card text-card-foreground transition-colors"
                           placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         />
                       )}
@@ -791,10 +786,10 @@ function PreviewPageContent() {
                   <button
                     type="button"
                     onClick={handleAddMetric}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors"
+                    className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
-                    <PlusIcon className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-gray-600">Add a Question</span>
+                    <PlusIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Add a Question</span>
                   </button>
 
                   <div className="pt-4">
@@ -806,10 +801,10 @@ function PreviewPageContent() {
                         <button
                           type="submit"
                           disabled={!canSubmit || isSubmitting}
-                          className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                          className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                             canSubmit && !isSubmitting
-                              ? "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              : "bg-gray-400 cursor-not-allowed"
+                              ? "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                              : "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed"
                           }`}
                         >
                           {isSubmitting ? (

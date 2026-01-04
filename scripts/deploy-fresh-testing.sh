@@ -334,13 +334,13 @@ create_production_package_json() {
     "start": "node server.js"
   },
   "dependencies": {
-    "next": "15.2.4",
-    "react": "^19",
-    "react-dom": "^19",
+    "next": "15.5.9",
+    "react": "19.1.2",
+    "react-dom": "19.1.2",
     "dotenv": "^16.5.0",
-    "@ai-sdk/azure": "^1.0.0",
-    "ai": "^4.0.0",
-    "zod": "^3.22.0"
+    "@ai-sdk/azure": "^1.3.23",
+    "ai": "latest",
+    "zod": "latest"
   },
   "engines": {
     "node": ">=18.0.0",

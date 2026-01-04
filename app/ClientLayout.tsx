@@ -8,6 +8,7 @@ import "./globals.css"
 import Header from "@/components/layout/header"
 import { DatabaseProvider } from "@/components/database-provider"
 import { GlobalLoadingProvider } from "@/components/GlobalLoadingOverlay"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,18 +24,25 @@ export default function ClientLayout({
   const isHomePage = pathname === "/"
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <GlobalLoadingProvider>
-          {/* Wrap the application with DatabaseProvider */}
-          <DatabaseProvider>
-            {/* Persistent Header - only show if not on home page */}
-            {!isHomePage && <Header />}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <GlobalLoadingProvider>
+            {/* Wrap the application with DatabaseProvider */}
+            <DatabaseProvider>
+              {/* Persistent Header - only show if not on home page */}
+              {!isHomePage && <Header />}
 
-            {/* Main Content */}
-            <main className={isHomePage ? "" : "pt-16"}>{children}</main>
-          </DatabaseProvider>
-        </GlobalLoadingProvider>
+              {/* Main Content */}
+              <main className={isHomePage ? "" : "pt-16"}>{children}</main>
+            </DatabaseProvider>
+          </GlobalLoadingProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -7,6 +7,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import PageLayout from "@/components/layout/page-layout"
 import ContentRenderer from "@/components/content-renderer"
+import { Button } from "@/components/ui/button"
 import { useReviewerDataInitialization } from "@/components/reviewer/useReviewerDataInitialization"
 import { useReviewerFormNavigation } from "@/components/reviewer/useReviewerFormNavigation"
 import { useReviewerUIHelpers } from "@/components/reviewer/useReviewerUIHelpers"
@@ -46,7 +47,7 @@ export default function ReviewTaskPage() {
       
       return (
         <span 
-          className="inline [&_a]:text-blue-600 [&_a]:hover:text-blue-800"
+          className="inline [&_a]:text-primary [&_a]:hover:text-primary/80"
           dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       )
@@ -78,7 +79,7 @@ export default function ReviewTaskPage() {
             href={linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 no-underline"
+            className="text-primary hover:text-primary/80 no-underline"
           >
             {linkText}
           </a>
@@ -343,7 +344,7 @@ export default function ReviewTaskPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Evaluation Not Found</h3>
             <p className="text-gray-600 mb-4">The evaluation you're looking for doesn't exist or has been removed.</p>          <button
             onClick={() => router.push("/reviewer")}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90"
           >
             Back to Review Tasks
           </button>
@@ -373,11 +374,15 @@ export default function ReviewTaskPage() {
   const actions = (
     <div className="flex space-x-3">
       {/* Instructions Toggle Button */}
-      <button
+      <Button
         onClick={() => setShowInstructions(!showInstructions)}
-        className={`inline-flex items-center px-4 py-2 border ${
-          showInstructions ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700"
-        } shadow-sm text-sm font-medium rounded-md hover:bg-gray-50 focus:outline-none transition-colors`}
+        variant="outline"
+        size="sm"
+        className={`flex items-center gap-2 ${
+          showInstructions 
+            ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
+            : "hover:bg-muted/50"
+        }`}
         aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
         title="Toggle instructions"
       >
@@ -390,10 +395,10 @@ export default function ReviewTaskPage() {
           />
         </svg>
         Instructions
-      </button>
+      </Button>
 
       {/* Exit Button */}
-      <button
+      <Button
         onClick={() => {
           // Save current item position before exiting
           const progressKey = getProgressKey()
@@ -431,10 +436,11 @@ export default function ReviewTaskPage() {
             router.push("/reviewer")
           }
         }}
-        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        variant="outline"
+        size="sm"
       >
         Exit
-      </button>
+      </Button>
     </div>
   )
 
@@ -448,7 +454,7 @@ export default function ReviewTaskPage() {
         {/* Left Column - Instructions and Review */}
         <div className="space-y-6 pr-4 pb-6" style={{ width: `${leftColumnWidth}%` }}>
           {/* Content for Review */}
-          <div className="bg-white shadow sm:rounded-lg">
+          <div className="bg-card shadow sm:rounded-lg border border-border">
             <div className="px-4 py-5 sm:p-6">
               {Array.isArray(currentContent) && currentContent.length > 0 ? (
                 <div 
@@ -479,7 +485,7 @@ export default function ReviewTaskPage() {
             console.log('[MetadataCard] currentMetadata.length:', currentMetadata.length)
             return currentMetadata.length > 0
           })() && (
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-card shadow sm:rounded-lg border border-border">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-2 text-xs">
                   {currentMetadata.map((item, index) => {
@@ -488,13 +494,13 @@ export default function ReviewTaskPage() {
                       <div key={index}>
                         {item.name ? (
                           <>
-                            <span className="font-medium text-gray-600">{item.name}: </span>
-                            <span className="text-gray-900">
+                            <span className="font-medium text-muted-foreground">{item.name}: </span>
+                            <span className="text-foreground">
                               {renderInlineContent(item.value)}
                             </span>
                           </>
                         ) : (
-                          <span className="text-gray-900">
+                          <span className="text-foreground">
                             {renderInlineContent(item.value)}
                           </span>
                         )}
@@ -524,21 +530,21 @@ export default function ReviewTaskPage() {
         <div className="pl-4" style={{ width: `${100 - leftColumnWidth}%` }}>
           {/* Instructions Panel - conditionally rendered */}
           {showInstructions && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg leading-6 font-medium text-blue-900">Instructions</h3>
+                  <h3 className="text-lg leading-6 font-medium text-primary dark:text-primary">Instructions</h3>
                 </div>
-                <p className="text-sm text-blue-800">{evaluation.instructions}</p>
+                <p className="text-sm text-primary/80 dark:text-primary/70">{evaluation.instructions}</p>
               </div>
             </div>
           )}
 
-          <div className="bg-white shadow sm:rounded-lg">
+          <div className="bg-card shadow sm:rounded-lg border border-border">
             <div className="px-4 py-5 sm:p-6 relative">
               {/* Heading and navigation on the same line */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Evaluation</h3>
+                <h3 className="text-lg font-medium text-foreground">Evaluation</h3>
                 
                 {/* Navigation unit */}
                 <div className="flex items-center space-x-3 flex-shrink-0 -mr-3">
@@ -559,8 +565,8 @@ export default function ReviewTaskPage() {
                     disabled={currentItem <= 1}
                     className={`p-1 rounded-md ${
                       currentItem <= 1
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -569,12 +575,12 @@ export default function ReviewTaskPage() {
                   </button>
 
                   <div className="flex items-center space-x-3 min-w-0">
-                    <div className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">
+                    <div className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap flex-shrink-0">
                       {currentItem} of {evaluation.totalItems}
                     </div>
-                    <div className="flex-1 min-w-16 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 min-w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-blue-500 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
                         style={{
                           width: `${progressWidth}%`,
                         }}
@@ -597,8 +603,8 @@ export default function ReviewTaskPage() {
                     disabled={currentItem >= evaluation.totalItems || currentItem >= furthestItemReached}
                     className={`p-1 rounded-md ${
                       currentItem >= evaluation.totalItems || currentItem >= furthestItemReached
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                        ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,9 +618,9 @@ export default function ReviewTaskPage() {
                 {evaluation.criteria.map((criterion) => (
                   <div key={criterion.id} className="space-y-3">
                     <div className="flex items-center">
-                      <label className="block text-sm font-semibold text-gray-700">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
                         {criterion.name}
-                        {criterion.required && <span className="text-red-500 ml-1">*</span>}
+                        {criterion.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                       </label>
                     </div>
 
@@ -628,11 +634,11 @@ export default function ReviewTaskPage() {
                             className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                               formData[`criterion-${criterion.id}`] === option
                                 ? isReviewComplete 
-                                  ? "bg-gray-500 text-white border-gray-500"
-                                  : "bg-blue-500 text-white border-blue-500"
+                                  ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                                  : "bg-primary text-primary-foreground border-primary"
                                 : isReviewComplete
-                                  ? "bg-gray-100 text-gray-500 border-gray-300"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                  ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -645,8 +651,8 @@ export default function ReviewTaskPage() {
                     {criterion.type === "likert-scale" && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-gray-500">{criterion.likertLabels?.low || "Low"}</span>
-                          <span className="text-xs text-gray-500">{criterion.likertLabels?.high || "High"}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{criterion.likertLabels?.low || "Low"}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{criterion.likertLabels?.high || "High"}</span>
                         </div>
                         <div className="grid grid-cols-5 gap-2">
                           {[1, 2, 3, 4, 5].map((number) => (
@@ -657,11 +663,11 @@ export default function ReviewTaskPage() {
                               className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                                 formData[`criterion-${criterion.id}`] === number.toString()
                                   ? isReviewComplete 
-                                    ? "bg-gray-500 text-white border-gray-500"
-                                    : "bg-blue-500 text-white border-blue-500"
+                                    ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                                    : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                   : isReviewComplete
-                                    ? "bg-gray-100 text-gray-500 border-gray-300"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                    ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
+                                    : "bg-card text-card-foreground border-border hover:bg-muted/50"
                               }`}
                               disabled={isReviewComplete}
                             >
@@ -682,11 +688,11 @@ export default function ReviewTaskPage() {
                             className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                               formData[`criterion-${criterion.id}`] === option
                                 ? isReviewComplete 
-                                  ? "bg-gray-500 text-white border-gray-500"
-                                  : "bg-blue-500 text-white border-blue-500"
+                                  ? "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                                  : "bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600"
                                 : isReviewComplete
-                                  ? "bg-gray-100 text-gray-500 border-gray-300"
-                                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                  ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
+                                  : "bg-card text-card-foreground border-border hover:bg-muted/50"
                             }`}
                             disabled={isReviewComplete}
                           >
@@ -701,10 +707,10 @@ export default function ReviewTaskPage() {
                         rows={3}
                         value={formData[`criterion-${criterion.id}`] || ""}
                         onChange={(e) => handleInputChange(criterion.id, e.target.value)}
-                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 ${
+                        className={`block w-full border rounded-md shadow-sm sm:text-sm px-3 py-1.5 transition-colors ${
                           isReviewComplete
-                            ? "border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            : "bg-card text-card-foreground border-border focus:ring-0 focus:outline-none focus:border-blue-500 focus:border-[1px]"
                         }`}
                         placeholder={`Enter ${criterion.name.toLowerCase()}...`}
                         disabled={isReviewComplete}
@@ -718,10 +724,10 @@ export default function ReviewTaskPage() {
                 <button
                   type="submit"
                   disabled={!canSubmit || isSubmitting}
-                  className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                  className={`w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm ${
                     canSubmit && !isSubmitting
-                      ? "bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      : "bg-gray-400 cursor-not-allowed"
+                      ? "bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                      : "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed"
                   }`}
                   onClick={handleSubmit}
                 >
@@ -762,11 +768,11 @@ export default function ReviewTaskPage() {
                 {/* Completion message */}
                 {isReviewComplete && (
                   <div className="mt-4 text-center space-y-3">
-                    <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-md">
-                      <svg className="h-5 w-5 text-green-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="inline-flex items-center px-4 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                      <svg className="h-5 w-5 text-green-500 dark:text-green-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-sm font-medium text-green-800">
+                      <span className="text-sm font-medium text-green-800 dark:text-green-200">
                         Thank you! Your evaluation has been completed successfully.
                       </span>
                     </div>

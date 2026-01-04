@@ -62,8 +62,8 @@ export default function TestUtilityPage() {
 
   return (
     <PageLayout title="Test Utility">
-      <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Create Test Response</h2>
+      <div className="bg-card shadow sm:rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-medium text-foreground mb-4">Create Test Response</h2>
         
         <div className="space-y-4">
           <div>
@@ -126,8 +126,8 @@ export default function TestUtilityPage() {
         </div>
       </div>
       
-      <div className="bg-white shadow sm:rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Instructions</h2>
+      <div className="bg-card shadow sm:rounded-lg p-6">
+        <h2 className="text-lg font-medium text-foreground mb-4">Instructions</h2>
         <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-600">
           <li>Enter the evaluation ID for which you want to create a test response (default is 9876543210)</li>
           <li>Click "Create Test Response" to add a fake response to localStorage</li>
