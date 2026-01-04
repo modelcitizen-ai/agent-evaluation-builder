@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import PageLayout from "@/components/layout/page-layout"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export default function HomePage() {
   const router = useRouter()
@@ -19,7 +17,7 @@ export default function HomePage() {
   }
   
   return (
-    <PageLayout title="" actions={<ThemeToggle />} fullWidth={true}>
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="py-24 px-4 text-center bg-[#020617] relative overflow-hidden">
         {/* Subtle radial glow */}
@@ -376,6 +374,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </PageLayout>
+    </div>
   )
 }

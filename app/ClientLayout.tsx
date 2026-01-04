@@ -20,9 +20,6 @@ export default function ClientLayout({
   const router = useRouter()
   const pathname = usePathname()
 
-  // Don't show header/footer on home page
-  const isHomePage = pathname === "/"
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
@@ -35,11 +32,11 @@ export default function ClientLayout({
           <GlobalLoadingProvider>
             {/* Wrap the application with DatabaseProvider */}
             <DatabaseProvider>
-              {/* Persistent Header - only show if not on home page */}
-              {!isHomePage && <Header />}
+              {/* Persistent Header */}
+              <Header />
 
               {/* Main Content */}
-              <main className={isHomePage ? "" : "pt-16"}>{children}</main>
+              <main className="pt-16">{children}</main>
             </DatabaseProvider>
           </GlobalLoadingProvider>
         </ThemeProvider>

@@ -11,16 +11,13 @@ export default function Header() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Don't show header on home page
-  if (pathname === "/") return null
-
   // Determine if user is in data scientist or reviewer section
   const isDataScientist = pathname?.includes("/data-scientist")
   const isReviewer = pathname?.includes("/reviewer")
   const userRole = isDataScientist ? "Data Scientist" : isReviewer ? "Reviewer" : ""
 
   return (
-    <header className="bg-white dark:bg-black/30 border-b border-border dark:border-gray-800 fixed top-0 left-0 right-0 z-40">
+    <header className="bg-white/90 dark:bg-black/50 backdrop-blur-sm border-b border-border dark:border-gray-800 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and App Name */}
