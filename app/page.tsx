@@ -24,31 +24,31 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.12)_0%,transparent_70%)] pointer-events-none"></div>
         
         <div className="max-w-6xl mx-auto relative z-10">
-          <span className="inline-block text-sm font-bold tracking-[0.25em] uppercase text-[#3b82f6] mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+          <span className="inline-block text-xs font-bold tracking-[0.25em] uppercase text-[#3b82f6] mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
             LLM Evaluation Builder
           </span>
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white leading-[1.1] tracking-tight max-w-5xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-[1.1] tracking-tight max-w-5xl mx-auto">
             Turn model outputs into defensible decisions with structured human review.
           </h1>
-          <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
             Upload your outputs, invite reviewers, score with rubrics, and export results. The missing layer for professional AI evaluation cycles.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
             <button
               onClick={() => router.push("/data-scientist")}
-              className="inline-flex items-center px-8 py-4 text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-all duration-200"
+              className="inline-flex items-center px-6 py-3 text-base font-bold rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-all duration-200"
             >
               Start an evaluation
             </button>
             <a
               href="#contact"
-              className="inline-flex items-center px-8 py-4 text-lg font-bold rounded-xl border border-slate-800 bg-transparent text-white hover:bg-slate-900 transition-all duration-200"
+              className="inline-flex items-center px-6 py-3 text-base font-bold rounded-xl border border-slate-800 bg-transparent text-white hover:bg-slate-900 transition-all duration-200"
             >
               Request a demo
             </a>
           </div>
-          <div className="flex items-center justify-center gap-3 text-slate-500 font-medium">
-            <svg className="w-5 h-5 text-[#10b981]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-500 font-medium">
+            <svg className="w-4 h-4 text-[#10b981]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
             <span>Works with your stack: Bring outputs from any model, vendor, or pipeline—no integration required.</span>
