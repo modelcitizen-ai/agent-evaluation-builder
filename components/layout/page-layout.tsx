@@ -22,7 +22,7 @@ export default function PageLayout({ title, subtitle, children, actions, fullWid
       {/* Header */}
       <div className={`w-full ${fullWidth ? (isHomePage ? "py-4 bg-[#020617] border-b border-slate-800 mb-0" : "py-4 border-b border-border mb-0") : "py-2"}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1 flex items-center">
               {isHomePage && (
                 <div className="flex items-center mr-6">
@@ -36,12 +36,12 @@ export default function PageLayout({ title, subtitle, children, actions, fullWid
                   </h1>
                 </div>
               )}
-              <div>
-                <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-semibold text-foreground truncate">{title}</h1>
                 {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
               </div>
             </div>
-            {actions && <div className="flex-shrink-0 ml-4">{actions}</div>}
+            {actions && <div className="flex-shrink-0">{actions}</div>}
           </div>
         </div>
       </div>

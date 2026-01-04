@@ -313,28 +313,29 @@ function PreviewPageContent() {
   return (
     <PageLayout
       title={
-        <div className="flex items-center space-x-3">
-          <input
-            type="text"
-            value={evaluationName}
-            onChange={(e) => {
-              setEvaluationName(e.target.value)
-              setEvaluationNameEdited(true)
-            }}
-            className="bg-transparent border-none text-2xl font-semibold text-foreground focus:outline-none focus:ring-0 p-0 m-0 min-w-0 flex-1"
-          />
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground flex-shrink-0">
-            Draft
-          </span>
-        </div>
+        <input
+          type="text"
+          value={evaluationName}
+          onChange={(e) => {
+            setEvaluationName(e.target.value)
+            setEvaluationNameEdited(true)
+          }}
+          className="bg-transparent border-none text-2xl font-semibold text-foreground focus:outline-none focus:ring-0 p-0 m-0 w-full"
+        />
       }
       actions={
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-3">
+          {/* Draft Status Pill */}
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex-shrink-0">
+            Draft
+          </span>
+          
           {/* Configure Dataset Button */}
                   <Button
                     onClick={() => setShowDatasetConfig(true)}
                     variant="outline"
                     size="sm"
+                    className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <CogIcon className="h-4 w-4 mr-2" />
                     Configure Dataset
@@ -346,7 +347,7 @@ function PreviewPageContent() {
                     className={`flex items-center gap-2 ${
                       showInstructions 
                         ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
-                        : "hover:bg-muted/50"
+                        : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                     aria-label={showInstructions ? "Hide instructions" : "Show instructions"}
                     title="Toggle instructions"
@@ -365,6 +366,7 @@ function PreviewPageContent() {
             onClick={() => router.push("/data-scientist")}
             variant="outline"
             size="sm"
+            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Cancel
           </Button>
@@ -449,7 +451,7 @@ function PreviewPageContent() {
       ) : (
         <div
           ref={containerRef}
-          className="relative flex animate-in fade-in slide-in-from-bottom-4 duration-700"
+          className="relative flex animate-in fade-in slide-in-from-bottom-4 duration-700 mt-4"
           style={{ cursor: isDragging ? "col-resize" : "default" }}
         >
           {/* Left Column - Instructions and Review */}
