@@ -82,7 +82,7 @@ export default function DataScientistPage() {
     <PageLayout title="My Projects" actions={actions}>
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8 mt-4">
-        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
+        <div className="bg-card overflow-hidden shadow-sm rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -104,7 +104,7 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
+        <div className="bg-card overflow-hidden shadow-sm rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -126,7 +126,7 @@ export default function DataScientistPage() {
           </div>
         </div>
 
-        <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
+        <div className="bg-card overflow-hidden shadow-sm rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -150,11 +150,11 @@ export default function DataScientistPage() {
       </div>
 
       {/* Evaluations Table */}
-      <div className="bg-card shadow overflow-visible sm:rounded-md border border-border">
+      <div className="bg-card shadow-sm overflow-visible sm:rounded-md border border-border">
         <div className="px-4 py-5 sm:px-6 border-b border-border">
           <h3 className="text-lg leading-6 font-medium text-foreground">Recent Projects</h3>
         </div>
-        <div className="bg-card shadow overflow-visible sm:rounded-md">
+        <div className="bg-card shadow-sm overflow-visible sm:rounded-md">
           <ul className="divide-y divide-border">
             {evaluations.length === 0 ? (
               <li className="py-4 px-6 text-center text-muted-foreground">No evaluations found. Create your first evaluation.</li>
@@ -165,7 +165,7 @@ export default function DataScientistPage() {
                 
                 return (
                   <li key={evaluation.id} className={isDropdownOpen(evaluation.id) ? "relative z-50" : ""}>
-                    <div className="px-4 py-4 sm:px-6">
+                    <div className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1 min-w-0">
                           <div>
@@ -175,7 +175,7 @@ export default function DataScientistPage() {
                             >
                               {evaluation.name}
                             </button>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-sm text-muted-foreground">
                               {evaluationDescription}
                             </p>
                           </div>

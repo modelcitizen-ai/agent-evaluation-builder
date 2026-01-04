@@ -20,7 +20,7 @@ export default function Header() {
   const userRole = isDataScientist ? "Data Scientist" : isReviewer ? "Reviewer" : ""
 
   return (
-    <header className="bg-background dark:bg-black/30 border-b border-border dark:border-gray-800 fixed top-0 left-0 right-0 z-40">
+    <header className="bg-white dark:bg-black/30 border-b border-border dark:border-gray-800 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and App Name */}
@@ -35,7 +35,7 @@ export default function Header() {
                 <div className="absolute bottom-1 left-1 h-1 w-1 bg-pink-300 rounded-full"></div>
               </div>
               <h1 className="text-base font-semibold text-foreground dark:text-white">
-                Agent Evaluation Builder
+                LLM Evaluation Builder
               </h1>
             </button>
           </div>
