@@ -65,13 +65,26 @@ export function useAssignReviewersDataInitialization({}: UseAssignReviewersDataI
     initializeEvaluationId()
   }, [])
 
+  // Helper function to generate unique links
+  const generateUniqueLink = (reviewerId: string) => {
+    // Generate link to reviewer dashboard where reviewers can see their assigned evaluations
+    return `${window.location.origin}/reviewer?participant=${reviewerId}`
+  }
+
   // Load existing reviewers for the current evaluation
   useEffect(() => {
     if (currentEvaluationId) {
       const loadReviewers = async () => {
         try {
           const existingReviewers = await getReviewers(parseInt(currentEvaluationId))
-          setReviewers(existingReviewers)
+          
+          // Add the generated link to each reviewer since it's not stored in DB
+          const reviewersWithLinks = existingReviewers.map((r: any) => ({
+            ...r,
+            link: generateUniqueLink(r.id)
+          }))
+          
+          setReviewers(reviewersWithLinks)
         } catch (error) {
           console.error("Error loading reviewers:", error)
         }
@@ -80,18 +93,6 @@ export function useAssignReviewersDataInitialization({}: UseAssignReviewersDataI
       loadReviewers()
     }
   }, [currentEvaluationId])
-
-  // Auto-save reviewers whenever they change (removed localStorage dependency)
-  useEffect(() => {
-    // Note: Reviewers are now saved through API calls in form management hooks
-    // This effect is kept for potential future auto-save functionality
-  }, [reviewers, currentEvaluationId])
-
-  // Helper function to generate unique links
-  const generateUniqueLink = (reviewerId: string) => {
-    // Generate link to reviewer dashboard where reviewers can see their assigned evaluations
-    return `${window.location.origin}/reviewer?participant=${reviewerId}`
-  }
 
   return {
     // State
