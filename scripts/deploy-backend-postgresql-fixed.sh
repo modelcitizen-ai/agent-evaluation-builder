@@ -351,8 +351,15 @@ az webapp config appsettings set \
         AZURE_OPENAI_DEPLOYMENT="$AZURE_OPENAI_DEPLOYMENT"
 
 # Configure PostgreSQL connection
+# DB_PASSWORD must be set as an environment variable
+if [ -z "$DB_PASSWORD" ]; then
+    print_error "DB_PASSWORD environment variable is required"
+    exit 1
+fi
+
 DB_HOST="${DB_SERVER_NAME}.postgres.database.azure.com"
-DATABASE_URL="postgresql://dbadmin:HumanEval2025!@${DB_HOST}:5432/${DB_NAME}?sslmode=require&sslcert=&sslkey=&sslrootcert="
+DB_USER="${DB_USER:-dbadmin}"
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}?sslmode=require&sslcert=&sslkey=&sslrootcert="
 
 # Set DATABASE_URL
 az webapp config appsettings set \

@@ -6,8 +6,14 @@ const { Pool } = require('pg');
 async function addMissingColumn() {
   console.log('🔄 Adding missing column_roles column...');
   
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL environment variable is required');
+    console.error('Set it in .env.local or as an environment variable');
+    process.exit(1);
+  }
+  
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://dbadmin:HumanEval2025!@human-eval-db-server.postgres.database.azure.com:5432/humanevaldb?sslmode=require',
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 30000,
   });
