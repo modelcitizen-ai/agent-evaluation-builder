@@ -214,10 +214,7 @@ export default function ReviewTaskPage() {
   // Auto-save mechanism to periodically save state
   useEffect(() => {
     if (taskId) {
-      const participantId = searchParams.get('participant')
-      const storageKey = participantId 
-        ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-        : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+      const storageKey = getStorageKey()
       
       // Only save if we have responses to save
       if (Object.keys(allResponses).length > 0) {
@@ -233,6 +230,9 @@ export default function ReviewTaskPage() {
 
   // Synchronize progress in evaluationReviewers based on submitted items
   useEffect(() => {
+    const isPreview = searchParams.get('from') === 'data-scientist'
+    if (isPreview) return // Skip sync in preview mode
+
     if (evaluation && submittedItems.size > 0) {
       // Count how many items have been actually submitted (not just have responses)
       const completedItemsCount = submittedItems.size
@@ -353,6 +353,18 @@ export default function ReviewTaskPage() {
   }
 
   // Get current content and metadata from the UI helpers hook
+  const isPreview = searchParams.get('from') === 'data-scientist'
+
+  const handleResetPreview = () => {
+    if (confirm('Are you sure you want to reset the preview? This will clear all your responses.')) {
+      const storageKey = getStorageKey()
+      const progressKey = getProgressKey()
+      localStorage.removeItem(storageKey)
+      localStorage.removeItem(progressKey)
+      window.location.reload()
+    }
+  }
+
   const currentContent = getCurrentContent()
   const currentMetadata = getCurrentMetadata()
 
@@ -383,17 +395,12 @@ export default function ReviewTaskPage() {
       <button
         onClick={() => {
           // Save current item position before exiting
-          const participantId = searchParams.get('participant')
-          const progressKey = participantId 
-            ? `evaluation_${taskId}_reviewer_${participantId}_progress`
-            : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
+          const progressKey = getProgressKey()
           const currentProgress = { furthestItem: Math.max(currentItem, furthestItemReached) }
           
           try {
             // Save current form data first
-            const storageKey = participantId 
-              ? `evaluation_${taskId}_reviewer_${participantId}_responses`
-              : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
+            const storageKey = getStorageKey()
             const updatedResponses = {
               ...allResponses,
               [currentItem]: formData,
@@ -753,7 +760,7 @@ export default function ReviewTaskPage() {
                 
                 {/* Completion message */}
                 {isReviewComplete && (
-                  <div className="mt-4 text-center">
+                  <div className="mt-4 text-center space-y-3">
                     <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-md">
                       <svg className="h-5 w-5 text-green-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -762,6 +769,17 @@ export default function ReviewTaskPage() {
                         Thank you! Your evaluation has been completed successfully.
                       </span>
                     </div>
+                    
+                    {isPreview && (
+                      <div>
+                        <button
+                          onClick={handleResetPreview}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          Reset Preview
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

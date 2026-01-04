@@ -63,19 +63,26 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
   const searchParams = useSearchParams()
   const taskId = params.id
   const participantId = searchParams.get('participant')
+  const isPreview = searchParams.get('from') === 'data-scientist'
 
   // Memoize storage keys to prevent infinite re-renders
   const storageKey = useMemo(() => {
+    if (isPreview) {
+      return `evaluation_${taskId}_preview_responses`
+    }
     return participantId 
       ? `evaluation_${taskId}_reviewer_${participantId}_responses`
       : `evaluation_${taskId}_responses` // Fallback for backwards compatibility
-  }, [taskId, participantId])
+  }, [taskId, participantId, isPreview])
 
   const progressKey = useMemo(() => {
+    if (isPreview) {
+      return `evaluation_${taskId}_preview_progress`
+    }
     return participantId 
       ? `evaluation_${taskId}_reviewer_${participantId}_progress`
       : `evaluation_${taskId}_progress` // Fallback for backwards compatibility
-  }, [taskId, participantId])
+  }, [taskId, participantId, isPreview])
 
   // Core state
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
@@ -97,6 +104,14 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
   // Helper function to identify current reviewer (memoized to prevent recreations)
   const identifyCurrentReviewer = useMemo(() => 
     (evaluationReviewers: any[]): ReviewerInfo => {
+      if (isPreview) {
+        console.log(`[identifyCurrentReviewer] Preview mode active, using Preview User`)
+        return {
+          id: "preview-user",
+          name: "Preview User"
+        }
+      }
+
       if (participantId) {
         // Look for the specific reviewer by ID
         const specificReviewer = evaluationReviewers.find(
@@ -134,7 +149,7 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
         id: "reviewer-1",
         name: "Anonymous Reviewer"
       }
-    }, [taskId, participantId])
+    }, [taskId, participantId, isPreview])
 
   // Load evaluation data by task ID from API
   useEffect(() => {
@@ -182,56 +197,61 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
         console.log(`[useReviewerDataInitialization] Loading submitted responses from PostgreSQL for reviewer ${reviewer.id}`)
         
         try {
-          const resultsDataset = await getResultsDataset(taskIdNum)
-          
-          if (resultsDataset && Array.isArray(resultsDataset.results)) {
-            // Filter results for current reviewer only
-            const reviewerResults = resultsDataset.results.filter(
-              (result: EvaluationResult) => result.reviewerId === reviewer.id
-            )
+          // Skip loading from PostgreSQL if in preview mode
+          if (isPreview) {
+            console.log(`[useReviewerDataInitialization] Preview mode active, skipping PostgreSQL results load`)
+          } else {
+            const resultsDataset = await getResultsDataset(taskIdNum)
             
-            console.log(`[useReviewerDataInitialization] Found ${reviewerResults.length} submitted responses for reviewer ${reviewer.id}`)
-            
-            // Reconstruct allResponses from submitted results
-            const reconstructedResponses: Record<number, Record<string, string>> = {}
-            
-            reviewerResults.forEach((result: EvaluationResult) => {
-              // Find the item index based on itemId matching originalData
-              const evalData = evaluation?.originalData || evaluation?.data || []
-              const itemIndex = evalData.findIndex(
-                (row: any) => (row.item_id || row.id || `item-${evalData.indexOf(row) + 1}`) === result.itemId
+            if (resultsDataset && Array.isArray(resultsDataset.results)) {
+              // Filter results for current reviewer only
+              const reviewerResults = resultsDataset.results.filter(
+                (result: EvaluationResult) => result.reviewerId === reviewer.id
               )
               
-              if (itemIndex !== -1) {
-                const itemNumber = itemIndex + 1
-                // Convert responses back to form data format
-                const formDataForItem: Record<string, string> = {}
+              console.log(`[useReviewerDataInitialization] Found ${reviewerResults.length} submitted responses for reviewer ${reviewer.id}`)
+              
+              // Reconstruct allResponses from submitted results
+              const reconstructedResponses: Record<number, Record<string, string>> = {}
+              
+              reviewerResults.forEach((result: EvaluationResult) => {
+                // Find the item index based on itemId matching originalData
+                const evalData = evaluation?.originalData || evaluation?.data || []
+                const itemIndex = evalData.findIndex(
+                  (row: any) => (row.item_id || row.id || `item-${evalData.indexOf(row) + 1}`) === result.itemId
+                )
                 
-                if (evaluation?.criteria) {
-                  evaluation.criteria.forEach((criterion: any) => {
-                    const responseValue = result.responses[criterion.name]
-                    if (responseValue !== undefined) {
-                      formDataForItem[`criterion-${criterion.id}`] = responseValue
-                    }
-                  })
+                if (itemIndex !== -1) {
+                  const itemNumber = itemIndex + 1
+                  // Convert responses back to form data format
+                  const formDataForItem: Record<string, string> = {}
+                  
+                  if (evaluation?.criteria) {
+                    evaluation.criteria.forEach((criterion: any) => {
+                      const responseValue = result.responses[criterion.name]
+                      if (responseValue !== undefined) {
+                        formDataForItem[`criterion-${criterion.id}`] = responseValue
+                      }
+                    })
+                  }
+                  
+                  reconstructedResponses[itemNumber] = formDataForItem
                 }
-                
-                reconstructedResponses[itemNumber] = formDataForItem
+              })
+              
+              console.log(`[useReviewerDataInitialization] Reconstructed ${Object.keys(reconstructedResponses).length} responses from PostgreSQL:`, reconstructedResponses)
+              setAllResponses(reconstructedResponses)
+              
+              // Calculate progress from loaded responses
+              const submittedItemCount = Object.keys(reconstructedResponses).length
+              if (submittedItemCount > 0) {
+                const maxSubmittedItem = Math.max(...Object.keys(reconstructedResponses).map(Number))
+                console.log(`[useReviewerDataInitialization] Setting progress based on ${submittedItemCount} submitted items (furthest: ${maxSubmittedItem})`)
+                setFurthestItemReached(maxSubmittedItem)
               }
-            })
-            
-            console.log(`[useReviewerDataInitialization] Reconstructed ${Object.keys(reconstructedResponses).length} responses from PostgreSQL:`, reconstructedResponses)
-            setAllResponses(reconstructedResponses)
-            
-            // Calculate progress from loaded responses
-            const submittedItemCount = Object.keys(reconstructedResponses).length
-            if (submittedItemCount > 0) {
-              const maxSubmittedItem = Math.max(...Object.keys(reconstructedResponses).map(Number))
-              console.log(`[useReviewerDataInitialization] Setting progress based on ${submittedItemCount} submitted items (furthest: ${maxSubmittedItem})`)
-              setFurthestItemReached(maxSubmittedItem)
+            } else {
+              console.log(`[useReviewerDataInitialization] No results dataset found in PostgreSQL, starting fresh`)
             }
-          } else {
-            console.log(`[useReviewerDataInitialization] No results dataset found in PostgreSQL, starting fresh`)
           }
         } catch (dbError) {
           console.error('[useReviewerDataInitialization] Error loading from PostgreSQL:', dbError)
@@ -257,7 +277,19 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
         // Check if this evaluation is completed for the current reviewer
         let currentReviewerRecord
         
-        if (participantId) {
+        if (isPreview) {
+          // In preview mode, check local storage for completion status
+          const previewProgress = localStorage.getItem(progressKey)
+          if (previewProgress) {
+            try {
+              const progress = JSON.parse(previewProgress)
+              // If we have reached the end, check if all items are answered
+              // This is a simplified check for preview mode
+            } catch (e) {
+              console.error('Error parsing preview progress', e)
+            }
+          }
+        } else if (participantId) {
           // Look for the specific reviewer by ID from URL parameter
           currentReviewerRecord = evaluationReviewers.find(
             (r: any) => r.id === participantId && 
@@ -265,8 +297,8 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
           )
         }
         
-        // If no specific reviewer found, fall back to first matching reviewer
-        if (!currentReviewerRecord) {
+        // If no specific reviewer found and not preview, fall back to first matching reviewer
+        if (!currentReviewerRecord && !isPreview) {
           const matchingReviewers = evaluationReviewers.filter(
             (r: any) => r.evaluationId === taskId || r.evaluationId === Number(taskId)
           )
@@ -275,8 +307,8 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
           }
         }
         
-        const isCompleted = currentReviewerRecord?.status === "completed" || 
-                          (currentReviewerRecord?.completed === currentReviewerRecord?.total && currentReviewerRecord?.total > 0)
+        const isCompleted = !isPreview && (currentReviewerRecord?.status === "completed" || 
+                          (currentReviewerRecord?.completed === currentReviewerRecord?.total && currentReviewerRecord?.total > 0))
         
         // If evaluation is completed, mark as complete
         if (isCompleted) {
@@ -291,7 +323,7 @@ export function useReviewerDataInitialization(): UseReviewerDataInitializationRe
     }
 
     loadReviewerData()
-  }, [taskId, storageKey, progressKey, participantId, identifyCurrentReviewer])
+  }, [taskId, storageKey, progressKey, participantId, identifyCurrentReviewer, isPreview])
 
   return {
     // Core data
