@@ -21,7 +21,7 @@ export default function ReviewerPage() {
   const [completedEvaluations, setCompletedEvaluations] = useState<number[]>([])
   const [startedEvaluations, setStartedEvaluations] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [reviewerFirstName, setReviewerFirstName] = useState<string>("My")
+  const [reviewerFirstName, setReviewerFirstName] = useState<string>("")
 
   useLayoutEffect(() => {
     const initializeReviewerData = async () => {
@@ -298,7 +298,7 @@ export default function ReviewerPage() {
   // Add a loading state to prevent flicker
   if (isLoading) {
     return (
-      <PageLayout title={`${reviewerFirstName}'s Evaluations`}>
+      <PageLayout title={reviewerFirstName ? `${reviewerFirstName}'s Evaluations` : "Loading..."}>
         <div className="flex justify-center items-center h-64">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin"></div>
         </div>
@@ -307,7 +307,7 @@ export default function ReviewerPage() {
   }
 
   return (
-    <PageLayout title={`${reviewerFirstName}'s Evaluations`}>
+    <PageLayout title={reviewerFirstName ? `${reviewerFirstName}'s Evaluations` : "My Evaluations"}>
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
         <div className="bg-white overflow-hidden shadow rounded-lg">
