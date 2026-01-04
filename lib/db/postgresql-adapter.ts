@@ -108,7 +108,8 @@ export async function getEvaluation(id: number): Promise<Evaluation | null> {
       total_items as "totalItems",
       original_data as "originalData",
       criteria,
-      column_roles as "columnRoles"
+      column_roles as "columnRoles",
+      randomization_enabled as "randomizationEnabled"
     FROM evaluations 
     WHERE id = $1
   `;
@@ -126,9 +127,10 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
       original_data,
       criteria,
       column_roles,
+      randomization_enabled,
       created_at
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) 
     RETURNING 
       id,
       name,
@@ -138,7 +140,8 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
       total_items as "totalItems",
       original_data as "originalData",
       criteria,
-      column_roles as "columnRoles"
+      column_roles as "columnRoles",
+      randomization_enabled as "randomizationEnabled"
   `;
   
   const params = [
@@ -148,7 +151,8 @@ export async function createEvaluation(evaluationData: any): Promise<Evaluation 
     evaluationData.totalItems || 0,
     JSON.stringify(evaluationData.originalData || []),
     JSON.stringify(evaluationData.criteria || []),
-    JSON.stringify(evaluationData.columnRoles || [])
+    JSON.stringify(evaluationData.columnRoles || []),
+    evaluationData.randomizationEnabled || false
   ];
   
   return await executeQuerySingle<Evaluation>(query, params);
@@ -193,6 +197,11 @@ export async function updateEvaluation(id: number, evaluationData: any): Promise
   if (evaluationData.columnRoles !== undefined) {
     fields.push(`column_roles = $${paramIndex++}`);
     params.push(JSON.stringify(evaluationData.columnRoles));
+  }
+
+  if (evaluationData.randomizationEnabled !== undefined) {
+    fields.push(`randomization_enabled = $${paramIndex++}`);
+    params.push(evaluationData.randomizationEnabled);
   }
   
   if (fields.length === 0) {

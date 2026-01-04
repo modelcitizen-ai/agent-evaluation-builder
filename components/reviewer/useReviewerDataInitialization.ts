@@ -23,6 +23,7 @@ interface Evaluation {
   columnRoles: any[]
   data: any[]
   totalItems: number
+  randomizationEnabled?: boolean
   assignedReviewers?: { id: string; name: string }[]
 }
 

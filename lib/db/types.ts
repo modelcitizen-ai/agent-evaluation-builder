@@ -8,6 +8,7 @@ export interface Evaluation {
   status: string;
   createdAt: string;
   totalItems?: number;
+  randomizationEnabled?: boolean;
   // Add other fields as needed
 }
 

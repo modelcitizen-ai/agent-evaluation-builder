@@ -21,6 +21,7 @@ interface Evaluation {
   data?: any[]  // Made optional for backward compatibility
   originalData?: any[]  // Added for PostgreSQL response
   totalItems: number
+  randomizationEnabled?: boolean
   assignedReviewers?: { id: string; name: string }[] // Added assignedReviewers property
 }
 
