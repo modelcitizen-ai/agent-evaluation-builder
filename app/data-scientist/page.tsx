@@ -81,7 +81,7 @@ export default function DataScientistPage() {
   return (
     <PageLayout title="My Projects" actions={actions}>
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8 mt-4">
         <div className="bg-card overflow-hidden shadow rounded-lg border border-border">
           <div className="p-5">
             <div className="flex items-center">
