@@ -35,7 +35,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
             <button
-              onClick={() => router.push("/data-scientist")}
+              onClick={() => router.push("/data-scientist/new")}
               className="inline-flex items-center px-6 py-3 text-base font-bold rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-all duration-200"
             >
               Start an evaluation
