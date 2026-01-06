@@ -27,7 +27,7 @@ export default function HomePage() {
           <span className="inline-block text-xs font-bold tracking-[0.25em] uppercase text-[#3b82f6] mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
             LLM Evaluation Builder
           </span>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-[1.1] tracking-tight max-w-5xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight max-w-2xl mx-auto" style={{ lineHeight: '1.3' }}>
             Turn model outputs into defensible decisions with structured human review.
           </h1>
           <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
